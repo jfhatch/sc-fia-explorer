@@ -26,7 +26,7 @@ async function loadPlots() {
   const col = {}; p.c.forEach((c, i) => col[c] = i);
   return (FIA.plots = { col, rows: p.r, byKey: new Map(p.r.map((r, i) => [r[col.k], i])) });
 }
-const plotUrl = key => `plot.html?k=${encodeURIComponent(key)}`;
+const plotUrl = key => `plot.html?k=${encodeURIComponent(key)}${document.documentElement.dataset.view === 'expert' ? '&view=expert' : ''}`;
 
 // ---------------------------------------------------------------- decoding
 // Texts were rendered by fiasc.core.decode at export time; values not in the guide are flagged, never guessed.

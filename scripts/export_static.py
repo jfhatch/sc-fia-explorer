@@ -6,6 +6,11 @@ site/
   index.html, plot.html, about.html, app.css, *.js, vendor/   copied from web/ (the static frontend)
   data/meta.json        build info, legend groups, filter lists, metric/event key orders
   data/plots.json       every plot location: public LAT/LON + the fields used for filtering and colouring
+  data/plots_x.json     expert-view map fields (panel, cycle, codes, estimated next measurement), loaded only in Expert view
+  data/help.json        explanations (fiasc/help.json: sections, columns, glossary) shared with the PDF summary
+  data/glossary_ex.json glossary examples taken from real plot values
+  x/<key>.json          expert-view records for one plot (SUBPLOT, SUBP_COND, POP_PLOT_STRATUM_ASSGN, TREE_GRM_COMPONENT,
+                        extra TREE columns), loaded only in Expert view
   data/ids.json         PLOT CN -> plot index (plot-ID search by CN; county-plot and key search use plots.json)
   data/codes.json       FIADB User Guide v9.4 code texts (pre-rendered by fiasc.core.decode), REF names
   data/counties.geojson simplified Census county boundaries
@@ -20,7 +25,7 @@ sys.path.insert(0, ROOT)
 sys.stdout.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)
 import numpy as np
 import pandas as pd
-from fiasc import core, store, plotdata, build
+from fiasc import core, store, plotdata, build, summary
 
 MAX_SITE, MAX_FILE = 900 * 2 ** 20, 50 * 2 ** 20
 WEB = os.path.join(ROOT, "web")
@@ -72,6 +77,11 @@ def table_block(df, cols, decimals=None):
     return {"c": cols, "r": out}
 
 
+def sval(v):
+    """CN-like value for JSON: None for missing, else its text."""
+    return None if v is None or (isinstance(v, float) and math.isnan(v)) else str(v)
+
+
 def dumps(o):
     return json.dumps(o, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
 
@@ -101,6 +111,46 @@ def simplify(coords, tol):
     return [[round(x, 4), round(y, 4)] for x, y in out]
 
 
+EX_KEY = "45-3-91-25"
+
+
+def glossary_examples(SUMS, trees, ref):
+    """Short examples for the glossary, from real values (the regression plot when exported, else the first plot with trees)."""
+    k = EX_KEY if EX_KEY in SUMS else next((k for k, S in SUMS.items() if S.get("sp")), None)
+    if k is None:
+        return {}
+    S, T = SUMS[k], trees.get(k)
+    v = [x for x in S["v"] if x["nl"]]
+    if not v or T is None:
+        return {}
+    z = v[-1]
+    zi = S["v"].index(z)
+    lv = T[(T.vi == zi) & (T.STATUSCD == 1) & T.TPA_UNADJ.notna()]
+    big = lv.sort_values("DIA").iloc[-1]
+    sap = lv[lv.DIA < 5]
+    sp = ref.spname(int(big.SPCD))
+    ing = sum(x["ing"] for x in S["v"])
+    ex = {
+        "key": k, "year": z["y"],
+        "ex_ba": f"A {big.DIA:.1f}-in {sp} has 0.005454 × {big.DIA:.1f}² = {core.BA_K * big.DIA ** 2:.2f} ft² of basal area. Plot {k} had {z['ba']:.1f} ft²/ac of live basal area in {z['y']}.",
+        "ex_tpa": f"On plot {k} in {z['y']}, each tree ≥5 in stood for {lv[lv.DIA >= 5].TPA_UNADJ.iloc[0]:.2f} trees/ac"
+                  + (f" and each sapling for {sap.TPA_UNADJ.iloc[0]:.2f}" if len(sap) else "") + f"; live trees totalled {z['tpa']:,.0f} trees/ac.",
+        "ex_qmd": f"Plot {k}: QMD {z['qmd']:.1f} in in {z['y']} (live trees ≥1.0 in).",
+        "ex_dbh": f"The largest live tree on plot {k} in {z['y']} was a {sp} of {big.DIA:.1f} in DBH.",
+        "ex_vol": f"Plot {k}: {z['vol']:,.0f} ft³/ac net cubic volume in {z['y']}" + (f"; the {big.DIA:.1f}-in {sp} alone had {big.VOLCFNET:.1f} ft³." if not pd.isna(big.VOLCFNET) else "."),
+        "ex_c": f"Plot {k}: {z['c']:.1f} tons C/ac aboveground carbon in {z['y']}" + (f"; the {big.DIA:.1f}-in {sp} held {big.CARBON_AG:.0f} lb of carbon." if not pd.isna(big.CARBON_AG) else "."),
+        "ex_age": f"Plot {k}: stand age {z['age']:.0f} years in {z['y']}." if z["age"] is not None else "",
+        "ex_ft": f"Plot {k}: forest type {int(z['ft'])} = {ref.FTN.get(int(z['ft']), '?')} in {z['y']}." if z["ft"] is not None else "",
+        "ex_plots": f"Plot {k} in {z['y']}: {z['n5']} trees ≥5 in were measured on the subplots and {z['ns']} saplings on the microplots.",
+        "ex_ing": f"Plot {k}: {ing} trees entered as ingrowth over its surveys.",
+        "ex_rc": "Plot 45-3-91-25 in 2006: 17 saplings added with RECONCILECD 3 and 8 dropped with RECONCILECD 8 when the microplots moved." if k == EX_KEY else "",
+        "ex_unadj": f"Plot {k}'s {z['ba']:.1f} ft²/ac in {z['y']} expands {z['nl']} measured trees; one sapling crossing 5.0 in changes its weight from about 75 to 6 trees/ac.",
+        "ex_design": "Plot 45-3-91-25 (national design, 2000–2021) has an inferred periodic predecessor, plot 90119 (variable-radius points, 1985 and 1992)." if k == EX_KEY else "",
+        "ex_si": "", "ex_agent": "Periodic plot 45-3-91-90119's cut trees carry AGENTCD 81, which no FIA guide defines; it is shown flagged." if k == EX_KEY else "",
+    }
+    return ex
+
+
 def main():
     t0 = time.time()
     db = arg("--db") or store.current_db()
@@ -126,13 +176,15 @@ def main():
             fp = os.path.join(out, f); h = open(fp, encoding="utf-8").read()
             h2 = re.sub(r'((?:src|href)="(?!https?:|//|#)[^"?]+\.(?:js|css))"', lambda m: f'{m.group(1)}?v={site_v}"', h)
             open(fp, "w", encoding="utf-8").write(h2)
-    os.makedirs(os.path.join(out, "data")); os.makedirs(os.path.join(out, "p"))
+    os.makedirs(os.path.join(out, "data")); os.makedirs(os.path.join(out, "p")); os.makedirs(os.path.join(out, "x"))
     print(f"export {os.path.basename(db)} -> {out}")
 
     # ------------------------------------------------------------ plots.json + meta.json (same rules as /api/meta, /api/locations)
     loc = q("SELECT * FROM plot_location ORDER BY KEY")
     if limit:
         keep = set(loc.KEY.sample(limit, random_state=1)) | set(core.REGRESSION_BA)
+        keep |= {r[0] for r in con.execute(f"SELECT CAND_KEY FROM predecessor_candidate WHERE RANK=1 AND KEY IN ({','.join('?' * len(core.REGRESSION_BA))})",
+                                           tuple(core.REGRESSION_BA))}
         loc = loc[loc.KEY.isin(keep)].reset_index(drop=True)
     gcount = loc.FORTYP_GRP.dropna().astype(int).value_counts()
     groups = [{"code": int(g), "name": ref.FGN.get(int(g), f"group {g}"), "n": int(n), "color": core.PAL[i] if i < len(core.PAL) else core.OTHER}
@@ -215,8 +267,11 @@ def main():
         df["_k"] = df[cn_col].map(vkey)
         return {k: g.drop(columns="_k") for k, g in df.groupby("_k", sort=False)}
 
+    shown_cols = set()
+
     def generic(df, table):
         cols = [c for c in df.columns if c not in SKIP and not c.endswith("_CN") and c != "vi" and df[c].notna().any()]
+        shown_cols.update(f"{table}.{c}" for c in cols)
         return table_block(df.sort_values("vi"), ["vi"] + cols)
 
     t1 = time.time()
@@ -254,7 +309,50 @@ def main():
     pcs = q("SELECT * FROM predecessor_candidate")
     pc_by = {k: g.sort_values("RANK") for k, g in pcs.groupby("KEY")}
     cf_by = {k: g.sort_values("SCORE", ascending=False) for k, g in pcs.groupby("CAND_KEY")}
+    # expert view: extra per-plot tables (written to x/<key>.json, fetched only in Expert view)
+    xt = {}
+    for short_, t, cols in (("sbp", "SUBPLOT", None), ("sbc", "SUBP_COND", None), ("ppsa", "POP_PLOT_STRATUM_ASSGN", ["vi", "EVALID", "ESTN_UNIT", "STRATUMCD", "RSCD", "STRATUM_CN"]),
+                            ("grm", "TREE_GRM_COMPONENT", ["vi", "TRE_CN", "PREV_TRE_CN", "DIA_BEGIN", "DIA_MIDPT", "DIA_END", "ANN_DIA_GROWTH", "ANN_HT_GROWTH",
+                             "SUBPTYP_BEGIN", "SUBPTYP_END", "SUBP_COMPONENT_AL_FOREST", "SUBP_SUBPTYP_GRM_AL_FOREST", "SUBP_TPAGROW_UNADJ_AL_FOREST",
+                             "SUBP_TPAREMV_UNADJ_AL_FOREST", "SUBP_TPAMORT_UNADJ_AL_FOREST", "MICR_COMPONENT_AL_FOREST", "MICR_TPAGROW_UNADJ_AL_FOREST",
+                             "MICR_TPAREMV_UNADJ_AL_FOREST", "MICR_TPAMORT_UNADJ_AL_FOREST", "GROWCFAL_FOREST", "MORTCFAL_FOREST", "REMVCFAL_FOREST",
+                             "GROWTSAL_FOREST", "MORTTSAL_FOREST", "REMVTSAL_FOREST"])):
+        if plotdata.has_table(con, t):
+            df = q(f'SELECT * FROM "{t}"')
+            xt[short_] = (t, cols, by_key(df))
+    xtree = q("SELECT CN, SPGRPCD, VOLCFGRS, VOLBFNET FROM TREE")
+    xtree = xtree.set_index("CN")
     print(f"  tables loaded and grouped in {time.time() - t1:.0f}s")
+    vgroups = {k: g for k, g in visit.groupby("KEY", sort=False)}
+
+    # ------------------------------------------------------------ plot summaries (fiasc.summary: the PDF summary's computations)
+    t3 = time.time()
+    SUMS = {}
+    inv_by = gen.get(("iv", "INVASIVE_SUBPLOT_SPP"), {})
+    errs = []
+    for k in loc.KEY:
+        try:
+            SUMS[k] = summary.compute(vgroups[k], trees.get(k), events.get(k), grow.get(k), cond_rows.get(k), inv_by.get(k), plot_rows.get(k), ref)
+        except Exception as e:                            # report every failing plot, then stop
+            import traceback
+            errs.append((k, e, traceback.format_exc()))
+    if errs:
+        print(f"EXPORT FAILED: {len(errs)} plot summaries failed" + (" (summary totals differ from the database)" if any(isinstance(e, summary.SummaryError) for _, e, _ in errs) else ""))
+        for k, e, _ in errs[:10]:
+            print(f"  {k}: {e!r}")
+        print(errs[0][2])
+        sys.exit(1)
+    print(f"  {len(SUMS):,} plot summaries in {time.time() - t3:.0f}s")
+    # composition groups: the user's five base genera, then the genera that most often lead a plot statewide (up to 8 groups)
+    gen_of = {int(r.SPCD): (r.GENUS or "?") for r in q("SELECT SPCD, GENUS FROM REF_SPECIES").itertuples()}
+    lead = {}
+    for S_ in SUMS.values():
+        if S_.get("sp"):
+            g_ = gen_of.get(S_["sp"]["codes"][0], "?"); lead[g_] = lead.get(g_, 0) + 1
+    comp = ["Pinus", "Quercus", "Liquidambar", "Juniperus", "Ulmus"]
+    comp += [g_ for g_, n in sorted(lead.items(), key=lambda kv: -kv[1]) if g_ not in comp][:8 - len(comp)]
+    meta["comp"] = comp
+    json.dump(meta, open(os.path.join(out, "data", "meta.json"), "w", encoding="utf-8"), separators=(",", ":"), ensure_ascii=False)
 
     # ------------------------------------------------------------ write p/<key>.json
     t2 = time.time()
@@ -262,8 +360,10 @@ def main():
              "REMPER", "PREV_PLT_CN", "CHAIN", "LAT", "LON", "P_MANUAL", "MICROPLOT_LOC", "FORTYPCD", "STDAGE", "OWNGRPCD", "N_INVASIVE_SPP"]
     vshort = ["cn", "y", "d", "da", "ds", "dy", "kc", "dc", "st", "ns", "rp", "pp", "ch", "la", "lo", "mn", "mp", "ft", "ag", "og", "ni"]
     check25 = None
-    vgroups = {k: g for k, g in visit.groupby("KEY", sort=False)}
     sizes = []
+    HELP = json.load(open(os.path.join(ROOT, "fiasc", "help.json"), encoding="utf-8"))
+    shown = set()                                         # FIADB columns the plot pages can show (for the help-coverage check)
+    xmap = []
     for i, r in enumerate(loc.itertuples()):
         k = r.KEY
         vg = vgroups[k]
@@ -305,10 +405,44 @@ def main():
         if k in pc_by:
             P["pc"] = [{"key": x.CAND_KEY, "plot": int(x.CAND_PLOT), "last": x.CAND_LAST_DATE, "invyr": int(x.CAND_INVYR), "ft": num(x.CAND_FORTYPCD),
                         "age": num(x.CAND_STDAGE), "dist": num(x.DIST_MI, 2), "dt": num(x.DT_YR, 2), "rp": num(x.REMPER, 1), "nb": int(x.N_BRIDGE),
-                        "nm": int(x.N_MATCHED), "pairs": re.sub(r"SPCD (\d+)", lambda m: ref.spname(int(m.group(1))), x.PAIRS or ""),
+                        "nm": int(x.N_MATCHED), "pairs": re.sub(r"SPCD (\d+): ", lambda m: ref.spname(int(m.group(1))) + " ", x.PAIRS or "").replace(" -> ", " → "),
                         "score": num(x.SCORE, 1), "rank": int(x.RANK)} for x in pc_by[k].itertuples()]
         if k in cf_by:
             P["cf"] = [{"key": x.KEY, "score": num(x.SCORE, 1), "rank": int(x.RANK), "dist": num(x.DIST_MI, 2)} for x in cf_by[k].itertuples()]
+        S = dict(SUMS[k])
+        S["hl"] = [list(h) for h in S["hl"]]; S["cav"] = [list(c_) for c_ in S["cav"]]
+        if P.get("pc") and P["pc"][0]["rank"] == 1 and P["pc"][0]["key"] in SUMS:
+            S = summary.finish(S, None, SUMS[P["pc"][0]["key"]], P["pc"][0], vg)
+        S["undc"] = summary.undecoded_caveat(S.pop("und", []))
+        P["sum"] = S
+        if P["pf"]:
+            shown_cols.update(f"PLOT.{c}" for c in P["pf"]["c"] if c != "vi")
+        # expert view: extra tables for this plot, in their own file
+        X = {}
+        for short_, (t, cols, dd) in xt.items():
+            if k in dd:
+                X[short_] = generic(dd[k], t) if cols is None else table_block(dd[k].sort_values("vi"), [c_ for c_ in cols if c_ in dd[k].columns])
+        if tr is not None:
+            xx = xtree.reindex(tr.CN)
+            X["trx"] = {"c": ["SPGRPCD", "VOLCFGRS", "VOLBFNET", "CN", "PREV_TRE_CN"],
+                        "r": [[num(a), num(b_, 3), num(c_, 1), cn, pcn] for a, b_, c_, cn, pcn in
+                              zip(xx.SPGRPCD, xx.VOLCFGRS, xx.VOLBFNET, [sval(v) for v in tr.CN], [sval(v) for v in tr.PREV_TRE_CN])]}
+        open(os.path.join(out, "x", f"{k}.json"), "w", encoding="utf-8").write(dumps(X))
+        # expert map fields: from the latest visit's PLOT row and its largest condition
+        lastp = plot_rows[k].sort_values("vi").iloc[-1] if k in plot_rows else None
+        lc = None
+        if k in cond_rows:
+            cl = cond_rows[k][cond_rows[k].vi == cond_rows[k].vi.max()]
+            lc = cl.sort_values("CONDPROP_UNADJ", ascending=False).iloc[0] if len(cl) else None
+        ann = vg[vg.DESIGN == "annual"]
+        gaps = np.diff(ann.DYEAR.values) if len(ann) >= 2 else []
+        nxt = round(float(ann.DYEAR.iloc[-1] + np.median(gaps)), 1) if len(gaps) else None
+        g_ = lambda row, c_: num(row[c_]) if row is not None and c_ in row else None
+        dist = [int(lc[c_]) for c_ in ("DSTRBCD1", "DSTRBCD2", "DSTRBCD3") if lc is not None and not pd.isna(lc.get(c_)) and lc[c_] > 0]
+        trt = [int(lc[c_]) for c_ in ("TRTCD1", "TRTCD2", "TRTCD3") if lc is not None and not pd.isna(lc.get(c_)) and lc[c_] > 0]
+        xmap.append([g_(lastp, "P2PANEL"), g_(lastp, "CYCLE"), g_(lastp, "SUBCYCLE"), g_(lastp, "KINDCD"), g_(lastp, "DESIGNCD"),
+                     g_(lastp, "PLOT_STATUS_CD"), g_(lastp, "PLOT_NONSAMPLE_REASN_CD"), g_(lc, "STDSZCD"), g_(lc, "GSSTKCD"), g_(lc, "ALSTKCD"),
+                     g_(lc, "SITECLCD"), dist, trt, nxt, len(gaps)])
         s = dumps(P)
         open(os.path.join(out, "p", f"{k}.json"), "w", encoding="utf-8").write(s)
         sizes.append(len(s.encode("utf-8")))
@@ -317,9 +451,24 @@ def main():
         if i % 2000 == 0:
             print(f"  {i:,}/{len(loc):,} plot files ({time.time() - t2:.0f}s)")
     print(f"  {len(loc):,} plot files written in {time.time() - t2:.0f}s; largest {max(sizes) / 1024:.0f} KB, median {np.median(sizes) / 1024:.1f} KB")
+    json.dump({"c": ["p2", "cy", "scy", "kc", "dc", "st", "ns", "sz", "gs", "al", "sc", "ds", "tr", "nx", "ni"], "r": xmap},
+              open(os.path.join(out, "data", "plots_x.json"), "w", encoding="utf-8"), separators=(",", ":"))
+    # help: every FIADB column the plot pages can show must have help text (guide, plain or an explicit "not described")
+    for c_ in TREE_COLS + ["SPGRPCD", "VOLCFGRS", "VOLBFNET", "CN", "PREV_TRE_CN"]:
+        shown_cols.add(f"TREE.{c_}")
+    for short_, (t, cols, dd) in xt.items():
+        for c_ in (cols or []):
+            if c_ != "vi":
+                shown_cols.add(f"{t}.{c_}")
+    missing_help = sorted(c_ for c_ in shown_cols if not any(x in HELP["columns"].get(c_, {}) for x in ("guide", "plain", "nodef")))
+    shutil.copy(os.path.join(ROOT, "fiasc", "help.json"), os.path.join(out, "data", "help.json"))
+    json.dump(glossary_examples(SUMS, trees, ref), open(os.path.join(out, "data", "glossary_ex.json"), "w", encoding="utf-8"), ensure_ascii=False)
 
     # ------------------------------------------------------------ validation
     problems = []
+    if missing_help:
+        problems.append(f"{len(missing_help)} column(s) shown on plot pages have no help text in fiasc/help.json: {missing_help[:20]}"
+                        " (run scripts/build_help.py, or add a 'plain' or 'nodef' entry)")
     for key, exp in core.REGRESSION_BA.items():
         if check25 is None:
             problems.append(f"{key} not exported")

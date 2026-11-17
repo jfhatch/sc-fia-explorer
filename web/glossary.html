@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Glossary · SC FIA plot explorer</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="page prose-wide">
+  <div class="pagehead noprint"><a href="index.html" data-keepview>← Map</a> <a href="about.html" data-keepview>About &amp; caveats</a><span class="grow"></span><span id="viewsw"></span></div>
+  <h1>Glossary</h1>
+  <p id="gsrc" class="muted"></p>
+  <div class="actions noprint"><label>Search <input id="gq" type="search" placeholder="term, column name or word" autocomplete="off"></label><span class="muted" id="gn"></span></div>
+  <h2 id="terms">Terms and metrics</h2>
+  <div id="gterms"></div>
+  <h2 id="derived">Values computed by this site</h2>
+  <p class="muted">Columns on the plot pages and map that this site computes from FIADB columns.</p>
+  <div id="gderived"></div>
+  <h2 id="sections">Page sections</h2>
+  <div id="gsections"></div>
+  <h2 id="columns">FIADB columns</h2>
+  <p class="muted">Every FIADB column the site can show. Plain-English text where written; otherwise the FIADB User Guide wording (first sentences) with its section number. Columns the guide does not describe say so.</p>
+  <div id="gcols"></div>
+</div>
+<footer id="footer" class="footer"></footer>
+<script src="fia.js"></script>
+<script src="help.js"></script>
+<script src="glossary.js"></script>
+</body>
+</html>

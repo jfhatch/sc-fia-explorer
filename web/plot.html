@@ -10,34 +10,111 @@
 </head>
 <body>
 <div class="page">
-  <p class="noprint"><a href="index.html">← Map</a> · <a href="about.html">About &amp; caveats</a></p>
+  <div class="pagehead noprint">
+    <a href="index.html" data-keepview>← Map</a> <a href="glossary.html" data-keepview>Glossary</a> <a href="about.html" data-keepview>About &amp; caveats</a>
+    <span class="grow"></span>
+    <button type="button" id="printbtn" class="printbtn">Print / Save as PDF</button>
+    <span id="viewsw"></span>
+  </div>
   <h1 id="title">Loading…</h1>
+  <p class="printonly" id="printurl"></p>
   <p class="muted" id="subtitle"></p>
+  <p class="muted" id="subtitle2"></p>
   <div class="actions noprint">
     <button type="button" id="csv_trees">Tree history CSV</button>
     <button type="button" id="csv_visits">Visit summary CSV</button>
-    <button type="button" id="print">Print summary</button>
   </div>
-  <div class="note" id="notes"></div>
+  <section class="psec" data-sec="highlights" id="s-highlights">
+    <div class="kpis" id="kpis"></div>
+    <h2>Highlights</h2>
+    <div id="hl"></div>
+  </section>
 
-  <h2>Visit timeline</h2>
-  <p class="muted" id="tldesc"></p>
-  <div class="timeline" id="timeline"></div>
-  <div id="predbox"></div>
+  <section class="psec" data-sec="timeline" id="s-timeline">
+    <h2>Visit timeline</h2>
+    <div id="tlintro"></div>
+    <p class="muted" id="tldesc"></p>
+    <div class="tlwrap"><div class="timeline" id="timeline"></div></div>
+    <div id="predbox"></div>
+  </section>
 
-  <h2>Stand totals by visit</h2>
-  <div class="scroll" style="max-height:none"><table id="totals"></table></div>
+  <section class="psec" data-sec="survey" id="s-survey">
+    <h2>Survey summary</h2>
+    <div id="survey"></div>
+    <h3>Tree totals</h3>
+    <div id="treetot"></div>
+  </section>
 
-  <h2 class="noprint">Visit details <span class="muted" id="vsel"></span></h2>
-  <div class="tabs noprint" id="tabs"></div>
-  <div id="tab" class="noprint"></div>
+  <section class="psec" data-sec="details" id="s-details">
+    <h2>Visit details <span class="muted" id="vsel"></span></h2>
+    <div id="detintro"></div>
+    <div class="actions noprint"><label>Visit <select id="vpick"></select></label></div>
+    <div id="details"></div>
+  </section>
 
-  <h2>History</h2>
-  <div id="hist">Loading…</div>
+  <section class="psec expert-only" data-sec="expert" id="s-expert">
+    <h2>Expert panels <span class="muted" id="xsel"></span></h2>
+    <div id="expert">Loading…</div>
+  </section>
+
+  <section class="psec" data-sec="vc" id="s-vc">
+    <h2>Volume and carbon</h2>
+    <div id="vc"></div>
+  </section>
+
+  <section class="psec" data-sec="species" id="s-species">
+    <h2>Species</h2>
+    <div id="species"></div>
+  </section>
+
+  <section class="psec" data-sec="comp" id="s-comp">
+    <h2>Species composition by survey (% of live basal area)</h2>
+    <div id="comp"></div>
+  </section>
+
+  <section class="psec" data-sec="indiv" id="s-indiv">
+    <h2>Individual trees</h2>
+    <div id="indiv"></div>
+  </section>
+
+  <section class="psec" data-sec="growth" id="s-growth">
+    <h2>Growth</h2>
+    <div id="growth"></div>
+  </section>
+
+  <section class="psec" data-sec="mort" id="s-mort">
+    <h2>Mortality</h2>
+    <div id="mort"></div>
+  </section>
+
+  <section class="psec" data-sec="invh" id="s-invh">
+    <h2>Invasives</h2>
+    <div id="invh"></div>
+  </section>
+
+  <section class="psec" data-sec="caveats" id="s-caveats">
+    <h2>Caveats for this plot</h2>
+    <div id="caveats"></div>
+  </section>
+
+  <section class="printonly" id="s-terms"></section>
+  <p class="printonly" id="printfoot"></p>
 </div>
 <footer id="footer" class="footer"></footer>
+<dialog class="printdlg" id="printdlg">
+  <form method="dialog">
+    <h3 style="margin-top:0">Print / Save as PDF</h3>
+    <p class="muted">Sections to include</p>
+    <div id="pd_secs"></div>
+    <label><input type="checkbox" id="pd_trees" checked> Individual tree table</label>
+    <label class="expert-only"><input type="checkbox" id="pd_raw"> Include raw records (appendix)</label>
+    <div class="actions"><button value="cancel" type="submit">Cancel</button><button value="print" type="submit" class="primary" id="pd_go">Print…</button></div>
+  </form>
+</dialog>
 <script src="vendor/plotly-7.1.0.min.js"></script>
 <script src="fia.js"></script>
+<script src="help.js"></script>
 <script src="plot.js"></script>
+<script src="expert.js"></script>
 </body>
 </html>

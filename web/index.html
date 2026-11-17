@@ -23,7 +23,10 @@
   <button id="locbtn" type="button">Location</button>
   <button id="attrbtn" type="button">Attributes</button>
   <span class="grow"></span>
-  <a class="toplink" href="about.html">About</a>
+  <button id="printmap" type="button" class="noprint">Print map</button>
+  <a class="toplink" href="glossary.html" data-keepview>Glossary</a>
+  <a class="toplink" href="about.html" data-keepview>About</a>
+  <span id="viewsw"></span>
 </div>
 <div id="main">
   <aside id="side" aria-label="Filters">
@@ -38,6 +41,16 @@
     <div class="row"><label for="f_nv">Visits ≥</label><input id="f_nv" type="number" inputmode="numeric" min="1" value="1"></div>
     <div class="row"><label for="f_des">Design</label><select id="f_des"><option value="">Any</option><option value="a">Annual (national design)</option><option value="p">Periodic only</option><option value="ap">Both at one key</option></select></div>
     <div class="row"><label for="f_inv">Invasives</label><select id="f_inv"><option value="">Any</option><option value="1">Present</option><option value="0">None recorded</option></select></div>
+    <div class="expert-only" id="xfilters">
+      <h2>Expert filters <button type="button" class="hb" data-h="s:xmap" aria-label="About expert filters">ⓘ</button></h2>
+      <p class="muted" id="xf_status">Loading expert fields…</p>
+      <div id="xf_rows"></div>
+      <div class="row"><label for="x_color">Color markers by</label><select id="x_color">
+        <option value="grp">Latest forest type group</option><option value="invyr">Last INVYR</option><option value="p2">P2PANEL</option>
+        <option value="sz">Stand size class (STDSZCD)</option><option value="gs">Stocking class (GSSTKCD)</option><option value="ds">Disturbance at last visit</option>
+        <option value="nx">Estimated next measurement</option></select></div>
+      <div id="xlegend"></div>
+    </div>
     <div class="row"><button id="f_reset" type="button">Reset filters</button></div>
     <h2>Latest forest type group</h2>
     <div id="legend"></div>
@@ -52,6 +65,7 @@
 </div>
 <footer id="footer" class="footer"></footer>
 <div id="drawer" class="hidden" role="dialog" aria-modal="false"></div>
+<div id="printinfo" class="printonly"></div>
 
 <template id="tpl-loc">
   <h3>Search by location <button class="close" type="button" aria-label="Close">×</button></h3>
@@ -84,6 +98,8 @@
 <script src="vendor/leaflet/1.9.4/leaflet.js"></script>
 <script src="vendor/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
 <script src="fia.js"></script>
+<script src="help.js"></script>
 <script src="map.js"></script>
+<script src="mapx.js"></script>
 </body>
 </html>

@@ -12,7 +12,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
-from . import core, plotdata
+from . import core, plotdata, summary
 from .core import dec, nz
 
 esc = lambda x: html.escape(str(x))
@@ -400,6 +400,15 @@ def build_pdf(con, ref, key, out_pdf):
         "<b>Codes.</b> Every coded value shown was found in the FIADB User Guide v9.4 or the REF tables.",
     ]
     caveats = [c for c in caveats if c]
+    # highlights, caveats and section intros: the same computations (fiasc.summary) and text (fiasc/help.json) as the site's plot page
+    SUMM = summary.for_key(con, ref, key)
+    if SUMM:
+        bul = [f"<b>{esc(b)}.</b> {esc(t)}" for b, t in SUMM["hl"]] or bul
+        caveats = [f"<b>{esc(b)}.</b> {esc(t)}" for b, t in SUMM["cav"]] + (
+            ["<b>Undecoded codes</b> (shown flagged, not guessed):<ul>" + "".join(f"<li>{esc(u)}</li>" for u in SUMM["undc"]) + "</ul>"] if SUMM["undc"] else []) + [
+            "<b>Public coordinates.</b> " + esc(hdr["coord_note"])]
+    HT = summary.help_text()["sections"]
+    intro_ = lambda k: f'<p class="muted">{esc(HT[k]["intro"])} ({esc(HT[k]["refs"])})</p>' if k in HT else ""
     CSS = f"""
 @page {{ size: letter portrait; margin: 0.6in;
   @top-left {{ content: "{esc(title)} · summary"; font: 7.5pt 'Segoe UI', Arial, sans-serif; color: #6b6a66; }}
@@ -443,7 +452,8 @@ table.inv td {{ text-align: center; }} table.inv td:first-child {{ text-align: l
               ("Stand age", f"{f(V[a]['age'], 0)} → {f(V[z]['age'], 0)}", "years (COND.STDAGE)")]
     KPI = "".join(f'<div class="kpi"><div class="l">{a}</div><div class="v">{b}</div><div class="u">{c}</div></div>' for a, b, c in kp)
     surveys = " · ".join(DATE[y] for y in YRS)
-    sec = lambda n, t, body: f"<section><h2>{n}. {t}</h2>{body}</section>"
+    SK = {"Survey summary": "survey", "Volume and carbon": "vc", "Species": "species", "Growth": "growth", "Mortality": "mort", "Invasive plants": "invh"}
+    sec = lambda n, t, body: f"<section><h2>{n}. {t}</h2>{intro_(SK[t]) if t in SK else ''}{body}</section>"
     H = f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><title>{esc(title)} summary</title><style>{CSS}</style></head><body>
 <h1>{esc(title)}</h1>
 <p class="sub">STATECD {hdr['statecd']} · UNITCD {hdr['unitcd']} · COUNTYCD {hdr['countycd']} · PLOT {hdr['plot']} · surveys: {esc(surveys)} ·

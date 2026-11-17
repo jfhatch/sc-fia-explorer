@@ -92,7 +92,8 @@ function updateCounts() {
   for (const o of $('#f_own').options) if (o.value) o.textContent = `${o.dataset.name} (${(own[o.value] || 0).toLocaleString()})`;
 }
 async function init() {
-  const [meta, P] = await Promise.all([loadMeta(), loadPlots(), loadCodes()]);
+  const [meta, P] = await Promise.all([loadMeta(), loadPlots(), loadCodes(), loadHelp()]);
+  viewSwitch($('#viewsw'));
   S.meta = meta; S.col = P.col; S.rows = P.rows;
   S.groupColor = Object.fromEntries(meta.groups.map(g => [g.code, g.color]));
   footer();
@@ -146,6 +147,7 @@ function passes(r) {
   const g = document.querySelector(`#legend input[data-grp="${r[c.g]}"]`);
   if (g && !g.checked) return false;
   if (S.attrKeys && !S.attrKeys.has(r[c.k])) return false;
+  if (window.MAPX && isExpert() && !window.MAPX.passes(r)) return false;
   return true;
 }
 function applyFilters() {
@@ -179,13 +181,13 @@ function setPin(key) {
   renderCount();
 }
 // compact popup headers; the full name is the tooltip
-const POP_COLS = [['Survey', 'Survey date', 0], ['Design', 'Design: annual (national design) or periodic', 0], ['BA', 'BA ft²/ac: live basal area per acre', 1],
-  ['TPA', 'TPA: live trees per acre', 1], ['C', 'C t/ac: aboveground carbon, tons per acre', 1], ['Died', 'Died: trees that died since the previous survey', 1],
-  ['Ingr.', 'Ingrowth: trees that grew into the tally since the previous survey', 1], ['Inv.', 'Invasives: number of invasive plant species recorded', 1]];
+// compact popup headers; each has an ⓘ with the full name, units and meaning (help.json)
+const POP_COLS = [['Survey', 'd:survey', 0], ['Design', 'd:design', 0], ['BA', 'd:ba', 1], ['TPA', 'd:tpa', 1], ['C', 'd:c', 1], ['Died', 'd:died_pop', 1],
+  ['Ingr.', 'd:ingrowth', 1], ['Inv.', 'd:inv_pop', 1]];
 async function openPopup(m) {
   if (!m._map) return;
   // as wide as the table needs on desktop; on narrow screens the table scrolls sideways inside the popup
-  const mw = Math.max(240, Math.min(600, map.getSize().x - 60));
+  const mw = Math.max(220, Math.min(600, map.getSize().x - 76));
   m.bindPopup('Loading…', { maxWidth: mw, minWidth: Math.min(290, mw) }).openPopup();
   try {
     const P = await getJSON(`p/${encodeURIComponent(m.key)}.json`);
@@ -200,7 +202,8 @@ async function openPopup(m) {
     }).join('');
     const r = rowOf(m.key), hb = isActive(r) ? '' : `<br>${histBadge(r[S.col.t])}`;
     m.setPopupContent(`<b>Plot ${esc(m.key)}</b>${hb}<br><span class="muted">public location ${P.la.toFixed(4)}, ${P.lo.toFixed(4)} (fuzzed)</span>
-      <div class="popscroll"><table><thead><tr>${POP_COLS.map(([s, full, n]) => `<th${n ? ' class="n"' : ''}><abbr title="${full}">${s}</abbr></th>`).join('')}</tr></thead>
+      ${window.MAPX && isExpert() ? window.MAPX.popupLine(m.key) : ''}
+      <div class="popscroll"><table><thead><tr>${POP_COLS.map(([s, k, n]) => th(k, { l: s, n, unit: false })).join('')}</tr></thead>
       <tbody>${rows}</tbody></table></div>
       <p style="margin:6px 0 0"><a href="${plotUrl(m.key)}">Open plot page →</a></p>`);
   } catch (e) { if (m.isPopupOpen()) m.setPopupContent('Could not load: ' + esc(e.message)); }
@@ -212,9 +215,23 @@ function focusKey(key, open = true) {
   const r = rowOf(key);
   if (!clusterOf(r).hasLayer(m)) setPin(key);
   const token = (focusKey.token = (focusKey.token || 0) + 1);
-  // the cluster plugin calls back after its zoom animation, which can be late on slow networks: open the popup only if
-  // this is still the latest request and the marker is on the map (otherwise Leaflet would pan a detached popup)
-  clusterOf(r).zoomToShowLayer(m, () => { if (open && token === focusKey.token && m._map) openPopup(m); });
+  // Not markercluster's zoomToShowLayer: it waits for a DOM icon (marker._icon or the parent cluster's icon), which canvas
+  // circle markers never have, so for a marker already shown on its own its callback never fired and no popup opened.
+  // Open only for the latest request, and only once the marker is on the map (Leaflet would otherwise pan a detached popup).
+  const go = () => {
+    if (!open || token !== focusKey.token) return;
+    if (m._map) openPopup(m); else m.once('add', () => { if (token === focusKey.token) openPopup(m); });
+  };
+  const cl = clusterOf(r);
+  if (cl.getVisibleParent(m) === m) { map.panTo(m.getLatLng(), { animate: false }); go(); return; }
+  // clustered: jump past disableClusteringAtZoom (12) without animation; the cluster re-renders on zoomend, then open
+  // the plugin re-renders over ~200 ms after the zoom (removing and re-adding markers, which would close an early popup):
+  // open when it reports 'animationend', or after a fallback delay if the zoom did not change
+  let done = false;
+  const after = () => { if (done) return; done = true; go(); };
+  cl.once('animationend', () => setTimeout(after, 0));
+  setTimeout(after, 700);
+  map.setView(m.getLatLng(), Math.max(map.getZoom(), 13), { animate: false });
 }
 function drawer(tplId) {
   const d = $('#drawer');
@@ -344,8 +361,8 @@ $('#attrbtn').onclick = () => {
     keys = res.map(r => r[c.k]);
     $('#a_map').disabled = !keys.length;
     const cn = Object.fromEntries(S.meta.counties.map(x => [x.code, x.name]));
-    $('#a_out').innerHTML = `<p>${res.length.toLocaleString()} plot location${res.length === 1 ? '' : 's'}${res.length > 2000 ? ' (first 2,000 listed)' : ''}.</p><div class="tables-wrap"><table><thead><tr><th>Plot</th><th>County</th>
-      <th>Forest type</th><th class="n">Age</th><th>Last visit</th><th class="n">BA</th></tr></thead><tbody>` + res.slice(0, 2000).map(r =>
+    $('#a_out').innerHTML = `<p>${res.length.toLocaleString()} plot location${res.length === 1 ? '' : 's'}${res.length > 2000 ? ' (first 2,000 listed)' : ''}.</p><div class="tables-wrap"><table><thead><tr>${th('d:plot')}${th('d:county')}
+      ${th('d:fortyp')}${th('d:age', { n: 1 })}${th('d:lastvisit')}${th('d:ba', { n: 1 })}</tr></thead><tbody>` + res.slice(0, 2000).map(r =>
       `<tr><td><a href="#" data-focus="${esc(r[c.k])}">${esc(r[c.k])}</a></td><td>${esc(cn[r[c.y]])}</td><td>${esc(ftName(r[c.f]))}</td><td class="n">${fmt(r[c.a], 0)}</td>
        <td>${esc(r[c.t])}</td><td class="n">${fmt(r[c.b])}</td></tr>`).join('') + '</tbody></table></div>';
     $('#a_out').querySelectorAll('[data-focus]').forEach(a => a.onclick = e => { e.preventDefault(); focusKey(a.dataset.focus); });
