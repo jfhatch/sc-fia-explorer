@@ -1,0 +1,67 @@
+{
+ "_about": "Codes not found in the FIADB v9.4 User Guide transcription (fia_codes.json), with the published sources checked. status 'decoded' is used only when a source explicitly defines the code; otherwise 'undecoded'.",
+ "TREE.AGENTCD": {
+  "81": {
+   "status": "undecoded",
+   "label": "undecoded: State-specific periodic code; no FIA source checked defines 81",
+   "range_context": "Every FIADB guide checked (v1.7 2004 to v9.4 2025) says 'Each FIA program records specific codes that may differ from one State to the next. These codes fall within the ranges listed below' and lists only 80 (v1.7: 'Human-caused (cultural, logging, accidental, etc.)'; v3.0-v9.4: 'Silvicultural or landclearing activity'). The Eastwide database manual (NC-151, 1992) lists the range '80-89 Logging'. These give the range, not a definition of 81.",
+   "evidence": "SC_TREE statewide: 32,719 of 32,721 AGENTCD 81 records are STATUSCD 3 (cut), 2 are STATUSCD 2; the code occurs only in periodic inventories INVYR 1968, 1978, 1986, 1993 (codes 82-85 occur alongside).",
+   "sources_checked": [
+    {
+     "source": "FIADB User Guide, Database Description v9.4 (Aug 2025), NFI",
+     "location": "sec. 3.1.27 AGENTCD, PDF p. 166",
+     "finding": "ranges only (00-80); no 81"
+    },
+    {
+     "source": "FIADB Description and Users Guide v1.7 (Alerich et al., Dec 2004)",
+     "location": "Tree table item 29 AGENTCD, PDF pp. 67-68 (printed 63-64)",
+     "finding": "ranges only; 80 = Human-caused (cultural, logging, accidental, etc.); no 81"
+    },
+    {
+     "source": "Forest Inventory Snapshot Database Description and Users Guide v2.1 (July 2006)",
+     "location": "Tree table item 28 AGENTCD, PDF pp. 82-83 (printed 68-69)",
+     "finding": "ranges only; no 81"
+    },
+    {
+     "source": "FIADB Description and Users Manual v3.0 rev. 1, Phase 2 (July 2008)",
+     "location": "Tree table item 28 AGENTCD, PDF p. 81",
+     "finding": "ranges only; 80 = Silvicultural or landclearing activity; no 81"
+    },
+    {
+     "source": "FIADB Description and Users Manual v4.0 rev. 2 DRAFT, Phase 2 (Dec 2009)",
+     "location": "Tree table item 27 AGENTCD, PDF pp. 105-106",
+     "finding": "ranges only; no 81"
+    },
+    {
+     "source": "FIADB Description and Users Manual v4.0, Phase 2 (RMRS-GTR-245, 2010)",
+     "location": "Tree table item 27 AGENTCD, PDF pp. 99-100 (printed 93-94)",
+     "finding": "ranges only; no 81"
+    },
+    {
+     "source": "FIADB Description and User Guide v6.0.2, Phase 2 (Apr/May 2014)",
+     "location": "Tree table item 27 AGENTCD, PDF p. 120",
+     "finding": "ranges only; no 81"
+    },
+    {
+     "source": "The Eastwide forest inventory data base: users manual (Hansen et al. 1992, GTR NC-151)",
+     "location": "Tree record item 17 DAMAGE, PDF p. 27 (printed 24)",
+     "finding": "ranges only; '80-89 Logging'; no 81"
+    },
+    {
+     "source": "RPA Tree-level Database User Guide (supplement to GTR WO-91)",
+     "location": "field list, PDF p. 35",
+     "finding": "lists AGENTCD as a field; no code values"
+    },
+    {
+     "source": "Forest Statistics for the Piedmont of South Carolina, 1993 (Southeastern Forest Experiment Station)",
+     "location": "whole document (text search)",
+     "finding": "describes harvest and causes of mortality in prose; no numeric codes"
+    }
+   ],
+   "not_retrieved": [
+    "Southeastern Forest Experiment Station periodic field manuals / code books for the SC 1986 and 1993 surveys: not found online (web searches; the station merged into the Southern Research Station in 1995). The SRS FIA work unit is the authority for State-specific codes.",
+    "FIADB User Guide v5.1.4 (2012), v7.0, v8.0 (2018) and v9.0.1: located in the Internet Archive index (fia.fs.fed.us/library/database-documentation) but downloads were refused (HTTP 429). v6.0.2 (2014) and v9.4 (2025), which bracket them, carry the same ranges-only table."
+   ]
+  }
+ }
+}

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>FIA plot</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="page">
+  <p class="noprint"><a href="index.html">← Map</a> · <a href="about.html">About &amp; caveats</a></p>
+  <h1 id="title">Loading…</h1>
+  <p class="muted" id="subtitle"></p>
+  <div class="actions noprint">
+    <button type="button" id="csv_trees">Tree history CSV</button>
+    <button type="button" id="csv_visits">Visit summary CSV</button>
+    <button type="button" id="print">Print summary</button>
+  </div>
+  <div class="note" id="notes"></div>
+
+  <h2>Visit timeline</h2>
+  <p class="muted" id="tldesc"></p>
+  <div class="timeline" id="timeline"></div>
+  <div id="predbox"></div>
+
+  <h2>Stand totals by visit</h2>
+  <div class="scroll" style="max-height:none"><table id="totals"></table></div>
+
+  <h2 class="noprint">Visit details <span class="muted" id="vsel"></span></h2>
+  <div class="tabs noprint" id="tabs"></div>
+  <div id="tab" class="noprint"></div>
+
+  <h2>History</h2>
+  <div id="hist">Loading…</div>
+</div>
+<footer id="footer" class="footer"></footer>
+<script src="vendor/plotly-7.1.0.min.js"></script>
+<script src="fia.js"></script>
+<script src="plot.js"></script>
+</body>
+</html>

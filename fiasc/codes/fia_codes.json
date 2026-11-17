@@ -1,0 +1,2779 @@
+{
+ "PLOT.PLOT_STATUS_CD": {
+  "section": "2.4.10",
+  "codes": {
+   "1": "Sampled - at least one accessible forest land condition present on plot.",
+   "2": "Sampled - no accessible forest land condition present on plot.",
+   "3": "Nonsampled."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "PLOT.PLOT_NONSAMPLE_REASN_CD": {
+  "section": "2.4.11",
+  "codes": {
+   "01": "Outside U.S. boundary - Entire plot is outside of the U.S. border.",
+   "02": "Denied access area - Access to the entire plot is denied by the legal owner, or by the owner of the only reasonable route to the plot.",
+   "03": "Hazardous - Entire plot cannot be accessed because of a hazard or danger.",
+   "05": "Lost data - Plot data file was discovered to be corrupt after a panel was completed and submitted for processing.",
+   "06": "Lost plot - Entire plot cannot be found.",
+   "07": "Wrong location - Previous plot can be found, but its placement is beyond the tolerance limits for plot location.",
+   "08": "Skipped visit - Entire plot skipped. This code is for office use only.",
+   "09": "Dropped intensified plot - Intensified plot dropped due to a change in grid density. This code is for office use only.",
+   "10": "Other - Entire plot not sampled due to a reason other than one of the specific reasons already listed.",
+   "11": "Ocean - Plot falls in ocean water below mean high tide line."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "PLOT.KINDCD": {
+  "section": "2.4.16",
+  "codes": {
+   "0": "Periodic inventory plot.",
+   "1": "Initial installation of a national design plot or resampling of a national design plot that was coded as nonsampled (PLOT_STATUS_CD = 3) at the previous visit.",
+   "2": "Remeasurement of previously installed national design plot.",
+   "3": "Replacement of previously installed national design plot.",
+   "4": "Modeled periodic inventory plot (Northeastern and North Central only)."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "PLOT.RDDISTCD": {
+  "section": "2.4.18",
+  "codes": {
+   "1": "100 ft or less.",
+   "2": "101 ft to 300 ft.",
+   "3": "301 ft to 500 ft.",
+   "4": "501 ft to 1000 ft.",
+   "5": "1001 ft to 1/2 mile.",
+   "6": "1/2 to 1 mile.",
+   "7": "1 to 3 miles.",
+   "8": "3 to 5 miles.",
+   "9": "Greater than 5 miles."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "PLOT.WATERCD": {
+  "section": "2.4.19",
+  "codes": {
+   "0": "None - no water sources within the sampled condition class(es).",
+   "1": "Permanent streams or ponds too small to qualify as noncensus water.",
+   "2": "Permanent water in the form of deep swamps, bogs, marshes without standing trees present and less than 1.0 acre in size, or with standing trees.",
+   "3": "Ditch/canal - human-made channels used as a means of moving water, e.g., for irrigation or drainage, which are too small to qualify as noncensus water.",
+   "4": "Temporary streams.",
+   "5": "Flood zones - evidence of flooding when bodies of water exceed their natural banks.",
+   "9": "Other temporary water."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "PLOT.GROW_TYP_CD": {
+  "section": "2.4.23",
+  "codes": {
+   "1": "Current annual.",
+   "2": "Periodic annual."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "PLOT.MORT_TYP_CD": {
+  "section": "2.4.24",
+  "codes": {
+   "1": "Current annual.",
+   "2": "Periodic annual."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "PLOT.KINDCD_NC": {
+  "section": "2.4.28",
+  "codes": {
+   "0": "New/lost.",
+   "6": "Remeasured.",
+   "8": "Old location but not remeasured.",
+   "20": "Skipped.",
+   "33": "Replacement of lost plot."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "PLOT.QA_STATUS": {
+  "section": "2.4.29",
+  "codes": {
+   "1": "Standard production plot",
+   "2": "Cold check - This code is for office use only.",
+   "3": "Reference plot (off grid) - This code is for office use only.",
+   "4": "Training/practice plot (off grid) - This code is for office use only.",
+   "5": "Botched plot file (disregard during data processing) - This code is for office use only.",
+   "6": "Blind check - This code is for office use only.",
+   "7": "Hot check - This is the same as standard production plot, but the measurement is taken under the supervision of a quality assurance crew."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "PLOT.MICROPLOT_LOC": {
+  "section": "2.4.36",
+  "codes": {
+   "OFFSET": "The microplot center is offset from the subplot center.",
+   "CENTER": "The microplot center is at the subplot center."
+  },
+  "oracle_type": "VARCHAR2(12)",
+  "numeric": false
+ },
+ "PLOT.SAMP_METHOD_CD": {
+  "section": "2.4.38",
+  "codes": {
+   "1": "Field visited, meaning a field crew physically examined the plot and recorded information at least about subplot 1 center condition.",
+   "2": "Remotely sensed, meaning a determination was made using some type of imagery that a field visit was not necessary."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "PLOT.SUBP_EXAMINE_CD": {
+  "section": "2.4.39",
+  "codes": {
+   "1": "Only subplot 1 center condition examined and all other subplots assumed (inferred) to be the same.",
+   "4": "All four subplots fully described (no assumptions/inferences)."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "PLOT.TOPO_POSITION_PNW": {
+  "section": "2.4.44",
+  "codes": {
+   "1": "Ridge top or mountain peak over 130 feet. Flat.",
+   "2": "Narrow ridge top or mountain peak over 130 feet wide. Convex.",
+   "3": "Side hill - upper 1/3. Convex.",
+   "4": "Side hill - middle 1/3. No rounding.",
+   "5": "Side hill - lower 1/3. Concave.",
+   "6": "Canyon bottom less than 660 feet wide. Concave.",
+   "7": "Bench, terrace or dry flat. Flat.",
+   "8": "Broad alluvial flat over 660 feet wide. Flat.",
+   "9": "Swamp or wet flat. Flat."
+  },
+  "oracle_type": "VARCHAR2(2)",
+  "numeric": false
+ },
+ "PLOT.NF_SAMPLING_STATUS_CD": {
+  "section": "2.4.45",
+  "codes": {
+   "0": "Nonforest plots / conditions are not inventoried.",
+   "1": "Nonforest plots / conditions are inventoried."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "PLOT.NF_PLOT_STATUS_CD": {
+  "section": "2.4.46",
+  "codes": {
+   "1": "Sampled - at least one accessible nonforest land condition present on the plot.",
+   "2": "Sampled - no nonforest land condition present on plot (i.e., plot is either census and/or noncensus water).",
+   "3": "Nonsampled nonforest."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "PLOT.NF_PLOT_NONSAMPLE_REASN_CD": {
+  "section": "2.4.47",
+  "codes": {
+   "02": "Denied access - Access to the entire plot is denied by the legal owner, or by the owner of the only reasonable route to the plot.",
+   "03": "Hazardous - Entire plot cannot be accessed because of a hazard or danger.",
+   "08": "Skipped visit - Entire plot skipped. This code is for office use only.",
+   "09": "Dropped intensified plot - Intensified plot dropped due to a change in grid density. This code is for office use only.",
+   "10": "Other - Entire plot not sampled due to a reason other than one of the specific reasons already listed."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "PLOT.P2VEG_SAMPLING_STATUS_CD": {
+  "section": "2.4.48",
+  "codes": {
+   "0": "Plot is not part of the P2 vegetation sample.",
+   "1": "P2 vegetation data are sampled only on accessible forest land conditions.",
+   "2": "P2 vegetation data are sampled on all accessible land conditions."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "PLOT.P2VEG_SAMPLING_LEVEL_DETAIL_CD": {
+  "section": "2.4.49",
+  "codes": {
+   "1": "Data collected for vegetation structure only.",
+   "2": "Vegetation structure data (LOD = 1) plus understory species composition data collected including up to four most abundant species per GROWTH_HABIT_CD per subplot.",
+   "3": "Vegetation structure data, understory species composition data (LOD = 2), plus up to four most abundant tree species (tally or non-tally) >=5 inches d.b.h. (d.r.c for woodland species) per GROWTH_HABIT_CD per subplot."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "PLOT.INVASIVE_SAMPLING_STATUS_CD": {
+  "section": "2.4.50",
+  "codes": {
+   "0": "Plot is not part of invasive plant sample.",
+   "1": "Invasive plant data are sampled only on accessible forest land conditions.",
+   "2": "Invasive plant data are sampled on all accessible land conditions."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "PLOT.INVASIVE_SPECIMEN_RULE_CD": {
+  "section": "2.4.51",
+  "codes": {
+   "0": "FIA work unit does not require specimen collection for invasive plants.",
+   "1": "FIA work unit requires specimen collection for invasive plants."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "PLOT.SUBPANEL": {
+  "section": "2.4.54",
+  "codes": {
+   "0": "Subpaneling not used.",
+   "1": "Subpanel1.",
+   "2": "Subpanel2."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "PLOT.DESIGNCD": {
+  "section": "2.4.17",
+  "codes": {
+   "1": "(All FIA work units) National plot design consists of four 24-foot fixed-radius subplots for trees [>=]5 inches d.b.h., and four 6.8-foot fixed-radius microplots for seedlings and trees [>=]1 and <5 inches d.b.h. Subplot 1 is the center plot, and subplots 2, 3, and 4 are located 120.0 feet, horizontal, at azimuths of 360, 120, and 240. The microplot center is 12 feet east of the subplot center. Four 58.9-foot fixed-radius macroplots are optional. A plot may sample more than one condition; condition boundaries are delineated (mapped).",
+   "210": "(SRS) Other plot design installed by previous research stations within the 13-State Southern area not described by DESIGNCD 211-219.",
+   "211": "(SRS) Ten variable-radius, 37.5 BAF points, 70 feet apart. Remeasure first 3 points of same design or new/replacement plot.",
+   "212": "(SRS) Five variable-radius, 37.5 BAF points, 70 feet apart. Remeasure first 5 points of DESIGNCD 211 or new/replacement plot.",
+   "213": "(SRS) Five variable-radius, 37.5 BAF points, 70 feet apart. Remeasure DESIGNCD 212.",
+   "214": "(SRS) Ten variable-radius, 37.5 BAF points, 66 feet apart. Remeasure same design or new/replacement plot.",
+   "215": "(SRS) Five variable-radius, 37.5 BAF points, 66 feet apart. Remeasure first 5 points of DESIGNCD 214 or new/replacement plot.",
+   "216": "(SRS) Ten variable-radius, 37.5 BAF points, 66 feet apart. Remeasure DESIGNCD 215.",
+   "217": "(SRS) Five point cluster plot, point 1 is 1/5th acre sawtimber plot and 1/10th acre poletimber plot, points 2-5 are 37.5 BAF prism points. No remeasurement.",
+   "218": "(SRS) Remeasurement of DESIGNCD 217, point 1 only. Used only for change estimates.",
+   "219": "(SRS) Three point, 2.5 BAF metric prism plot, points 25 meters apart. Remeasure same design or new/replacement plot.",
+   "220": "(SRS) Four 1/24 acre plots for trees [>=]5 inches d.b.h. and 4, 1/300 acre plots for seedlings and trees [>=]1 and <5 inches d.b.h. The 1/24 acre and 1/300 acre plots have common centers. Conditions are mapped and boundaries may be within the plots. Remeasurement plot not described by 221-229.",
+   "221": "(SRS) DESIGNCD 220. Remeasure same design or new/replacement plot.",
+   "222": "(SRS) DESIGNCD 220. Overlaid on and remeasurement of DESIGNCD 212 or 213.",
+   "223": "(SRS) DESIGNCD 220. Overlaid on and remeasurement of first 5 points of DESIGNCD 214 or 216.",
+   "230": "(SRS) DESIGNCD 1. Remeasurement plot not described by DESIGNCD 231-239.",
+   "231": "(SRS) DESIGNCD 1. Overlaid on and remeasurement of DESIGNCD 212 or DESIGNCD 213.",
+   "232": "(SRS) DESIGNCD 1. Overlaid on and remeasurement of first 5 points of DESIGNCD 214 or 216.",
+   "233": "(SRS) DESIGNCD 1. Overlaid on and remeasurement of DESIGNCD 220, 221, 222, or 223.",
+   "240": "(SRS) DESIGNCD 1. Collected in metric and converted to English in the database. Remeasurement not described by 241-249.",
+   "241": "(SRS) DESIGNCD 1. Collected in metric and converted to English in the database. Remeasure same design or new/replacement plot.",
+   "242": "(SRS) DESIGNCD 1. Overlaid on and remeasurement of DESIGNCD 219. Collected in metric and converted to English in the database.",
+   "299": "(SRS) Other plot design not described in DESIGNCD 200-298.",
+   "999": "(All FIA work units) A plot record created to represent reserved or other nonsampled or undersampled areas where there were no ground plots; placeholder for area estimates only; not used in tree-level estimates."
+  },
+  "note": "/ Appendix G",
+  "oracle_type": "NUMBER(4)",
+  "numeric": true
+ },
+ "COND.COND_STATUS_CD": {
+  "section": "2.5.9",
+  "codes": {
+   "1": "Accessible forest land - Land within the population of interest that can be occupied safely and has at least 10 percent canopy cover by live tally trees of any size or has had at least 10 percent canopy cover of live tally species in the past; at least 1.0 acre in size and 120.0 feet wide.",
+   "2": "Nonforest land - Land that has less than 10 percent canopy cover of tally tree species of any size (and, for afforested land, fewer than 150 established trees per acre); or land with sufficient cover but classified as nonforest land use (see PRESNFCD). Includes other wooded land.",
+   "3": "Noncensus water - Lakes, reservoirs, ponds, and similar bodies of water 1.0 acre to 4.5 acre in size. Rivers, streams, canals, etc., 30.0 feet to 200 feet wide.",
+   "4": "Census water - Lakes, reservoirs, ponds, and similar bodies of water 4.5 acre in size and larger; and rivers, streams, canals, etc., more than 200 feet wide.",
+   "5": "Nonsampled, possibility of forest land - Any portion of a plot within accessible forest land that cannot be sampled is delineated as a separate condition. Reason in COND_NONSAMPLE_REASN_CD."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "COND.COND_NONSAMPLE_REASN_CD": {
+  "section": "2.5.10",
+  "codes": {
+   "01": "Outside U.S. boundary - Condition class is outside the U.S. border.",
+   "02": "Denied access area - Access to the condition class is denied by the legal owner, or by the owner of the only reasonable route to the condition class.",
+   "03": "Hazardous situation - Condition class cannot be accessed because of a hazard or danger.",
+   "05": "Lost data - The data file was discovered to be corrupt after a panel was completed and submitted for processing. This code is for office use only.",
+   "06": "Lost plot - Entire plot cannot be found.",
+   "07": "Wrong location - Previous plot can be found, but its placement is beyond the tolerance limits for plot location.",
+   "08": "Skipped visit - Entire plot skipped. This code is for office use only.",
+   "09": "Dropped intensified plot - Intensified plot dropped due to a change in grid density. This code is for office use only.",
+   "10": "Other - Condition class not sampled due to a reason other than one of the specific reasons listed.",
+   "11": "Ocean - Condition falls in ocean water below mean high tide line."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.RESERVCD": {
+  "section": "2.5.11",
+  "codes": {
+   "0": "Not reserved.",
+   "1": "Reserved."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.OWNCD": {
+  "section": "2.5.12",
+  "codes": {
+   "11": "National Forest.",
+   "12": "National Grassland and/or Prairie.",
+   "13": "Other Forest Service land.",
+   "21": "National Park Service.",
+   "22": "Bureau of Land Management.",
+   "23": "Fish and Wildlife Service.",
+   "24": "Departments of Defense/Energy.",
+   "25": "Other Federal.",
+   "31": "State including State public universities.",
+   "32": "Local (County, Municipality, etc.) including water authorities.",
+   "33": "Other non-Federal public.",
+   "46": "Undifferentiated private and Native American.",
+   "41": "(Detailed private code; not available in this database - FIA confidentiality policy) Corporate, including Native Corporations in Alaska and private universities.",
+   "42": "(Detailed private code; not available in this database) Non-governmental conservation/natural resources organization.",
+   "43": "(Detailed private code; not available in this database) Unincorporated local partnership/association/club.",
+   "44": "(Detailed private code; not available in this database) Native American.",
+   "45": "(Detailed private code; not available in this database) Individual and family, including trusts, estates, and family partnerships."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.OWNGRPCD": {
+  "section": "2.5.13",
+  "codes": {
+   "10": "Forest Service (OWNCD = 11, 12, 13).",
+   "20": "Other Federal (OWNCD 21, 22, 23, 24, 25).",
+   "30": "State and local government (OWNCD = 31, 32, 33).",
+   "40": "Private (OWNCD = 41, 42, 43, 44, 45, 46). Note: includes Native American lands."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.MAPDEN": {
+  "section": "2.5.17",
+  "codes": {
+   "1": "Initial tree density class.",
+   "2": "Density class 2 - density different than density of the condition assigned a tree density class of 1.",
+   "3": "Density class 3 - density different than densities of the conditions assigned tree density classes of 1 and 2."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "COND.STDSZCD": {
+  "section": "2.5.19",
+  "codes": {
+   "1": "Large diameter - Stands with an all live stocking value of at least 10 (base 100); with more than 50 percent of the stocking in medium and large diameter trees; and with the stocking of large diameter trees equal to or greater than the stocking of medium diameter trees.",
+   "2": "Medium diameter - Stands with an all live stocking value of at least 10 (base 100); with more than 50 percent of the stocking in medium and large diameter trees; and with the stocking of large diameter trees less than the stocking of medium diameter trees.",
+   "3": "Small diameter - Stands with an all live stocking value of at least 10 (base 100) on which at least 50 percent of the stocking is in small diameter trees.",
+   "5": "Nonstocked - Forest land with all live stocking value <10."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.FLDSZCD": {
+  "section": "2.5.20",
+  "codes": {
+   "0": "Nonstocked - <10 percent stocked by trees, seedlings, and saplings (or <10 percent canopy cover where stocking standards are not available).",
+   "1": "[<=]4.9 inches (seedlings/saplings). At least 10 percent stocking and at least 2/3 of the canopy cover is in trees <5.0 inches d.b.h./d.r.c.",
+   "2": "5.0-8.9 inches (softwoods and woodland trees)/ 5.0-10.9 inches (hardwoods).",
+   "3": "9.0-19.9 inches (softwoods and woodland trees)/ 11.0-19.9 inches (hardwoods).",
+   "4": "20.0-39.9 inches.",
+   "5": "40.0+ inches."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.SITECLCD": {
+  "section": "2.5.21",
+  "codes": {
+   "1": "225+ cubic feet/acre/year.",
+   "2": "165-224 cubic feet/acre/year.",
+   "3": "120-164 cubic feet/acre/year.",
+   "4": "85-119 cubic feet/acre/year.",
+   "5": "50-84 cubic feet/acre/year.",
+   "6": "20-49 cubic feet/acre/year.",
+   "7": "0-19 cubic feet/acre/year."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.SITECLCDEST": {
+  "section": "2.5.63",
+  "codes": {
+   "1": "225+ cubic feet/acre/year.",
+   "2": "165-224 cubic feet/acre/year.",
+   "3": "120-164 cubic feet/acre/year.",
+   "4": "85-119 cubic feet/acre/year.",
+   "5": "50-84 cubic feet/acre/year.",
+   "6": "20-49 cubic feet/acre/year.",
+   "7": "0-19 cubic feet/acre/year."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.SITECL_METHOD": {
+  "section": "2.5.65",
+  "codes": {
+   "1": "Tree measurement (length, age, etc.) collected during this inventory.",
+   "2": "Tree measurement (length, age, etc.) collected during a previous inventory.",
+   "3": "Site index or site productivity class estimated either in the field or office.",
+   "4": "Site index or site productivity class estimated by the height-intercept method during this inventory.",
+   "5": "Site index or site productivity class estimated using multiple site trees.",
+   "6": "Site index or site productivity class estimated using default values."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.STDORGCD": {
+  "section": "2.5.25",
+  "codes": {
+   "0": "Natural stands.",
+   "1": "Clear evidence of artificial regeneration."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.PROP_BASIS": {
+  "section": "2.5.27",
+  "codes": {
+   "SUBP": "Subplots (24.0-foot radius per subplot).",
+   "MACR": "Macroplots (58.9-foot radius per subplot)."
+  },
+  "oracle_type": "VARCHAR2(12)",
+  "numeric": false
+ },
+ "COND.PHYSCLCD": {
+  "section": "2.5.34",
+  "codes": {
+   "11": "Xeric - Dry Tops - Ridge tops with thin rock outcrops and considerable exposure to sun and wind.",
+   "12": "Xeric - Dry Slopes - Slopes with thin rock outcrops and considerable exposure to sun and wind.",
+   "13": "Xeric - Deep Sands - Sites with a deep, sandy surface subject to rapid loss of moisture following precipitation.",
+   "19": "Xeric - Other Xeric - All dry physiographic sites not described above.",
+   "21": "Mesic - Flatwoods - Flat or fairly level sites outside of floodplains. Excludes deep sands and wet, swampy sites.",
+   "22": "Mesic - Rolling Uplands - Hills and gently rolling, undulating terrain and associated small streams.",
+   "23": "Mesic - Moist Slopes and Coves - Moist slopes and coves with relatively deep, fertile soils.",
+   "24": "Mesic - Narrow floodplains/Bottomlands - Floodplains and bottomlands less than 1/4 mile in width along rivers and streams.",
+   "25": "Mesic - Broad Floodplains/Bottomlands - Floodplains and bottomlands 1/4-mile or wider along rivers and streams.",
+   "29": "Mesic - Other Mesic - All moderately moist physiographic sites not described above.",
+   "31": "Hydric - Swamps/Bogs - Low, wet, flat, forested areas usually quite extensive that are flooded for long periods except during periods of extreme drought.",
+   "32": "Hydric - Small Drains - Narrow, stream-like, wet strands of forest land often without a well-defined stream channel.",
+   "33": "Hydric - Bays and wet pocosins - Low, wet, boggy sites characterized by peaty or organic soils.",
+   "34": "Hydric - Beaver ponds.",
+   "35": "Hydric - Cypress ponds.",
+   "36": "Hydric - Forest or Nonforest over Permafrost.",
+   "39": "Hydric - Other hydric - All other hydric physiographic sites."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.GSSTKCD": {
+  "section": "2.5.35",
+  "codes": {
+   "1": "Overstocked (100+%).",
+   "2": "Fully stocked (60-99%).",
+   "3": "Medium stocked (35-59%).",
+   "4": "Poorly stocked (10-34%).",
+   "5": "Nonstocked (0-9%)."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true,
+  "alt_codes_absolute_stocking_periodic": {
+   "1": "Overstocked (130+%).",
+   "2": "Fully stocked (100 - 129.9%).",
+   "3": "Medium stocked (60 - 99.9%).",
+   "4": "Poorly stocked (16.7 - 59.9%).",
+   "5": "Nonstocked (<16.7%)."
+  },
+  "note": "Second table in 2.5.35 labelled 'Absolute stocking value - used for some periodic inventory data' stored in alt_codes_absolute_stocking_periodic."
+ },
+ "COND.ALSTKCD": {
+  "section": "2.5.36",
+  "codes": {
+   "1": "Overstocked (100+%).",
+   "2": "Fully stocked (60-99%).",
+   "3": "Medium stocked (35-59%).",
+   "4": "Poorly stocked (10-34%).",
+   "5": "Nonstocked (0-9%)."
+  },
+  "note": "classes 'as listed for GSSTKCD above'",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.DSTRBCD1": {
+  "section": "2.5.37",
+  "codes": {
+   "0": "No visible disturbance.",
+   "10": "Insect damage.",
+   "11": "Insect damage to understory vegetation.",
+   "12": "Insect damage to trees, including seedlings and saplings.",
+   "20": "Disease damage.",
+   "21": "Disease damage to understory vegetation.",
+   "22": "Disease damage to trees, including seedlings and saplings.",
+   "30": "Fire damage (from crown and ground fire, either prescribed or natural).",
+   "31": "Ground fire damage.",
+   "32": "Crown fire damage.",
+   "40": "Animal damage.",
+   "41": "Beaver (includes flooding caused by beaver).",
+   "42": "Porcupine.",
+   "43": "Deer/ungulate.",
+   "44": "Bear (core optional).",
+   "45": "Rabbit (core optional).",
+   "46": "Domestic animal/livestock (includes grazing).",
+   "50": "Weather damage.",
+   "51": "Ice.",
+   "52": "Wind (includes hurricane, tornado).",
+   "53": "Flooding (weather induced).",
+   "54": "Drought.",
+   "60": "Vegetation (suppression, competition, vines).",
+   "70": "Unknown / not sure / other.",
+   "80": "Human-induced damage - any significant threshold of human-caused damage not described in the DISTURBANCE codes or in the TREATMENT codes.",
+   "90": "Geologic disturbances.",
+   "91": "Landslide.",
+   "92": "Avalanche track.",
+   "93": "Volcanic blast zone.",
+   "94": "Other geologic event.",
+   "95": "Earth movement / avalanches."
+  },
+  "note": "same list for DSTRBCD2 2.5.39, DSTRBCD3 2.5.41; codes 11, 12, 21, 22 valid where PLOT.MANUAL >=2.0",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.DSTRBCD2": {
+  "section": "2.5.39",
+  "codes": {
+   "0": "No visible disturbance.",
+   "10": "Insect damage.",
+   "11": "Insect damage to understory vegetation.",
+   "12": "Insect damage to trees, including seedlings and saplings.",
+   "20": "Disease damage.",
+   "21": "Disease damage to understory vegetation.",
+   "22": "Disease damage to trees, including seedlings and saplings.",
+   "30": "Fire damage (from crown and ground fire, either prescribed or natural).",
+   "31": "Ground fire damage.",
+   "32": "Crown fire damage.",
+   "40": "Animal damage.",
+   "41": "Beaver (includes flooding caused by beaver).",
+   "42": "Porcupine.",
+   "43": "Deer/ungulate.",
+   "44": "Bear (core optional).",
+   "45": "Rabbit (core optional).",
+   "46": "Domestic animal/livestock (includes grazing).",
+   "50": "Weather damage.",
+   "51": "Ice.",
+   "52": "Wind (includes hurricane, tornado).",
+   "53": "Flooding (weather induced).",
+   "54": "Drought.",
+   "60": "Vegetation (suppression, competition, vines).",
+   "70": "Unknown / not sure / other.",
+   "80": "Human-induced damage - any significant threshold of human-caused damage not described in the DISTURBANCE codes or in the TREATMENT codes.",
+   "90": "Geologic disturbances.",
+   "91": "Landslide.",
+   "92": "Avalanche track.",
+   "93": "Volcanic blast zone.",
+   "94": "Other geologic event.",
+   "95": "Earth movement / avalanches."
+  },
+  "note": "see DSTRBCD1",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.DSTRBCD3": {
+  "section": "2.5.41",
+  "codes": {
+   "0": "No visible disturbance.",
+   "10": "Insect damage.",
+   "11": "Insect damage to understory vegetation.",
+   "12": "Insect damage to trees, including seedlings and saplings.",
+   "20": "Disease damage.",
+   "21": "Disease damage to understory vegetation.",
+   "22": "Disease damage to trees, including seedlings and saplings.",
+   "30": "Fire damage (from crown and ground fire, either prescribed or natural).",
+   "31": "Ground fire damage.",
+   "32": "Crown fire damage.",
+   "40": "Animal damage.",
+   "41": "Beaver (includes flooding caused by beaver).",
+   "42": "Porcupine.",
+   "43": "Deer/ungulate.",
+   "44": "Bear (core optional).",
+   "45": "Rabbit (core optional).",
+   "46": "Domestic animal/livestock (includes grazing).",
+   "50": "Weather damage.",
+   "51": "Ice.",
+   "52": "Wind (includes hurricane, tornado).",
+   "53": "Flooding (weather induced).",
+   "54": "Drought.",
+   "60": "Vegetation (suppression, competition, vines).",
+   "70": "Unknown / not sure / other.",
+   "80": "Human-induced damage - any significant threshold of human-caused damage not described in the DISTURBANCE codes or in the TREATMENT codes.",
+   "90": "Geologic disturbances.",
+   "91": "Landslide.",
+   "92": "Avalanche track.",
+   "93": "Volcanic blast zone.",
+   "94": "Other geologic event.",
+   "95": "Earth movement / avalanches."
+  },
+  "note": "see DSTRBCD1",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.TRTCD1": {
+  "section": "2.5.43",
+  "codes": {
+   "00": "No observable treatment.",
+   "10": "Cutting - The removal of one or more trees from a stand.",
+   "20": "Site preparation - Clearing, slash burning, chopping, disking, bedding, or other practices clearly intended to prepare a site for either natural or artificial regeneration.",
+   "30": "Artificial regeneration - Following a disturbance or treatment (usually cutting), a new stand where at least 50 percent of the live trees present resulted from planting or direct seeding.",
+   "40": "Natural regeneration - Following a disturbance or treatment (usually cutting), a new stand where at least 50 percent of the live trees present (of any size) were established through the growth of existing trees and/or natural seeding or sprouting.",
+   "50": "Other silvicultural treatment - The use of fertilizers, herbicides, girdling, pruning, or other activities (not covered by codes 10-40) designed to improve the commercial value of the residual stand; or chaining."
+  },
+  "note": "same list for TRTCD2 2.5.45, TRTCD3 2.5.47",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.TRTCD2": {
+  "section": "2.5.45",
+  "codes": {
+   "00": "No observable treatment.",
+   "10": "Cutting - The removal of one or more trees from a stand.",
+   "20": "Site preparation - Clearing, slash burning, chopping, disking, bedding, or other practices clearly intended to prepare a site for either natural or artificial regeneration.",
+   "30": "Artificial regeneration - Following a disturbance or treatment (usually cutting), a new stand where at least 50 percent of the live trees present resulted from planting or direct seeding.",
+   "40": "Natural regeneration - Following a disturbance or treatment (usually cutting), a new stand where at least 50 percent of the live trees present (of any size) were established through the growth of existing trees and/or natural seeding or sprouting.",
+   "50": "Other silvicultural treatment - The use of fertilizers, herbicides, girdling, pruning, or other activities (not covered by codes 10-40) designed to improve the commercial value of the residual stand; or chaining."
+  },
+  "note": "see TRTCD1",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.TRTCD3": {
+  "section": "2.5.47",
+  "codes": {
+   "00": "No observable treatment.",
+   "10": "Cutting - The removal of one or more trees from a stand.",
+   "20": "Site preparation - Clearing, slash burning, chopping, disking, bedding, or other practices clearly intended to prepare a site for either natural or artificial regeneration.",
+   "30": "Artificial regeneration - Following a disturbance or treatment (usually cutting), a new stand where at least 50 percent of the live trees present resulted from planting or direct seeding.",
+   "40": "Natural regeneration - Following a disturbance or treatment (usually cutting), a new stand where at least 50 percent of the live trees present (of any size) were established through the growth of existing trees and/or natural seeding or sprouting.",
+   "50": "Other silvicultural treatment - The use of fertilizers, herbicides, girdling, pruning, or other activities (not covered by codes 10-40) designed to improve the commercial value of the residual stand; or chaining."
+  },
+  "note": "see TRTCD1",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.PRESNFCD": {
+  "section": "2.5.49",
+  "codes": {
+   "10": "Agricultural land.",
+   "11": "Cropland.",
+   "12": "Pasture (improved through cultural practices).",
+   "13": "Idle farmland.",
+   "16": "Maintained wildlife opening.",
+   "17": "Windbreak/Shelterbelt.",
+   "20": "Rangeland.",
+   "30": "Developed.",
+   "31": "Cultural (business, residential, other intense human activity).",
+   "32": "Rights-of-way (improved road, railway, power line).",
+   "40": "Other (undeveloped beach, marsh, bog, snow, ice).",
+   "41": "Nonvegetated.",
+   "42": "Wetland.",
+   "43": "Beach.",
+   "45": "Nonforest-Chaparral.",
+   "14": "(Detailed code not available in this database; included in code 10) Orchard.",
+   "15": "(Detailed code not available in this database; included in code 10) Christmas tree plantation.",
+   "33": "(Detailed code not available in this database; included in code 30) Recreation (park, golf course, ski run).",
+   "34": "(Detailed code not available in this database; included in code 30) Mining."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.MIXEDCONFCD": {
+  "section": "2.5.61",
+  "codes": {
+   "Y": "Yes, the condition is a mixed conifer site in California.",
+   "N": "No, the condition is not a mixed conifer site in California."
+  },
+  "oracle_type": "VARCHAR2(1)",
+  "numeric": false
+ },
+ "COND.STUMP_CD_PNWRS": {
+  "section": "2.5.84",
+  "codes": {
+   "Y": "Yes, evidence of cutting or management exists; stumps are present.",
+   "N": "No, evidence of cutting was not observed; stumps are not present."
+  },
+  "oracle_type": "VARCHAR2(1)",
+  "numeric": false
+ },
+ "COND.FIRE_SRS": {
+  "section": "2.5.85",
+  "codes": {
+   "0": "No evidence of fire since last survey.",
+   "1": "Evidence of burning (either prescribed or wildfire)."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "COND.GRAZING_SRS": {
+  "section": "2.5.86",
+  "codes": {
+   "0": "No evidence of livestock use (by domestic animals).",
+   "1": "Evidence of grazing (including dung, tracks, trails, etc.)."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "COND.HARVEST_TYPE1_SRS": {
+  "section": "2.5.87",
+  "codes": {
+   "11": "Clearcut harvest - The removal of the majority of the merchantable trees in a stand; residual stand stocking is under 50 percent.",
+   "12": "Partial harvest - Removal primarily consisting of highest quality trees (e.g., uneven aged, group selection, high grading, species selection).",
+   "13": "Seed-tree/shelterwood harvest - Crop trees are harvested leaving seed source trees either in a shelterwood or seed tree. Also includes the final harvest of the seed trees.",
+   "14": "Commercial thinning - The removal of trees (usually poletimber sized) from poletimber-sized stands leaving sufficient stocking of growing-stock trees.",
+   "15": "Timber stand improvement (cut trees only) - non-commercial cutting applied to an immature stand that leaves sufficient stocking.",
+   "16": "Salvage cutting - The harvesting of dead or damaged trees or of trees in danger of being killed by insects, disease, flooding, or other factors."
+  },
+  "note": "HARVEST_TYPE2_SRS / HARVEST_TYPE3_SRS same list",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.LAND_USE_SRS": {
+  "section": "2.5.90",
+  "codes": {
+   "01": "Timberland (SITECLCD = 1, 2, 3, 4, 5, or 6).",
+   "02": "Other forest land (SITECLCD = 7).",
+   "10": "Agricultural land - Land managed for crops, pasture, or other agricultural use and is not better described by one of the following detailed codes.",
+   "11": "Cropland.",
+   "12": "Pasture (improved through cultural practices).",
+   "13": "Idle farmland.",
+   "14": "Orchard.",
+   "15": "Christmas tree plantation.",
+   "16": "Maintained wildlife openings.",
+   "17": "Windbreak/Shelterbelt.",
+   "20": "Rangeland - Land primarily composed of grasses, forbs, or shrubs.",
+   "30": "Developed - Land used primarily by humans for purposes other than forestry or agriculture and is not better described by one of the following detailed codes.",
+   "31": "Cultural - business, residential, and other places of intense human activity.",
+   "32": "Rights-of-way - improved roads, railway, power lines, maintained canal.",
+   "33": "Recreation - parks, skiing, golf courses.",
+   "34": "Mining.",
+   "40": "Other - Land parcels greater than 1.0 acre in size and greater than 120.0 feet wide that do not fall into one of the uses described above or below.",
+   "41": "Nonvegetated.",
+   "42": "Wetland.",
+   "43": "Beach.",
+   "45": "Nonforest - Chaparral.",
+   "91": "Census Water - Lakes, reservoirs, ponds, and similar bodies of water 4.5 acres in size and larger; and rivers, streams, canals, etc., 30 to 200 feet wide. [as printed]",
+   "92": "Noncensus water - Lakes, reservoirs, ponds, and similar bodies of water 1.0 acre to 4.5 acres in size. Rivers, streams, canals, etc., more than 200 feet wide. [as printed]",
+   "99": "Nonsampled - Condition not sampled (see COND_NONSAMPLE_REASN_CD for exact reason)."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.OPERABILITY_SRS": {
+  "section": "2.5.91",
+  "codes": {
+   "0": "No problems.",
+   "1": "Seasonal access due to water conditions in wet weather.",
+   "2": "Mixed wet and dry areas typical of multi-channeled streams punctuated with dry islands.",
+   "3": "Broken terrain, cliffs, gullies, outcroppings, etc. that would severely limit equipment, access or use.",
+   "4": "Year-round water problems (includes islands).",
+   "5": "Slopes 20-40 percent.",
+   "6": "Slope greater than 40 percent."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.STAND_STRUCTURE_SRS": {
+  "section": "2.5.92",
+  "codes": {
+   "0": "Nonstocked - The condition is less than 10 percent stocked.",
+   "1": "Single-storied - Most of the dominant/codominant tree crowns form a single canopy.",
+   "2": "Two-storied - The dominant/codominant tree crowns form two distinct canopy layers or stories.",
+   "3": "Multi-storied - More than two recognizable levels characterize the crown canopy."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.NF_COND_STATUS_CD": {
+  "section": "2.5.93",
+  "codes": {
+   "2": "Accessible nonforest land.",
+   "5": "Nonsampled nonforest."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "COND.NF_COND_NONSAMPLE_REASN_CD": {
+  "section": "2.5.94",
+  "codes": {
+   "02": "Denied access - Any area within the sampled area of a plot to which access is denied by the legal owner, or by the owner of the only reasonable route to the plot.",
+   "03": "Hazardous situation - Any area within the sampled area on plot that cannot be accessed because of a hazard or danger.",
+   "10": "Other - Condition class not sampled due to a reason other than one of the specific reasons listed."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.CANOPY_CVR_SAMPLE_METHOD_CD": {
+  "section": "2.5.95",
+  "codes": {
+   "1": "Ocular method.",
+   "2": "Subplot method. Crew measures the crowns of all live trees, seedlings, and saplings on each of the four 1/24 acre subplots.",
+   "3": "Acre method. Crew samples all live, dead, and missing tree canopies on the one-acre sample plot.",
+   "4": "Sub-acre method. Used only when the acre or subplot methods cannot be established due to the condition's shape, dimensions or accessibility.",
+   "11": "Dot grid method. 109 dots systematically arranged within the 144 foot radius prefield plot.",
+   "12": "Ocular image-based assessment. Only used for plots that fall in the ocean or when the dot grid method is not possible.",
+   "13": "Other image-based assessment. Used when the codes 11 and 12 do not apply.",
+   "14": "No canopy cover estimate possible (lacking or poor-quality imagery)."
+  },
+  "note": "codes 1-4 field-measured; 11-14 generated from imagery",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.OWNSUBCD": {
+  "section": "2.5.99",
+  "codes": {
+   "1": "State forestry agency.",
+   "2": "State wildlife agency.",
+   "3": "State park agency.",
+   "4": "Other State lands."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "COND.INDUSTRIALCD_FIADB": {
+  "section": "2.5.100",
+  "codes": {
+   "0": "Non-industrial.",
+   "1": "Industrial."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "COND.RESERVCD_5": {
+  "section": "2.5.101",
+  "codes": {
+   "0": "Not reserved.",
+   "1": "Reserved."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "COND.ADMIN_WITHDRAWN_CD": {
+  "section": "2.5.102",
+  "codes": {
+   "0": "Not administratively withdrawn.",
+   "1": "Administratively withdrawn."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "COND.CHAINING_CD": {
+  "section": "2.5.103",
+  "codes": {
+   "0": "No.",
+   "1": "Yes."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "COND.LAND_COVER_CLASS_CD_RET": {
+  "section": "2.5.104",
+  "codes": {
+   "01": "Treeland: trees provide 10% or greater canopy cover and are part of the dominant (uppermost) vegetation layer.",
+   "02": "Shrubland: shrubs or subshrubs provide 10% or greater cover and are part of the dominant vegetation layer, not Treeland.",
+   "03": "Grassland: herbaceous vegetation provide 10% or greater cover and are part of the dominant vegetation layer, not Treeland or Shrubland.",
+   "04": "Non-vascular Vegetation: non-vascular vegetation provide 10% or greater cover.",
+   "05": "Mixed Vegetation: 10% or greater vegetative cover but no one life form has 10% or more cover.",
+   "06": "Agricultural Vegetation: dominated by vegetation grown for the production of crops.",
+   "07": "Developed, Vegetated: covered by vegetation with highly manipulated growth forms, but not Agricultural.",
+   "08": "Barren: Natural areas of limited plant life (<10%).",
+   "09": "Developed: covered with constructed materials with limited plant life (<10%).",
+   "10": "Water: persistently covered and predominated by water and have <10% emergent vegetative cover."
+  },
+  "note": "retired when PLOT.MANUAL >=8.0",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.LAND_COVER_CLASS_CD": {
+  "section": "2.5.149",
+  "codes": {
+   "01": "Tree Cover: live trees provide 10% or greater canopy cover and are part of the dominant (uppermost) vegetation layer.",
+   "02": "Shrub Cover: live shrubs or subshrubs provide 10% or greater cover and are part of the dominant layer, not Tree Cover.",
+   "03": "Herbaceous Cover: live herbaceous vegetation provides 10% or greater cover and is part of the dominant layer, not Tree or Shrub Cover.",
+   "04": "Non-vascular Vegetation Cover: non-vascular vegetation provides 10% or greater cover.",
+   "05": "Mixed Vegetation Cover: 10% or greater live vegetative cover but no one life form has 10% or more cover.",
+   "08": "Barren: predominately bare rock, gravel, sand, silt, clay, or other earthen material, <10% vegetation cover.",
+   "09": "Impervious: predominantly constructed materials, <10% vegetation cover.",
+   "10": "Water: persistently covered and predominated by water and have <10% emergent vegetative cover.",
+   "12": "Unknown: No classification was possible."
+  },
+  "note": "implemented PLOT.MANUAL = 8.0",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "COND.AFFORESTATION_CD": {
+  "section": "2.5.105",
+  "codes": {
+   "0": "No.",
+   "1": "Yes."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "COND.PREV_AFFORESTATION_CD": {
+  "section": "2.5.106",
+  "codes": {
+   "0": "No.",
+   "1": "Yes."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "COND.FOREST_COND_STATUS_CHANGE_CD": {
+  "section": "2.5.157",
+  "codes": {
+   "0": "No change - the condition is not a new forested condition nor a new condition resulting from a previously forested condition no longer qualifying, or the condition was previously not field visited or was previously classified as non-sampled.",
+   "1": "Physical changes - condition status changed due to actual on-the-ground physical change either natural or human-caused.",
+   "2": "Crew error - condition status changed due to a previous crew's error.",
+   "3": "Procedural changes - condition status changed due to a change in variable definition or procedures."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SUBPLOT.SUBP_STATUS_CD": {
+  "section": "2.6.10",
+  "codes": {
+   "1": "Sampled - at least one accessible forest land condition present on subplot.",
+   "2": "Sampled - no accessible forest land condition present on subplot.",
+   "3": "Nonsampled - possibility of forest land."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SUBPLOT.POINT_NONSAMPLE_REASN_CD": {
+  "section": "2.6.11",
+  "codes": {
+   "01": "Outside U.S. boundary - Entire subplot (or macroplot) is outside of the U.S. border.",
+   "02": "Denied access area - Access to the entire subplot (or macroplot) is denied by the legal owner, or by the owner of the only reasonable route to the subplot (or macroplot).",
+   "03": "Hazardous situation - Entire subplot (or macroplot) cannot be accessed because of a hazard or danger.",
+   "04": "Time limitation - Entire subplot (or macroplot) cannot be sampled due to a time restriction.",
+   "05": "Lost data - The plot data file was discovered to be corrupt after a panel was completed and submitted for processing.",
+   "06": "Lost plot - Entire plot cannot be found. Used for the four subplots that are required for this plot.",
+   "07": "Wrong location - Previous plot can be found, but its placement is beyond the tolerance limits for plot location.",
+   "08": "Skipped visit - Entire plot skipped. This code is for office use only.",
+   "09": "Dropped intensified plot - Intensified plot dropped due to a change in grid density. This code is for office use only.",
+   "10": "Other - Entire subplot (or macroplot) not sampled due to a reason other than one of the specific reasons already listed.",
+   "11": "Ocean - Subplot/macroplot falls in ocean water below mean high tide line."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "SUBPLOT.P2A_GRM_FLG": {
+  "section": "2.6.19",
+  "codes": {
+   "Y": "Subplot is part of a periodic inventory needed for change (GRM) estimation; otherwise blank (null)."
+  },
+  "note": "described in text, no code table",
+  "oracle_type": "VARCHAR2(1)",
+  "numeric": false
+ },
+ "SUBPLOT.ROOT_DIS_SEV_CD_PNWRS": {
+  "section": "2.6.28",
+  "codes": {
+   "0": "No evidence of root disease visible within 50 feet of the 58.9 foot macroplot.",
+   "1": "Root disease present within 50 feet of the macroplot, but no evidence of disease on the macroplot.",
+   "2": "Minor evidence of root disease on the macroplot. Little or no detectable reduction in canopy closure or volume.",
+   "3": "Canopy reduction evident, up to 20 percent.",
+   "4": "Canopy reduction at least 20 percent; up to 30 percent as a result of root disease mortality.",
+   "5": "Canopy reduction 30-50 percent as a result of root disease.",
+   "6": "50-75 percent reduction in canopy with most of the ground area considered infested.",
+   "7": "At least 75 percent canopy reduction.",
+   "8": "The entire macroplot falls within a definite root disease pocket with only one or very few susceptible overstory trees present.",
+   "9": "The entire macroplot falls within a definite root disease pocket with no overstory trees of the susceptible species present."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SUBPLOT.NF_SUBP_STATUS_CD": {
+  "section": "2.6.29",
+  "codes": {
+   "1": "Sampled - at least one accessible nonforest land condition present on the subplot/macroplot.",
+   "2": "Sampled - no nonforest land condition present on subplot/macroplot (i.e., subplot/macroplot is either census and/or noncensus water).",
+   "3": "Nonsampled nonforest."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SUBPLOT.NF_SUBP_NONSAMPLE_REASN_CD": {
+  "section": "2.6.30",
+  "codes": {
+   "02": "Denied access - A subplot/macroplot to which access is denied by the legal owner, or by the owner of the only reasonable route to the plot.",
+   "03": "Hazardous situation - A subplot/macroplot that cannot be accessed because of a hazard or danger.",
+   "04": "Time limitation - A full subplot/macroplot that cannot be sampled due to a time restriction.",
+   "10": "Other - A subplot/macroplot is not sampled due to a reason other than one of the specific reasons already listed."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "SUBPLOT.P2VEG_SUBP_STATUS_CD": {
+  "section": "2.6.31",
+  "codes": {
+   "1": "Subplot sampled for P2 vegetation.",
+   "2": "Subplot not sampled for P2 vegetation."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SUBPLOT.P2VEG_SUBP_NONSAMPLE_REASN_CD": {
+  "section": "2.6.32",
+  "codes": {
+   "04": "Time limitation.",
+   "05": "Lost Data (for office use only).",
+   "10": "Other (for example, snow or water covering vegetation that is supposed to be sampled)."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "SUBPLOT.INVASIVE_SUBP_STATUS_CD": {
+  "section": "2.6.33",
+  "codes": {
+   "1": "Subplot sampled, invasive plants present.",
+   "2": "Subplot sampled, no invasive plants present.",
+   "3": "Subplot not sampled for invasive plants."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SUBPLOT.INVASIVE_NONSAMPLE_REASN_CD": {
+  "section": "2.6.34",
+  "codes": {
+   "04": "Time limitation.",
+   "05": "Lost Data (for office use only).",
+   "10": "Other (for example, snow or water covering vegetation that is supposed to be sampled)."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "SUBPLOT.CROWN_CLOSURE_ME_NERS": {
+  "section": "2.6.35",
+  "codes": {
+   "0": "0-25%",
+   "1": "26-50%",
+   "2": "51-75%",
+   "3": ">75%"
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SUBPLOT.PREV_STATUSCD_RMRS": {
+  "section": "2.6.51",
+  "codes": {
+   "1": "Sampled - at least one accessible forest land condition present on subplot.",
+   "2": "Sampled - no accessible forest land condition present on subplot.",
+   "3": "Nonsampled - possibility of forest land."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SUBPLOT.ROOTSEVCD_RMRS": {
+  "section": "2.6.52",
+  "codes": {
+   "0": "No evidence of root disease visible within 50 feet of the subplot perimeter.",
+   "1": "Root disease present within 50 feet of the subplot perimeter, but no evidence of root disease on subplot.",
+   "2": "Minor evidence of root disease evident on the subplot. Little or no reduction in canopy closure or volume.",
+   "3": "Up to 20 percent canopy reduction evident.",
+   "4": "20 to 30 percent canopy reduction - as a result of root disease-caused mortality.",
+   "5": "30 to 50 percent canopy reduction - as a result of root disease.",
+   "6": "50 to 75 percent canopy reduction.",
+   "7": "75 percent or more canopy reduction.",
+   "8": "Entire subplot falls within a definite root disease patch with only one or very few susceptible overstory trees present (standing/live) within the canopy.",
+   "9": "Entire subplot falls within a definite root disease patch with no overstory trees of the susceptible species present within the canopy."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE.STATUSCD": {
+  "section": "3.1.15",
+  "codes": {
+   "0": "No status - Tree is not presently in the sample (remeasurement plots only). Tree was incorrectly tallied at the previous inventory, currently not tallied due to definition or procedural change, or is not tallied because it is located on a nonsampled condition. RECONCILECD = 5-9 required for remeasured annual inventory data.",
+   "1": "Live tree.",
+   "2": "Dead tree.",
+   "3": "Retired code - Starting with PLOT.MANUAL = 9.3, this code is only valid for some periodic-to-periodic, periodic-to-annual, and modeled GRM estimates (SURVEY.RSCD = 23, 24). Removed - Cut and removed by direct human activity related to harvesting, silviculture, or land clearing. This tree is assumed to be utilized."
+  },
+  "note": "new and replacement plots use only codes 1 and 2",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE.DIAHTCD": {
+  "section": "3.1.19",
+  "codes": {
+   "1": "Breast height (d.b.h.).",
+   "2": "Root collar (d.r.c.)."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE.HTCD": {
+  "section": "3.1.21",
+  "codes": {
+   "1": "Field measured (total and actual length).",
+   "2": "Total length visually estimated in the field, actual length measured.",
+   "3": "Total and actual lengths are visually estimated.",
+   "4": "Estimated with a model."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE.TREECLCD": {
+  "section": "3.1.23",
+  "codes": {
+   "2": "Growing stock - All live trees of commercial species that meet minimum merchantability standards (at least one solid 8-foot section, reasonably free of form defect, at least 34 percent (26 percent in CA, OR, WA, AK) of the volume merchantable). Excludes rough or rotten cull trees.",
+   "3": "Rough cull - Live trees without a solid 8-foot section reasonably free of form defect, or with 67 percent (75 percent in CA, OR, WA, AK) or more of merchantable volume cull, mostly due to sound dead wood or severe form defect. Also all trees of noncommercial species or SPGRPCD 23, 43, 48. For dead trees, this code indicates that the tree is salvable (sound).",
+   "4": "Rotten cull - All live trees with 67 percent (75 percent in CA, OR, WA, AK) or more of the merchantable volume cull, more than half due to rotten or missing cubic-foot volume loss. For dead trees, this code indicates that the tree is nonsalvable (not sound)."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE.CCLCD": {
+  "section": "3.1.25",
+  "codes": {
+   "1": "Open grown - Trees with crowns that have received full light from above and from all sides throughout all or most of their life.",
+   "2": "Dominant - Trees with crowns extending above the general level of the canopy and receiving full light from above and partly from the sides.",
+   "3": "Codominant - Trees with crowns forming part of the general level of the canopy cover and receiving full light from above, but comparatively little from the side.",
+   "4": "Intermediate - Trees shorter than dominants/codominants, with crowns either below or extending into the canopy, receiving little direct light from above, and none from the sides.",
+   "5": "Overtopped - Trees with crowns entirely below the general canopy level and receiving no direct light either from above or the sides."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE.AGENTCD": {
+  "section": "3.1.27",
+  "codes": {
+   "00": "No agent recorded (only allowed on live trees in data prior to 1999).",
+   "10": "Insect.",
+   "20": "Disease.",
+   "30": "Fire.",
+   "40": "Animal.",
+   "50": "Weather.",
+   "60": "Vegetation (e.g., suppression, competition, vines/kudzu).",
+   "70": "Unknown / not sure / other - includes death from human activity not related to silvicultural or landclearing activity (accidental, random, etc.).",
+   "80": "Silvicultural or landclearing activity (death caused by harvesting or other silvicultural activity, including girdling, chaining, etc., or other landclearing activity)."
+  },
+  "note": "general ranges; State-specific codes fall within these ranges",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE.DAMLOC1": {
+  "section": "3.1.29",
+  "codes": {
+   "0": "No damage.",
+   "1": "Roots (exposed) and stump (up to 12 inches from ground level).",
+   "2": "Roots, stump, and lower bole.",
+   "3": "Lower bole (lower half of bole between stump and base of live crown).",
+   "4": "Lower and upper bole.",
+   "5": "Upper bole (upper half of bole between stump and base of live crown).",
+   "6": "Crownstem (main stem within the live crown).",
+   "7": "Branches (>1 inch diameter at junction with main stem and within the live crown).",
+   "8": "Buds and shoots of current year.",
+   "9": "Foliage."
+  },
+  "note": "DAMLOC2 uses same codes",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE.DAMTYP1": {
+  "section": "3.1.30",
+  "codes": {
+   "01": "Canker, gall.",
+   "02": "Conk, fruiting body, or sign of advanced decay.",
+   "03": "Open wound.",
+   "04": "Resinosis or gumosis.",
+   "05": "Crack or seam.",
+   "11": "Broken bole or broken root within 3 feet of bole.",
+   "12": "Broom on root or bole.",
+   "13": "Broken or dead root further than 3 feet from bole.",
+   "20": "Vines in the crown.",
+   "21": "Loss of apical dominance, dead terminal.",
+   "22": "Broken or dead branches.",
+   "23": "Excessive branching or brooms within the live crown.",
+   "24": "Damaged shoots, buds, or foliage.",
+   "25": "Discoloration of foliage.",
+   "31": "Other."
+  },
+  "note": "DAMTYP2 uses same codes",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE.DAMSEV1": {
+  "section": "3.1.31",
+  "codes": {
+   "0": "01 to 09% of location affected.",
+   "1": "10 to 19% of location affected.",
+   "2": "20 to 29% of location affected.",
+   "3": "30 to 39% of location affected.",
+   "4": "40 to 49% of location affected.",
+   "5": "50 to 59% of location affected.",
+   "6": "60 to 69% of location affected.",
+   "7": "70 to 79% of location affected.",
+   "8": "80 to 89% of location affected.",
+   "9": "90 to 99% of location affected."
+  },
+  "note": "DAMSEV2 uses same codes",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE.DECAYCD": {
+  "section": "3.1.35",
+  "codes": {
+   "1": "All limbs and branches are present; the top of the crown is still present; all bark remains; sapwood is intact, with minimal decay; heartwood is sound and hard.",
+   "2": "There are few limbs and no fine branches; the top may be broken; a variable amount of bark remains; sapwood is sloughing with advanced decay; heartwood is sound at base but beginning to decay in the outer part of the upper bole.",
+   "3": "Only limb stubs exist; the top is broken; a variable amount of bark remains; sapwood is sloughing; heartwood has advanced decay in upper bole and is beginning at the base.",
+   "4": "Few or no limb stubs remain; the top is broken; a variable amount of bark remains; sapwood is sloughing; heartwood has advanced decay at the base and is sloughing in the upper bole.",
+   "5": "No evidence of branches remains; the top is broken; <20 percent of the bark remains; sapwood is gone; heartwood is sloughing throughout."
+  },
+  "note": "standing dead trees, STANDING_DEAD_CD = 1",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE.DIACHECK": {
+  "section": "3.1.45",
+  "codes": {
+   "0": "Diameter accurately measured.",
+   "1": "Diameter estimated.",
+   "2": "Diameter measured at different location than previous measurement (remeasurement trees only).",
+   "5": "Diameter modeled in the office (used with periodic inventories)."
+  },
+  "note": "if both codes 1 and 2 apply, code 2 is used",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE.SALVCD": {
+  "section": "3.1.47",
+  "codes": {
+   "0": "Dead not salvable.",
+   "1": "Dead salvable."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE.CPOSCD": {
+  "section": "3.1.49",
+  "codes": {
+   "1": "Superstory.",
+   "2": "Overstory.",
+   "3": "Understory.",
+   "4": "Open canopy."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE.CLIGHTCD": {
+  "section": "3.1.50",
+  "codes": {
+   "0": "The tree receives no direct sunlight because it is shaded by adjacent trees or other vegetation.",
+   "1": "Receives full light from the top or 1 side.",
+   "2": "Receives full light from the top and 1 side (or 2 sides without the top).",
+   "3": "Receives full light from the top and 2 sides (or 3 sides without the top).",
+   "4": "Receives full light from the top and 3 sides.",
+   "5": "Receives full light from the top and 4 sides."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE.CVIGORCD": {
+  "section": "3.1.51",
+  "codes": {
+   "1": "Saplings must have an uncompacted live crown ratio of 35 or higher, have <5 percent dieback and 80 percent or more of the foliage present is normal or at least 50 percent of each leaf is not damaged or missing.",
+   "2": "Saplings do not meet class 1 or 3 criteria.",
+   "3": "Saplings may have any uncompacted live crown ratio and have 1 to 20 percent normal foliage or the percent of foliage missing combined with the percent of leaves over 50 percent damaged or missing equals 80 percent or more of the live crown. Also used for saplings that have no crown by definition."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE.RECONCILECD": {
+  "section": "3.1.82",
+  "codes": {
+   "1": "Ingrowth - Either (a) a new tally tree not qualifying as through growth, or (b) a new tree on land that was formerly nonforest and now qualifies as forest land unrelated to cruiser error or procedural/definition change.",
+   "2": "Through growth - New tally tree 5 inches d.b.h./d.r.c. and larger, within the microplot, which was not missed at the previous inventory (grew from seedling to at least 5.0 inches d.b.h. between cycles).",
+   "3": "Retired code - Starting with PLOT.MANUAL = 9.0, this code is no longer used; still valid for PLOT.MANUAL <9.0. Missed live - a live tree missed at previous inventory and that is live or dead now.",
+   "4": "Retired code - Starting with PLOT.MANUAL = 9.0, this code is no longer used; still valid for PLOT.MANUAL <9.0. Missed dead - a dead tree missed at previous inventory and that is dead now.",
+   "5": "Shrank - Live tree that shrunk below threshold diameter on microplot/subplot/macroplot. Must currently be alive. Only valid for remeasured trees that no longer qualify as tally (STATUSCD = 0).",
+   "6": "Physical movement - tree moved beyond (or within) the plot radius due to natural causes; live before and live now, or dead before and dead now.",
+   "7": "Cruiser error - Either (a) tree was erroneously tallied (added tree), or (b) tree was erroneously not tallied (missed tree) at the previous inventory.",
+   "8": "Procedural change - tree tallied previously but no longer tallied (or vice versa) due to a definition or procedural change.",
+   "9": "Nonsampled area - tree was in a sampled condition previously but now in a nonsampled condition, or vice versa. All trees located in a nonsampled area (either now or previously) have RECONCILECD = 9."
+  },
+  "note": "remeasurement locations only",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE.P2A_GRM_FLG": {
+  "section": "3.1.84",
+  "codes": {
+   "Y": "Tree is part of a periodic inventory needed for growth, removals and/or mortality estimation; otherwise blank (null)."
+  },
+  "note": "described in text, no code table",
+  "oracle_type": "VARCHAR2(1)",
+  "numeric": false
+ },
+ "TREE.TREECLCD_NERS": {
+  "section": "3.1.85",
+  "codes": {
+   "1": "Preferred - Live tree that would be favored in cultural operations; less than 20 percent total board-foot cull; expected to live 5 more years; low risk.",
+   "2": "Acceptable - Live sawtimber tree that does not qualify as preferred but is not a cull tree; or live poletimber tree that prospectively will not qualify as preferred but is not now or prospectively a cull tree.",
+   "3": "Rough Cull - live tree with 67 percent or more predominantly sound board-foot (or cubic-foot) cull, or without one merchantable 12-foot sawlog or two non-contiguous merchantable 8-foot sawlogs.",
+   "4": "Rotten Cull - live tree with 67 percent or more predominantly unsound board-foot (or cubic-foot) cull.",
+   "5": "Dead - Tree that has recently died (within the last several years) but still retains many branches and has bark that is generally tight.",
+   "6": "Snag - Dead tree, or what remains of a dead tree, that is at least 4.5 feet tall and is missing most of its bark (or has very loose bark)."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE.TREECLCD_SRS": {
+  "section": "3.1.86",
+  "codes": {
+   "2": "Growing-stock - All trees that have at least one 12-foot log or two 8-foot logs that meet grade and size requirements and at least 1/3 of the total board foot volume is merchantable. Poletimber-sized trees are evaluated based on their potential.",
+   "3": "Rough cull - Trees that do not contain at least one 12-foot log or two 8-foot logs, or more than 1/3 of the total board foot volume is not merchantable, primarily due to roughness or poor form.",
+   "4": "Rotten cull - Trees that do not contain at least one 12-foot log or two 8-foot logs, or more than 1/3 of the total board foot volume is not merchantable, primarily due to rotten, unsound wood."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE.TREECLCD_NCRS": {
+  "section": "3.1.87",
+  "codes": {
+   "20": "Growing stock - live tree of commercial species, sawtimber size, with at least one merchantable 12-foot sawlog or two merchantable 8-foot sawlogs; or pole timber size tree with potential to meet these specifications.",
+   "30": "Rough Cull, Salvable, and Salvable-down - noncommercial species, or sawtimber-size tree with no merchantable sawlog, mainly due to roughness/form; down-dead tree meeting these standards.",
+   "31": "Short-log Cull - live sawtimber-size tree of commercial species with at least one 8-foot sawlog but < a 12-foot sawlog meeting minimum log-grade specifications. Pole-size trees never receive code 31.",
+   "40": "Rotten Cull - live sawtimber-size tree of commercial species with no merchantable sawlog primarily because of rot, missing sections, or deadwood; also standing-dead tree without an 8-foot section at least 50 percent sound."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE.TREECLCD_RMRS": {
+  "section": "3.1.88",
+  "codes": {
+   "1": "Sound-live timber species - All live timber trees that meet minimum merchantability standards.",
+   "2": "All live woodland species - All live woodland trees (REF_SPECIES.WOODLAND = 'Y'; species groups 23 and 48).",
+   "3": "Rough-live timber species - live trees without a solid 8-foot section or with 67 percent or more of the merchantable volume cull, mostly sound dead wood or form defect.",
+   "4": "Rotten-live timber species - live trees with 67 percent or more of the merchantable volume cull, mostly rotten or missing.",
+   "5": "Hard (salvable) dead - dead trees that have less than 67 percent of the volume cull due to rotten or missing cubic-foot volume loss.",
+   "6": "Soft (nonsalvable) dead - dead trees that have 67 percent or more of the volume cull due to rotten or missing cubic-foot volume loss."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE.STANDING_DEAD_CD": {
+  "section": "3.1.89",
+  "codes": {
+   "0": "No - tree does not qualify as standing dead.",
+   "1": "Yes - tree does qualify as standing dead."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE.PREV_STATUS_CD": {
+  "section": "3.1.90",
+  "codes": {
+   "1": "Live tree - live tree at the previous inventory.",
+   "2": "Dead tree - standing dead at the previous inventory."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE.DISEASE_SRS": {
+  "section": "3.1.118",
+  "codes": {
+   "0": "None.",
+   "1": "Fusiform/Comandra rust on species codes 110, 111, 121, 126, 128, and 131, based on any incidence of cankers within 12 inches of the stem.",
+   "2": "Hardwood dieback of 10% or more of the crown area. Not recorded on overtopped trees."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE.DIEBACK_SEVERITY_SRS": {
+  "section": "3.1.119",
+  "codes": {
+   "1": "10-19% of crown affected.",
+   "2": "20-29% of crown affected.",
+   "3": "30-39% of crown affected.",
+   "4": "40-49% of crown affected.",
+   "5": "50-59% of crown affected.",
+   "6": "60-69% of crown affected.",
+   "7": "70-79% of crown affected.",
+   "8": "80-89% of crown affected.",
+   "9": "90-99% of crown affected."
+  },
+  "note": "populated when DISEASE_SRS = 2",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE.DAMAGE_AGENT_CD1": {
+  "section": "3.1.120",
+  "codes": {
+   "0": "No damage. (3.1.120: 'None' / 'No damage')",
+   "10000": "General insects.",
+   "11000": "Bark beetles.",
+   "12000": "Defoliators.",
+   "13000": "Chewing insects.",
+   "14000": "Sucking insects.",
+   "15000": "Boring insects.",
+   "19000": "General diseases.",
+   "20000": "Biotic Damage. (Appendix H category)",
+   "21000": "Root/butt diseases. Threshold: any occurrence. (Appendix H: Root/Butt Diseases, all regions)",
+   "22000": "Cankers (non-rust).",
+   "22500": "Stem decays. Threshold: any visual evidence (conks; fruiting bodies; rotten wood). Rot occurring in the bole/stems of trees above the roots and stump.",
+   "23000": "Parasitic / Epiphytic plants.",
+   "24000": "Decline Complexes/ Dieback/Wilts.",
+   "25000": "Foliage diseases.",
+   "26000": "Stem rusts.",
+   "26009": "fusiform rust (Cronartium quercuum f. sp. fusiforme). Appendix H, category 26 (Stem Rusts); threshold: any occurrence on the bole or stems, or on branches [<=]1 foot from boles or stems; damage to [>=]20% of branches. Region: SRS.",
+   "27000": "Broom rusts.",
+   "30000": "Fire.",
+   "41000": "Wild animals.",
+   "42000": "Domestic animals.",
+   "50000": "Abiotic.",
+   "60000": "Competition.",
+   "70000": "Human activities.",
+   "71000": "Harvest.",
+   "90000": "Other damage.",
+   "99000": "Unknown damage."
+  },
+  "note": "general agent codes + Appendix H for specific codes (same codes used by DAMAGE_AGENT_CD2/CD3). Note: starting PLOT.MANUAL = 9.4, code 90001 (broken top) retired.",
+  "oracle_type": "NUMBER(5)",
+  "numeric": true
+ },
+ "TREE_GRM_COMPONENT.SUBPTYP_BEGIN": {
+  "section": "3.3.10",
+  "codes": {
+   "0": "No plot type. Tree not present.",
+   "1": "Subplot.",
+   "2": "Microplot.",
+   "3": "Macroplot."
+  },
+  "note": "table header printed as 'Codes: SUBTYP_BEGIN'",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE_GRM_COMPONENT.SUBPTYP_MIDPT": {
+  "section": "3.3.11",
+  "codes": {
+   "0": "No plot type. Tree not present.",
+   "1": "Subplot.",
+   "2": "Microplot.",
+   "3": "Macroplot."
+  },
+  "note": "see SUBPTYP_BEGIN",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE_GRM_COMPONENT.SUBPTYP_END": {
+  "section": "3.3.12",
+  "codes": {
+   "0": "No plot type. Tree not present.",
+   "1": "Subplot.",
+   "2": "Microplot.",
+   "3": "Macroplot."
+  },
+  "note": "see SUBPTYP_BEGIN",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE_GRM_COMPONENT.MICR_COMPONENT_AL_FOREST": {
+  "section": "3.3.13",
+  "codes": {
+   "CUT0": "Tree was killed due to harvesting activity by T2 ((TREE.STATUSCD = 3) or (TREE.STATUSCD = 2 and TREE.AGENTCD = 80)). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "CUT1": "Tree was previously in estimate at T1 and was killed due to harvesting activity by T2. The tree must be in the same land basis (forest land or timberland) at time T1 and T2.",
+   "CUT2": "Tree grew across minimum threshold diameter for the estimate since T1 and was killed due to harvesting activity by T2. The tree must be in the same land basis (forest land or timberland) at time T1 and T2.",
+   "INGROWTH": "Tree grew across minimum threshold diameter for the estimate since T1. For example, a sapling grows across the 5-inch diameter threshold becoming ingrowth on the subplot.",
+   "MORTALITY0": "Tree died of natural causes by T2 (TREE.AGENTCD <> 80). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "MORTALITY1": "Tree was previously in estimate at T1 and died of natural causes by T2 (TREE.AGENTCD <> 80).",
+   "MORTALITY2": "Tree grew across minimum threshold diameter for the estimate since T1 and died of natural causes by T2 (TREE.AGENTCD <> 80).",
+   "NOT USED": "Tree was either live or dead at T1 and has no status at T2.",
+   "SURVIVOR": "Tree has remained live and in the estimate from T1 through T2.",
+   "UNKNOWN": "Tree lacks information required to classify component usually due to procedural changes.",
+   "REVERSION1": "Tree grew across minimum threshold diameter for the estimate by the midpoint of the measurement interval and the condition reverted to the land basis by T2.",
+   "REVERSION2": "Tree grew across minimum threshold diameter for the estimate after the midpoint of the measurement interval and the condition reverted to the land basis by T2.",
+   "DIVERSION0": "Tree was removed from the estimate by something other than harvesting activity by T2 (not (TREE.STATUSCD = 3) and not (TREE.STATUSCD = 2 and TREE.AGENTCD = 80)). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "DIVERSION1": "Tree was previously in estimate at T1 and the condition diverted from the land basis by T2. Not dependent upon tree status (TREE.STATUSCD).",
+   "DIVERSION2": "Tree grew across minimum threshold diameter for the estimate since T1 and the condition diverted from the land basis by T2. Not dependent upon tree status (TREE.STATUSCD).",
+   "CULLINCR": "Not used at this time.",
+   "CULLDECR": "Not used at this time.",
+   "N/A - A2A": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates.",
+   "N/A - A2A SOON": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates.",
+   "N/A - MODELED": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates. [as printed]",
+   "N/A - P2A": "Component of change is not defined or does not exist. Applicable only in periodic-to-annual GRM estimates.",
+   "N/A - P2P": "Component of change is not defined or does not exist. Applicable only in periodic-to-periodic GRM estimates.",
+   "N/A - PERIODIC": "Component of change is not defined or does not exist. Applicable only in periodic-to-periodic GRM estimates."
+  },
+  "oracle_type": "VARCHAR2(15)",
+  "numeric": false
+ },
+ "TREE_GRM_COMPONENT.MICR_SUBPTYP_GRM_AL_FOREST": {
+  "section": "3.3.14",
+  "codes": {
+   "0": "No plot type. Tree not present.",
+   "1": "Subplot.",
+   "2": "Microplot.",
+   "3": "Macroplot."
+  },
+  "note": "see SUBPTYP_BEGIN for codes",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE_GRM_COMPONENT.SUBP_COMPONENT_AL_FOREST": {
+  "section": "3.3.18",
+  "codes": {
+   "CUT0": "Tree was killed due to harvesting activity by T2 ((TREE.STATUSCD = 3) or (TREE.STATUSCD = 2 and TREE.AGENTCD = 80)). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "CUT1": "Tree was previously in estimate at T1 and was killed due to harvesting activity by T2. The tree must be in the same land basis (forest land or timberland) at time T1 and T2.",
+   "CUT2": "Tree grew across minimum threshold diameter for the estimate since T1 and was killed due to harvesting activity by T2. The tree must be in the same land basis (forest land or timberland) at time T1 and T2.",
+   "INGROWTH": "Tree grew across minimum threshold diameter for the estimate since T1. For example, a sapling grows across the 5-inch diameter threshold becoming ingrowth on the subplot.",
+   "MORTALITY0": "Tree died of natural causes by T2 (TREE.AGENTCD <> 80). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "MORTALITY1": "Tree was previously in estimate at T1 and died of natural causes by T2 (TREE.AGENTCD <> 80).",
+   "MORTALITY2": "Tree grew across minimum threshold diameter for the estimate since T1 and died of natural causes by T2 (TREE.AGENTCD <> 80).",
+   "NOT USED": "Tree was either live or dead at T1 and has no status at T2.",
+   "SURVIVOR": "Tree has remained live and in the estimate from T1 through T2.",
+   "UNKNOWN": "Tree lacks information required to classify component usually due to procedural changes.",
+   "REVERSION1": "Tree grew across minimum threshold diameter for the estimate by the midpoint of the measurement interval and the condition reverted to the land basis by T2.",
+   "REVERSION2": "Tree grew across minimum threshold diameter for the estimate after the midpoint of the measurement interval and the condition reverted to the land basis by T2.",
+   "DIVERSION0": "Tree was removed from the estimate by something other than harvesting activity by T2 (not (TREE.STATUSCD = 3) and not (TREE.STATUSCD = 2 and TREE.AGENTCD = 80)). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "DIVERSION1": "Tree was previously in estimate at T1 and the condition diverted from the land basis by T2. Not dependent upon tree status (TREE.STATUSCD).",
+   "DIVERSION2": "Tree grew across minimum threshold diameter for the estimate since T1 and the condition diverted from the land basis by T2. Not dependent upon tree status (TREE.STATUSCD).",
+   "CULLINCR": "Not used at this time.",
+   "CULLDECR": "Not used at this time.",
+   "N/A - A2A": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates.",
+   "N/A - A2A SOON": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates.",
+   "N/A - MODELED": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates. [as printed]",
+   "N/A - P2A": "Component of change is not defined or does not exist. Applicable only in periodic-to-annual GRM estimates.",
+   "N/A - P2P": "Component of change is not defined or does not exist. Applicable only in periodic-to-periodic GRM estimates.",
+   "N/A - PERIODIC": "Component of change is not defined or does not exist. Applicable only in periodic-to-periodic GRM estimates."
+  },
+  "note": "see MICR_COMPONENT_AL_FOREST for codes",
+  "oracle_type": "VARCHAR2(15)",
+  "numeric": false
+ },
+ "TREE_GRM_COMPONENT.SUBP_SUBPTYP_GRM_AL_FOREST": {
+  "section": "3.3.19",
+  "codes": {
+   "0": "No plot type. Tree not present.",
+   "1": "Subplot.",
+   "2": "Microplot.",
+   "3": "Macroplot."
+  },
+  "note": "see SUBPTYP_BEGIN for codes",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE_GRM_COMPONENT.SUBP_COMPONENT_GS_FOREST": {
+  "section": "3.3.23",
+  "codes": {
+   "CUT0": "Tree was killed due to harvesting activity by T2 ((TREE.STATUSCD = 3) or (TREE.STATUSCD = 2 and TREE.AGENTCD = 80)). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "CUT1": "Tree was previously in estimate at T1 and was killed due to harvesting activity by T2. The tree must be in the same land basis (forest land or timberland) at time T1 and T2.",
+   "CUT2": "Tree grew across minimum threshold diameter for the estimate since T1 and was killed due to harvesting activity by T2. The tree must be in the same land basis (forest land or timberland) at time T1 and T2.",
+   "INGROWTH": "Tree grew across minimum threshold diameter for the estimate since T1. For example, a sapling grows across the 5-inch diameter threshold becoming ingrowth on the subplot.",
+   "MORTALITY0": "Tree died of natural causes by T2 (TREE.AGENTCD <> 80). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "MORTALITY1": "Tree was previously in estimate at T1 and died of natural causes by T2 (TREE.AGENTCD <> 80).",
+   "MORTALITY2": "Tree grew across minimum threshold diameter for the estimate since T1 and died of natural causes by T2 (TREE.AGENTCD <> 80).",
+   "NOT USED": "Tree was either live or dead at T1 and has no status at T2.",
+   "SURVIVOR": "Tree has remained live and in the estimate from T1 through T2.",
+   "UNKNOWN": "Tree lacks information required to classify component usually due to procedural changes.",
+   "REVERSION1": "Tree grew across minimum threshold diameter for the estimate by the midpoint of the measurement interval and the condition reverted to the land basis by T2.",
+   "REVERSION2": "Tree grew across minimum threshold diameter for the estimate after the midpoint of the measurement interval and the condition reverted to the land basis by T2.",
+   "DIVERSION0": "Tree was removed from the estimate by something other than harvesting activity by T2 (not (TREE.STATUSCD = 3) and not (TREE.STATUSCD = 2 and TREE.AGENTCD = 80)). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "DIVERSION1": "Tree was previously in estimate at T1 and the condition diverted from the land basis by T2. Not dependent upon tree status (TREE.STATUSCD).",
+   "DIVERSION2": "Tree grew across minimum threshold diameter for the estimate since T1 and the condition diverted from the land basis by T2. Not dependent upon tree status (TREE.STATUSCD).",
+   "CULLINCR": "Not used at this time.",
+   "CULLDECR": "Not used at this time.",
+   "N/A - A2A": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates.",
+   "N/A - A2A SOON": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates.",
+   "N/A - MODELED": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates. [as printed]",
+   "N/A - P2A": "Component of change is not defined or does not exist. Applicable only in periodic-to-annual GRM estimates.",
+   "N/A - P2P": "Component of change is not defined or does not exist. Applicable only in periodic-to-periodic GRM estimates.",
+   "N/A - PERIODIC": "Component of change is not defined or does not exist. Applicable only in periodic-to-periodic GRM estimates."
+  },
+  "note": "see MICR_COMPONENT_AL_FOREST for codes",
+  "oracle_type": "VARCHAR2(15)",
+  "numeric": false
+ },
+ "TREE_GRM_COMPONENT.SUBP_SUBPTYP_GRM_GS_FOREST": {
+  "section": "3.3.24",
+  "codes": {
+   "0": "No plot type. Tree not present.",
+   "1": "Subplot.",
+   "2": "Microplot.",
+   "3": "Macroplot."
+  },
+  "note": "see SUBPTYP_BEGIN for codes",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE_GRM_COMPONENT.SUBP_COMPONENT_SL_FOREST": {
+  "section": "3.3.28",
+  "codes": {
+   "CUT0": "Tree was killed due to harvesting activity by T2 ((TREE.STATUSCD = 3) or (TREE.STATUSCD = 2 and TREE.AGENTCD = 80)). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "CUT1": "Tree was previously in estimate at T1 and was killed due to harvesting activity by T2. The tree must be in the same land basis (forest land or timberland) at time T1 and T2.",
+   "CUT2": "Tree grew across minimum threshold diameter for the estimate since T1 and was killed due to harvesting activity by T2. The tree must be in the same land basis (forest land or timberland) at time T1 and T2.",
+   "INGROWTH": "Tree grew across minimum threshold diameter for the estimate since T1. For example, a sapling grows across the 5-inch diameter threshold becoming ingrowth on the subplot.",
+   "MORTALITY0": "Tree died of natural causes by T2 (TREE.AGENTCD <> 80). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "MORTALITY1": "Tree was previously in estimate at T1 and died of natural causes by T2 (TREE.AGENTCD <> 80).",
+   "MORTALITY2": "Tree grew across minimum threshold diameter for the estimate since T1 and died of natural causes by T2 (TREE.AGENTCD <> 80).",
+   "NOT USED": "Tree was either live or dead at T1 and has no status at T2.",
+   "SURVIVOR": "Tree has remained live and in the estimate from T1 through T2.",
+   "UNKNOWN": "Tree lacks information required to classify component usually due to procedural changes.",
+   "REVERSION1": "Tree grew across minimum threshold diameter for the estimate by the midpoint of the measurement interval and the condition reverted to the land basis by T2.",
+   "REVERSION2": "Tree grew across minimum threshold diameter for the estimate after the midpoint of the measurement interval and the condition reverted to the land basis by T2.",
+   "DIVERSION0": "Tree was removed from the estimate by something other than harvesting activity by T2 (not (TREE.STATUSCD = 3) and not (TREE.STATUSCD = 2 and TREE.AGENTCD = 80)). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "DIVERSION1": "Tree was previously in estimate at T1 and the condition diverted from the land basis by T2. Not dependent upon tree status (TREE.STATUSCD).",
+   "DIVERSION2": "Tree grew across minimum threshold diameter for the estimate since T1 and the condition diverted from the land basis by T2. Not dependent upon tree status (TREE.STATUSCD).",
+   "CULLINCR": "Not used at this time.",
+   "CULLDECR": "Not used at this time.",
+   "N/A - A2A": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates.",
+   "N/A - A2A SOON": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates.",
+   "N/A - MODELED": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates. [as printed]",
+   "N/A - P2A": "Component of change is not defined or does not exist. Applicable only in periodic-to-annual GRM estimates.",
+   "N/A - P2P": "Component of change is not defined or does not exist. Applicable only in periodic-to-periodic GRM estimates.",
+   "N/A - PERIODIC": "Component of change is not defined or does not exist. Applicable only in periodic-to-periodic GRM estimates."
+  },
+  "note": "see MICR_COMPONENT_AL_FOREST for codes",
+  "oracle_type": "VARCHAR2(15)",
+  "numeric": false
+ },
+ "TREE_GRM_COMPONENT.SUBP_SUBPTYP_GRM_SL_FOREST": {
+  "section": "3.3.29",
+  "codes": {
+   "0": "No plot type. Tree not present.",
+   "1": "Subplot.",
+   "2": "Microplot.",
+   "3": "Macroplot."
+  },
+  "note": "see SUBPTYP_BEGIN for codes",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE_GRM_COMPONENT.MICR_COMPONENT_AL_TIMBER": {
+  "section": "3.3.33",
+  "codes": {
+   "CUT0": "Tree was killed due to harvesting activity by T2 ((TREE.STATUSCD = 3) or (TREE.STATUSCD = 2 and TREE.AGENTCD = 80)). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "CUT1": "Tree was previously in estimate at T1 and was killed due to harvesting activity by T2. The tree must be in the same land basis (forest land or timberland) at time T1 and T2.",
+   "CUT2": "Tree grew across minimum threshold diameter for the estimate since T1 and was killed due to harvesting activity by T2. The tree must be in the same land basis (forest land or timberland) at time T1 and T2.",
+   "INGROWTH": "Tree grew across minimum threshold diameter for the estimate since T1. For example, a sapling grows across the 5-inch diameter threshold becoming ingrowth on the subplot.",
+   "MORTALITY0": "Tree died of natural causes by T2 (TREE.AGENTCD <> 80). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "MORTALITY1": "Tree was previously in estimate at T1 and died of natural causes by T2 (TREE.AGENTCD <> 80).",
+   "MORTALITY2": "Tree grew across minimum threshold diameter for the estimate since T1 and died of natural causes by T2 (TREE.AGENTCD <> 80).",
+   "NOT USED": "Tree was either live or dead at T1 and has no status at T2.",
+   "SURVIVOR": "Tree has remained live and in the estimate from T1 through T2.",
+   "UNKNOWN": "Tree lacks information required to classify component usually due to procedural changes.",
+   "REVERSION1": "Tree grew across minimum threshold diameter for the estimate by the midpoint of the measurement interval and the condition reverted to the land basis by T2.",
+   "REVERSION2": "Tree grew across minimum threshold diameter for the estimate after the midpoint of the measurement interval and the condition reverted to the land basis by T2.",
+   "DIVERSION0": "Tree was removed from the estimate by something other than harvesting activity by T2 (not (TREE.STATUSCD = 3) and not (TREE.STATUSCD = 2 and TREE.AGENTCD = 80)). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "DIVERSION1": "Tree was previously in estimate at T1 and the condition diverted from the land basis by T2. Not dependent upon tree status (TREE.STATUSCD).",
+   "DIVERSION2": "Tree grew across minimum threshold diameter for the estimate since T1 and the condition diverted from the land basis by T2. Not dependent upon tree status (TREE.STATUSCD).",
+   "CULLINCR": "Not used at this time.",
+   "CULLDECR": "Not used at this time.",
+   "N/A - A2A": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates.",
+   "N/A - A2A SOON": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates.",
+   "N/A - MODELED": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates. [as printed]",
+   "N/A - P2A": "Component of change is not defined or does not exist. Applicable only in periodic-to-annual GRM estimates.",
+   "N/A - P2P": "Component of change is not defined or does not exist. Applicable only in periodic-to-periodic GRM estimates.",
+   "N/A - PERIODIC": "Component of change is not defined or does not exist. Applicable only in periodic-to-periodic GRM estimates."
+  },
+  "note": "see MICR_COMPONENT_AL_FOREST for codes",
+  "oracle_type": "VARCHAR2(15)",
+  "numeric": false
+ },
+ "TREE_GRM_COMPONENT.MICR_SUBPTYP_GRM_AL_TIMBER": {
+  "section": "3.3.34",
+  "codes": {
+   "0": "No plot type. Tree not present.",
+   "1": "Subplot.",
+   "2": "Microplot.",
+   "3": "Macroplot."
+  },
+  "note": "see SUBPTYP_BEGIN for codes",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE_GRM_COMPONENT.SUBP_COMPONENT_AL_TIMBER": {
+  "section": "3.3.38",
+  "codes": {
+   "CUT0": "Tree was killed due to harvesting activity by T2 ((TREE.STATUSCD = 3) or (TREE.STATUSCD = 2 and TREE.AGENTCD = 80)). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "CUT1": "Tree was previously in estimate at T1 and was killed due to harvesting activity by T2. The tree must be in the same land basis (forest land or timberland) at time T1 and T2.",
+   "CUT2": "Tree grew across minimum threshold diameter for the estimate since T1 and was killed due to harvesting activity by T2. The tree must be in the same land basis (forest land or timberland) at time T1 and T2.",
+   "INGROWTH": "Tree grew across minimum threshold diameter for the estimate since T1. For example, a sapling grows across the 5-inch diameter threshold becoming ingrowth on the subplot.",
+   "MORTALITY0": "Tree died of natural causes by T2 (TREE.AGENTCD <> 80). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "MORTALITY1": "Tree was previously in estimate at T1 and died of natural causes by T2 (TREE.AGENTCD <> 80).",
+   "MORTALITY2": "Tree grew across minimum threshold diameter for the estimate since T1 and died of natural causes by T2 (TREE.AGENTCD <> 80).",
+   "NOT USED": "Tree was either live or dead at T1 and has no status at T2.",
+   "SURVIVOR": "Tree has remained live and in the estimate from T1 through T2.",
+   "UNKNOWN": "Tree lacks information required to classify component usually due to procedural changes.",
+   "REVERSION1": "Tree grew across minimum threshold diameter for the estimate by the midpoint of the measurement interval and the condition reverted to the land basis by T2.",
+   "REVERSION2": "Tree grew across minimum threshold diameter for the estimate after the midpoint of the measurement interval and the condition reverted to the land basis by T2.",
+   "DIVERSION0": "Tree was removed from the estimate by something other than harvesting activity by T2 (not (TREE.STATUSCD = 3) and not (TREE.STATUSCD = 2 and TREE.AGENTCD = 80)). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "DIVERSION1": "Tree was previously in estimate at T1 and the condition diverted from the land basis by T2. Not dependent upon tree status (TREE.STATUSCD).",
+   "DIVERSION2": "Tree grew across minimum threshold diameter for the estimate since T1 and the condition diverted from the land basis by T2. Not dependent upon tree status (TREE.STATUSCD).",
+   "CULLINCR": "Not used at this time.",
+   "CULLDECR": "Not used at this time.",
+   "N/A - A2A": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates.",
+   "N/A - A2A SOON": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates.",
+   "N/A - MODELED": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates. [as printed]",
+   "N/A - P2A": "Component of change is not defined or does not exist. Applicable only in periodic-to-annual GRM estimates.",
+   "N/A - P2P": "Component of change is not defined or does not exist. Applicable only in periodic-to-periodic GRM estimates.",
+   "N/A - PERIODIC": "Component of change is not defined or does not exist. Applicable only in periodic-to-periodic GRM estimates."
+  },
+  "note": "see MICR_COMPONENT_AL_FOREST for codes",
+  "oracle_type": "VARCHAR2(15)",
+  "numeric": false
+ },
+ "TREE_GRM_COMPONENT.SUBP_SUBPTYP_GRM_AL_TIMBER": {
+  "section": "3.3.39",
+  "codes": {
+   "0": "No plot type. Tree not present.",
+   "1": "Subplot.",
+   "2": "Microplot.",
+   "3": "Macroplot."
+  },
+  "note": "see SUBPTYP_BEGIN for codes",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE_GRM_COMPONENT.SUBP_COMPONENT_GS_TIMBER": {
+  "section": "3.3.43",
+  "codes": {
+   "CUT0": "Tree was killed due to harvesting activity by T2 ((TREE.STATUSCD = 3) or (TREE.STATUSCD = 2 and TREE.AGENTCD = 80)). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "CUT1": "Tree was previously in estimate at T1 and was killed due to harvesting activity by T2. The tree must be in the same land basis (forest land or timberland) at time T1 and T2.",
+   "CUT2": "Tree grew across minimum threshold diameter for the estimate since T1 and was killed due to harvesting activity by T2. The tree must be in the same land basis (forest land or timberland) at time T1 and T2.",
+   "INGROWTH": "Tree grew across minimum threshold diameter for the estimate since T1. For example, a sapling grows across the 5-inch diameter threshold becoming ingrowth on the subplot.",
+   "MORTALITY0": "Tree died of natural causes by T2 (TREE.AGENTCD <> 80). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "MORTALITY1": "Tree was previously in estimate at T1 and died of natural causes by T2 (TREE.AGENTCD <> 80).",
+   "MORTALITY2": "Tree grew across minimum threshold diameter for the estimate since T1 and died of natural causes by T2 (TREE.AGENTCD <> 80).",
+   "NOT USED": "Tree was either live or dead at T1 and has no status at T2.",
+   "SURVIVOR": "Tree has remained live and in the estimate from T1 through T2.",
+   "UNKNOWN": "Tree lacks information required to classify component usually due to procedural changes.",
+   "REVERSION1": "Tree grew across minimum threshold diameter for the estimate by the midpoint of the measurement interval and the condition reverted to the land basis by T2.",
+   "REVERSION2": "Tree grew across minimum threshold diameter for the estimate after the midpoint of the measurement interval and the condition reverted to the land basis by T2.",
+   "DIVERSION0": "Tree was removed from the estimate by something other than harvesting activity by T2 (not (TREE.STATUSCD = 3) and not (TREE.STATUSCD = 2 and TREE.AGENTCD = 80)). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "DIVERSION1": "Tree was previously in estimate at T1 and the condition diverted from the land basis by T2. Not dependent upon tree status (TREE.STATUSCD).",
+   "DIVERSION2": "Tree grew across minimum threshold diameter for the estimate since T1 and the condition diverted from the land basis by T2. Not dependent upon tree status (TREE.STATUSCD).",
+   "CULLINCR": "Not used at this time.",
+   "CULLDECR": "Not used at this time.",
+   "N/A - A2A": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates.",
+   "N/A - A2A SOON": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates.",
+   "N/A - MODELED": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates. [as printed]",
+   "N/A - P2A": "Component of change is not defined or does not exist. Applicable only in periodic-to-annual GRM estimates.",
+   "N/A - P2P": "Component of change is not defined or does not exist. Applicable only in periodic-to-periodic GRM estimates.",
+   "N/A - PERIODIC": "Component of change is not defined or does not exist. Applicable only in periodic-to-periodic GRM estimates."
+  },
+  "note": "see MICR_COMPONENT_AL_FOREST for codes",
+  "oracle_type": "VARCHAR2(15)",
+  "numeric": false
+ },
+ "TREE_GRM_COMPONENT.SUBP_SUBPTYP_GRM_GS_TIMBER": {
+  "section": "3.3.44",
+  "codes": {
+   "0": "No plot type. Tree not present.",
+   "1": "Subplot.",
+   "2": "Microplot.",
+   "3": "Macroplot."
+  },
+  "note": "see SUBPTYP_BEGIN for codes",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE_GRM_COMPONENT.SUBP_COMPONENT_SL_TIMBER": {
+  "section": "3.3.48",
+  "codes": {
+   "CUT0": "Tree was killed due to harvesting activity by T2 ((TREE.STATUSCD = 3) or (TREE.STATUSCD = 2 and TREE.AGENTCD = 80)). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "CUT1": "Tree was previously in estimate at T1 and was killed due to harvesting activity by T2. The tree must be in the same land basis (forest land or timberland) at time T1 and T2.",
+   "CUT2": "Tree grew across minimum threshold diameter for the estimate since T1 and was killed due to harvesting activity by T2. The tree must be in the same land basis (forest land or timberland) at time T1 and T2.",
+   "INGROWTH": "Tree grew across minimum threshold diameter for the estimate since T1. For example, a sapling grows across the 5-inch diameter threshold becoming ingrowth on the subplot.",
+   "MORTALITY0": "Tree died of natural causes by T2 (TREE.AGENTCD <> 80). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "MORTALITY1": "Tree was previously in estimate at T1 and died of natural causes by T2 (TREE.AGENTCD <> 80).",
+   "MORTALITY2": "Tree grew across minimum threshold diameter for the estimate since T1 and died of natural causes by T2 (TREE.AGENTCD <> 80).",
+   "NOT USED": "Tree was either live or dead at T1 and has no status at T2.",
+   "SURVIVOR": "Tree has remained live and in the estimate from T1 through T2.",
+   "UNKNOWN": "Tree lacks information required to classify component usually due to procedural changes.",
+   "REVERSION1": "Tree grew across minimum threshold diameter for the estimate by the midpoint of the measurement interval and the condition reverted to the land basis by T2.",
+   "REVERSION2": "Tree grew across minimum threshold diameter for the estimate after the midpoint of the measurement interval and the condition reverted to the land basis by T2.",
+   "DIVERSION0": "Tree was removed from the estimate by something other than harvesting activity by T2 (not (TREE.STATUSCD = 3) and not (TREE.STATUSCD = 2 and TREE.AGENTCD = 80)). Applicable only in periodic-to-periodic, periodic-to-annual, and modeled GRM estimates.",
+   "DIVERSION1": "Tree was previously in estimate at T1 and the condition diverted from the land basis by T2. Not dependent upon tree status (TREE.STATUSCD).",
+   "DIVERSION2": "Tree grew across minimum threshold diameter for the estimate since T1 and the condition diverted from the land basis by T2. Not dependent upon tree status (TREE.STATUSCD).",
+   "CULLINCR": "Not used at this time.",
+   "CULLDECR": "Not used at this time.",
+   "N/A - A2A": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates.",
+   "N/A - A2A SOON": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates.",
+   "N/A - MODELED": "Component of change is not defined or does not exist. Applicable only in annual-to-annual GRM estimates. [as printed]",
+   "N/A - P2A": "Component of change is not defined or does not exist. Applicable only in periodic-to-annual GRM estimates.",
+   "N/A - P2P": "Component of change is not defined or does not exist. Applicable only in periodic-to-periodic GRM estimates.",
+   "N/A - PERIODIC": "Component of change is not defined or does not exist. Applicable only in periodic-to-periodic GRM estimates."
+  },
+  "note": "see MICR_COMPONENT_AL_FOREST for codes",
+  "oracle_type": "VARCHAR2(15)",
+  "numeric": false
+ },
+ "TREE_GRM_COMPONENT.SUBP_SUBPTYP_GRM_SL_TIMBER": {
+  "section": "3.3.49",
+  "codes": {
+   "0": "No plot type. Tree not present.",
+   "1": "Subplot.",
+   "2": "Microplot.",
+   "3": "Macroplot."
+  },
+  "note": "see SUBPTYP_BEGIN for codes",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE_GRM_MIDPT.SUBPTYP": {
+  "section": "3.5.5",
+  "codes": {
+   "0": "Undetermined. Assigned in cases where there is no T1 tree record, and the modeled tree grows across either the microplot-to-subplot threshold, or the subplot-to-macroplot threshold.",
+   "1": "Subplot.",
+   "2": "Microplot.",
+   "3": "Macroplot."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE_GRM_BEGIN.SUBPTYP": {
+  "section": "3.6.5",
+  "codes": {
+   "0": "Undetermined. Assigned in cases where there is no T1 tree record, and the modeled tree grows across either the microplot-to-subplot threshold, or the subplot-to-macroplot threshold.",
+   "1": "Subplot.",
+   "2": "Microplot.",
+   "3": "Macroplot."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SEEDLING.AGECD_RMRS": {
+  "section": "3.9.31",
+  "codes": {
+   "0": "Do not collect age information for this seedling count.",
+   "1": "Collect total age information for this seedling count."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SEEDLING.COUNTCHKCD_RMRS": {
+  "section": "3.9.32",
+  "codes": {
+   "0": "Seedlings counted accurately.",
+   "1": "Seedling count estimated."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SEEDLING.SPCD_ID_CD": {
+  "section": "3.9.33",
+  "codes": {
+   "1": "Sample collected - Sample sent to lab for genetic species identification.",
+   "2": "No sample collected - Species identified in the field based on distinctive characteristics during the visit (e.g., presence of cones, fruit, or flowers).",
+   "3": "No sample collected - Species identified in the field without distinctive characteristics (e.g., based on elevation, location, or other characteristic not on tree)."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SITETREE.METHOD": {
+  "section": "3.10.21",
+  "codes": {
+   "1": "Tree measurements (length, age, etc.) collected during this inventory.",
+   "2": "Tree measurements (length, age, etc.) collected during a previous inventory.",
+   "3": "Site index estimated either in the field or office.",
+   "4": "Site index determined by the height-intercept method during this inventory."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "SITETREE.VALIDCD": {
+  "section": "3.10.23",
+  "codes": {
+   "0": "Tree failed in site index calculations.",
+   "1": "Tree was successful in site index calculations."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SITETREE.AGECHKCD_RMRS": {
+  "section": "3.10.32",
+  "codes": {
+   "0": "Age/radial growth measured directly from core; or calculated from remeasurement data (same tree).",
+   "1": "Age/radial growth was estimated due to rot, difficult-to-count rings, or increment bore could not reach tree center.",
+   "2": "Age/radial growth was calculated from a similar remeasure tree (same species and diameter class), or based on a similar tree off the subplot.",
+   "3": "Age measured from a collected tree core (for cores collected and sent into the office for aging)."
+  },
+  "note": "code 3 added starting PLOT.MANUAL = 6.0",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SITETREE.AGE_DETERMINATION_METHOD_PNWRS": {
+  "section": "3.10.33",
+  "codes": {
+   "0": "Bored age.",
+   "1": "Extrapolated age."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SITETREE.CCLCD_RMRS": {
+  "section": "3.10.34",
+  "codes": {
+   "1": "Open grown.",
+   "2": "Dominant.",
+   "3": "Codominant.",
+   "4": "Intermediate.",
+   "5": "Overtopped."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SITETREE.SIBASE_AGE_PNWRS": {
+  "section": "3.10.38",
+  "codes": {
+   "50": "50 year base age, site index should be within 20.",
+   "100": "100 year base age, site index should be within 30."
+  },
+  "oracle_type": "NUMBER(3)",
+  "numeric": true
+ },
+ "SITETREE.SITETRCD_RMRS": {
+  "section": "3.10.39",
+  "codes": {
+   "1": "Suitable site tree.",
+   "2": "Unsuitable site tree."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SITETREE.SITE_AGE_TREE_STATUS_PNWRS": {
+  "section": "3.10.40",
+  "codes": {
+   "N": "New site tree (copied from previous inventory and updated, copied from current tree tally, or entered manually as non-tally site tree).",
+   "O": "Old site tree (downloaded from previous plot visit).",
+   "I": "Invalid 'old' site tree (only for procedural differences or previous crew selection error or if better stand representative site trees are now available)."
+  },
+  "oracle_type": "VARCHAR2(1)",
+  "numeric": false
+ },
+ "SITETREE.SITE_AGE_TREE_TYPE_PNWRS": {
+  "section": "3.10.41",
+  "codes": {
+   "1": "Site tree.",
+   "2": "Age tree.",
+   "3": "Site and age tree."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SITETREE.SITE_TREE_METHOD_PNWRS": {
+  "section": "3.10.42",
+  "codes": {
+   "K": "Kings.",
+   "P": "Primary.",
+   "M": "California mixed conifer."
+  },
+  "note": "guide misprints the table label as 'Codes: SITE_AGE_TREE_TYPE_PNWRS'",
+  "oracle_type": "VARCHAR2(1)",
+  "numeric": false
+ },
+ "SITETREE.TREECLCD_RMRS": {
+  "section": "3.10.44",
+  "codes": {
+   "1": "Sound-live timber species - All live timber trees that meet minimum merchantability standards.",
+   "3": "Rough-live timber species - live trees without a solid 8-foot section or with 67 percent or more of merchantable volume cull, mostly sound dead wood or form defect."
+  },
+  "note": "only codes 1 and 3 printed for this table",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "INVASIVE_SUBPLOT_SPP.SUBP": {
+  "section": "4.1.8",
+  "codes": {
+   "1": "Center subplot.",
+   "2": "North subplot.",
+   "3": "Southeast subplot.",
+   "4": "Southwest subplot."
+  },
+  "oracle_type": "NUMBER",
+  "numeric": true
+ },
+ "P2VEG_SUBPLOT_SPP.SUBP": {
+  "section": "4.2.8",
+  "codes": {
+   "1": "Center subplot.",
+   "2": "North subplot.",
+   "3": "Southeast subplot.",
+   "4": "Southwest subplot."
+  },
+  "oracle_type": "NUMBER",
+  "numeric": true
+ },
+ "P2VEG_SUBPLOT_SPP.GROWTH_HABIT_CD": {
+  "section": "4.2.13",
+  "codes": {
+   "SD": "Seedlings and Saplings: Small trees less than 5 inches d.b.h. or d.r.c., including tally and non-tally tree species. Seedlings of any length are included.",
+   "SH": "Shrubs/Subshrubs/Woody Vines: Woody, multiple-stemmed plants of any size, subshrubs (low-growing shrubs under 1.5 feet tall at maturity), and woody vines. Most cacti are included.",
+   "FB": "Forbs: Herbaceous, broad-leaved plants; includes non-woody-vines, ferns (does not include mosses and cryptobiotic crusts).",
+   "GR": "Graminoids: Grasses and grass-like plants (includes rushes and sedges).",
+   "LT": "Large Trees: Large trees greater than or equal to 5 inches d.b.h. or d.r.c. (LOD = 2: non-tally species only; LOD = 3: tally and non-tally).",
+   "ST": "(PNWRS additional) Seedlings: Small trees <1 inch d.b.h. or d.r.c. Populated for PLOT.MANUAL <5.0.",
+   "TR": "(PNWRS additional) Trees - Alaska 2005: All trees, regardless of size. Populated for Alaska 2005 Wilderness data category."
+  },
+  "note": "ST, TR are additional codes for PNWRS, SURVEY.RSCD = 26, 27",
+  "oracle_type": "VARCHAR2(2)",
+  "numeric": false
+ },
+ "P2VEG_SUBPLOT_SPP.LAYER": {
+  "section": "4.2.14",
+  "codes": {
+   "1": "0 to 2.0 feet.",
+   "2": "2.1 to 6.0 feet.",
+   "3": "6.1 to 16.0 feet.",
+   "4": "Greater than 16 feet."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "P2VEG_SUBP_STRUCTURE.SUBP": {
+  "section": "4.3.8",
+  "codes": {
+   "1": "Center subplot.",
+   "2": "North subplot.",
+   "3": "Southeast subplot.",
+   "4": "Southwest subplot."
+  },
+  "oracle_type": "NUMBER",
+  "numeric": true
+ },
+ "P2VEG_SUBP_STRUCTURE.GROWTH_HABIT_CD": {
+  "section": "4.3.10",
+  "codes": {
+   "TT": "Tally Tree Species: All core tree species and any core optional tree species selected by a particular FIA work unit (FIA Master Tree Species List). Seedlings, saplings, and mature plants are included.",
+   "NT": "Non-tally Tree Species: Tree species not on the FIA work unit's tree tally list that are woody plants with a single well-defined, dominant main stem, expected to become greater than 13 feet in height.",
+   "SH": "Shrubs/Subshrubs/Woody Vines: Woody, multiple-stemmed plants of any size, subshrubs, and woody vines. Most cacti are included.",
+   "FB": "Forbs: Herbaceous, broad-leaved plants; includes non-woody-vines, ferns (does not include mosses and cryptobiotic crusts).",
+   "GR": "Graminoids: Grasses and grass-like plants (includes rushes and sedges).",
+   "DS": "Dead pinyon species shrubs: Dead pinyon species shrubs and dead portions of live pinyon species shrubs for COND.FLDTYPCD = 182, 184, 185, 369. Only populated by certain FIA work units (SURVEY.RSCD = 22).",
+   "FN": "(NRS additional) Ferns: Includes only ferns (excludes other forbs). Populated for PLOT.MANUAL [>=]5.0.",
+   "AL": "(PNWRS additional) All vegetation: Populated for PLOT.MANUAL <5.0.",
+   "MO": "(PNWRS additional) Moss/bryophytes. Only populated for Pacific Islands.",
+   "SL": "(PNWRS additional) Bare soil. Populated for PLOT.MANUAL <5.0.",
+   "SS": "(PNWRS additional) Newly sprouted shrub cover: Cover of newly sprouted shrubs after fire. Only populated for PNWRS Fire Effects and Recovery Study (FERS) plots.",
+   "ST": "(PNWRS additional) Seedlings: Small trees <1 inch d.b.h. or d.r.c. Populated for PLOT.MANUAL <5.0."
+  },
+  "note": "FN = additional NRS code; AL, MO, SL, SS, ST = additional PNWRS codes",
+  "oracle_type": "VARCHAR2(2)",
+  "numeric": false
+ },
+ "P2VEG_SUBP_STRUCTURE.LAYER": {
+  "section": "4.3.11",
+  "codes": {
+   "1": "0 to 2.0 feet.",
+   "2": "2.1 to 6.0 feet.",
+   "3": "6.1 to 16.0 feet.",
+   "4": "Greater than 16 feet.",
+   "5": "Aerial: Canopy cover for all layers."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "COND_DWM_CALC.PHASE": {
+  "section": "5.8.12",
+  "codes": {
+   "P2": "Phase 2 plot design.",
+   "P3": "Phase 3 plot design.",
+   "P23": "Phase 2 and phase 3 plot (both designs co-located)."
+  },
+  "oracle_type": "VARCHAR2(3)",
+  "numeric": false
+ },
+ "DWM_COARSE_WOODY_DEBRIS.DECAYCD": {
+  "section": "5.2.15",
+  "codes": {
+   "1": "Sound, freshly fallen, intact logs. Intact, no rot; conks of stem decay absent. Original color. Invading roots absent. If branches are present, fine twigs are still attached and have tight bark.",
+   "2": "Sound. Mostly intact; sapwood partly soft (starting to decay) but can't be pulled apart by hand. Original color. Roots absent. If branches are present, many fine twigs are gone and remaining fine twigs have peeling bark.",
+   "3": "Heartwood sound; piece supports its own weight. Hard, large pieces; sapwood can be pulled apart by hand or sapwood absent. Reddish-brown or original color. Roots in sapwood only. Branch stubs will not pull out.",
+   "4": "Heartwood rotten; piece does not support its own weight, but maintains its shape. Soft, small blocky pieces; a metal pin can be pushed into heartwood. Reddish or light brown. Roots throughout. Branch stubs pull out.",
+   "5": "None; piece no longer maintains its shape, it spreads out on ground. Soft; powdery when dry. Red-brown to dark brown. Roots throughout. Branch stubs and pitch pockets have usually rotted down."
+  },
+  "note": "decay class table; columns: structural integrity / texture of rotten portions / color / invading roots / branches and twigs",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "DWM_COARSE_WOODY_DEBRIS.HOLLOWCD": {
+  "section": "5.2.20",
+  "codes": {
+   "Y": "The piece is hollow.",
+   "N": "The piece is not hollow."
+  },
+  "oracle_type": "VARCHAR2(1)",
+  "numeric": false
+ },
+ "DWM_COARSE_WOODY_DEBRIS.CWDHSTCD": {
+  "section": "5.2.21",
+  "codes": {
+   "1": "CWD piece is on the ground as a result of natural causes.",
+   "2": "CWD piece is on the ground as a result of major recent harvest activity ([<=]15 yrs old).",
+   "3": "CWD piece is on the ground as a result of older harvest activity (>15 yrs old).",
+   "4": "CWD piece is on the ground as a result of an incidental harvest (such as firewood cutting).",
+   "5": "Exact reason unknown."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "DWM_COARSE_WOODY_DEBRIS.CHARRED_CD": {
+  "section": "5.2.33",
+  "codes": {
+   "0": "None of the piece is charred by fire.",
+   "1": "Up to 1/3 of the piece is charred by fire.",
+   "2": "1/3 to 2/3 of the piece is charred by fire.",
+   "3": "2/3 or more of the piece is charred by fire."
+  },
+  "note": "same code set as retired CHRCD_PNWRS",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "DWM_COARSE_WOODY_DEBRIS.ORNTCD_PNWRS": {
+  "section": "5.2.34",
+  "codes": {
+   "A": "Across - Piece is oriented between vertical and horizontal.",
+   "F": "Flat - Piece is on flat ground (<10% slope).",
+   "H": "Horizontal - Piece is oriented within 15 degrees of the contour.",
+   "V": "Vertical - Piece is oriented within 15 degrees of perpendicular to the contour."
+  },
+  "oracle_type": "VARCHAR2(1)",
+  "numeric": false
+ },
+ "DWM_COARSE_WOODY_DEBRIS.CWD_SAMPLE_METHOD": {
+  "section": "5.2.41",
+  "codes": {
+   "0": "CWD not sampled. Not applicable.",
+   "1": "National P3 protocol. Three 24-foot transects on all subplots. Slope.",
+   "2": "PNWRS P2 protocol. Two 58.9-foot transects per subplot. Slope.",
+   "3": "PNWRS P2 and National P3 protocols overlaid. One 24-foot and two 58.9-foot transects per subplot. Slope.",
+   "4": "PNWRS juniper protocol. Slope.",
+   "5": "PNWRS P2 protocol. Two 24-foot transects per subplot. Slope.",
+   "6": "National P2 protocol, base option. Horizontal.",
+   "7": "National P2 protocol, wildlife option. Horizontal.",
+   "8": "National P2 protocol, rapid assessment option. Horizontal.",
+   "9": "National P3 protocol. Two 24-foot transects per subplot. Slope.",
+   "10": "RMRS P2 protocol. Three 120-foot transects per plot. Slope.",
+   "11": "SRS P2 protocol. One 48-foot transect only on subplot 1 (random orientation). Horizontal.",
+   "12": "PNWRS P2 protocol, transition wildlife. Two 24-foot transects per subplot. Horizontal.",
+   "13": "PNWRS P2 protocol for National Forest System, transition wildlife. Two 24-foot transects per subplot. Horizontal.",
+   "14": "National P2 protocol, wildlife for National Forest System. Two 24-foot transects per subplot. Horizontal.",
+   "15": "PNWRS periodic protocol. Three 55.6-foot transects per subplot. Horizontal.",
+   "16": "PNWRS periodic protocol. Three 55.8-foot transects per subplot. Horizontal.",
+   "17": "National P2 and P3 protocol (2001). Three 58.9-foot transects per subplot. Horizontal."
+  },
+  "note": "description; transect distance measurement",
+  "oracle_type": "VARCHAR2(6)",
+  "numeric": false
+ },
+ "DWM_COARSE_WOODY_DEBRIS.HORIZ_DIST_CD": {
+  "section": "5.2.43",
+  "codes": {
+   "1": "Central longitudinal axis of piece intersects the transect on the subplot ([<=]24.0 horizontal feet).",
+   "2": "Central longitudinal axis of piece intersects the transect on the macroplot (24.1-58.9 horizontal feet)."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "DWM_COARSE_WOODY_DEBRIS.LARGE_END_DIA_CLASS": {
+  "section": "5.2.45",
+  "codes": {
+   "1": "3.0 to 4.9 inches.",
+   "2": "5.0 to 8.9 inches.",
+   "3": "9.0 to 14.9 inches.",
+   "4": "15.0 to 20.9 inches.",
+   "5": "21.0 to 39.9 inches.",
+   "6": "40.0+ inches."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "DWM_COARSE_WOODY_DEBRIS.LENGTH_CD": {
+  "section": "5.2.46",
+  "codes": {
+   "1": "CWD piece length is [>=]3.0 feet.",
+   "2": "CWD piece length is [>=]0.5 feet and [<]3.0 feet."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "DWM_DUFF_LITTER_FUEL.SMPLOCCD": {
+  "section": "5.3.9",
+  "codes": {
+   "1": "Duff, litter, and fuelbed sampled at 14 feet.",
+   "2": "Duff, litter, and fuelbed sampled at 24 feet."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "DWM_DUFF_LITTER_FUEL.DLF_SAMPLE_METHOD": {
+  "section": "5.3.21",
+  "codes": {
+   "0": "Duff, litter, fuelbed not sampled. Not applicable.",
+   "1": "National P3 protocol. Sampled at 2 points (14 and 24 feet) along each transect with average recorded. Slope.",
+   "2": "National P3 protocol. Sampled at a point located 24 feet along each transect. Slope.",
+   "3": "National P2 protocol (all options). Sampled at a point 24 feet along each transect. Horizontal.",
+   "4": "RMRS P2 protocol. One duff and litter point sampled at a point 24 feet along each transect on subplots 2, 3, and 4. Horizontal."
+  },
+  "note": "description; distance measurement",
+  "oracle_type": "VARCHAR2(6)",
+  "numeric": false
+ },
+ "DWM_DUFF_LITTER_FUEL.DUFF_METHOD": {
+  "section": "5.3.22",
+  "codes": {
+   "NULL": "Not included in protocol.",
+   "0": "Included in protocol but not sampled.",
+   "1": "Measured.",
+   "2": "Estimated.",
+   "3": "Measured up to maximum depth."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "DWM_DUFF_LITTER_FUEL.DUFF_NONSAMPLE_REASN_CD": {
+  "section": "5.3.23",
+  "codes": {
+   "04": "Time limitation.",
+   "05": "Lost data.",
+   "10": "Other - The point was not measured (for example, snow/water covering sample point, or some other obstruction prevented measurement)."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "DWM_DUFF_LITTER_FUEL.LITTER_METHOD": {
+  "section": "5.3.24",
+  "codes": {
+   "NULL": "Not included in protocol.",
+   "0": "Included in protocol but not sampled.",
+   "1": "Measured.",
+   "2": "Estimated.",
+   "3": "Measured up to maximum depth."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "DWM_DUFF_LITTER_FUEL.LITTER_NONSAMPLE_REASN_CD": {
+  "section": "5.3.25",
+  "codes": {
+   "04": "Time limitation.",
+   "05": "Lost data.",
+   "10": "Other - The point was not measured (for example, snow/water covering sample point, or some other obstruction prevented measurement)."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "DWM_DUFF_LITTER_FUEL.FUELBED_METHOD": {
+  "section": "5.3.26",
+  "codes": {
+   "NULL": "Not included in protocol.",
+   "0": "Included in protocol but not sampled.",
+   "1": "Measured.",
+   "2": "Estimated.",
+   "3": "Measured up to maximum depth."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "DWM_DUFF_LITTER_FUEL.FUELBED_NONSAMPLE_REASN_CD": {
+  "section": "5.3.27",
+  "codes": {
+   "04": "Time limitation.",
+   "05": "Lost data.",
+   "10": "Other - The point was not measured (for example, snow/water covering sample point, or some other obstruction prevented measurement)."
+  },
+  "note": "'Codes:' prefix missing in extraction",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "DWM_DUFF_LITTER_FUEL.DL_STATUS_CD": {
+  "section": "5.3.28",
+  "codes": {
+   "0": "Duff and litter point not sampled.",
+   "1": "Duff and litter point sampled."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "DWM_FINE_WOODY_DEBRIS.RSNCTCD": {
+  "section": "5.4.14",
+  "codes": {
+   "0": "FWD is not unusually high (<100).",
+   "1": "High count is due to an overall high density of FWD across the transect.",
+   "2": "Wood rat's nest located on transect.",
+   "3": "Tree or shrub laying across transect.",
+   "4": "Other reason."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "DWM_FINE_WOODY_DEBRIS.PILESCD": {
+  "section": "5.4.15",
+  "codes": {
+   "0": "No pile is present on the transect. FWD was sampled.",
+   "1": "Yes, a pile is present on the transect. FWD was not sampled."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "DWM_FINE_WOODY_DEBRIS.FWD_STATUS_CD": {
+  "section": "5.4.31",
+  "codes": {
+   "0": "FWD transect segment not sampled.",
+   "1": "FWD transect segment sampled."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "DWM_FINE_WOODY_DEBRIS.FWD_NONSAMPLE_REASN_CD": {
+  "section": "5.4.32",
+  "codes": {
+   "04": "Time limitation.",
+   "05": "Lost data.",
+   "10": "Other - The point was not measured (for example, snow/water covering transect segment, or some other obstruction prevented measurement)."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "DWM_FINE_WOODY_DEBRIS.FWD_SAMPLE_METHOD": {
+  "section": "5.4.33",
+  "codes": {
+   "0": "FWD not sampled. Not applicable.",
+   "1": "National P2 and P3 protocol. One 10-foot transect for small and medium FWD and one 20-foot transect for large FWD per subplot. Slope.",
+   "2": "National P2 and P3 protocol. One 6-foot transect for small and medium FWD and one 10-foot transect for large FWD per subplot. Slope.",
+   "3": "National P2 protocol (all options). One 6-foot transect for small and medium FWD and one 10-foot transect for large FWD per subplot. Horizontal.",
+   "4": "SRS P2 protocol. One 6-foot transect for small and medium FWD, and one 10-foot transect for large FWD on subplot 1. Slope.",
+   "5": "RMRS P2 protocol. One 6-foot transect for small and medium FWD and one 10-foot transect for large FWD on each of subplots 2, 3, and 4. Slope."
+  },
+  "note": "description; transect distance measurement",
+  "oracle_type": "VARCHAR2(6)",
+  "numeric": false
+ },
+ "SUBP_SOIL_SAMPLE_LOC.SUBP": {
+  "section": "8.1.11",
+  "codes": {
+   "2": "North subplot.",
+   "3": "Southeast subplot.",
+   "4": "Southwest subplot."
+  },
+  "note": "soils protocols use only subplots 2-4",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SUBP_SOIL_SAMPLE_LOC.SOILS_SAMPLE_METHOD_CD": {
+  "section": "8.1.14",
+  "codes": {
+   "1": "P3 soils sample method.",
+   "2": "Interior Alaska pilot soils sample method.",
+   "3": "Interior Alaska soils sample method.",
+   "4": "Hawaii soils sample method."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SUBP_SOIL_SAMPLE_LOC.SOILS_SAMPLE_STATUS_CD": {
+  "section": "8.1.15",
+  "codes": {
+   "01": "[METHOD_CD = 1] Sampled: forest that has been identified as a condition on the plot.",
+   "02": "[METHOD_CD = 1] Not sampled: non-forest.",
+   "03": "[METHOD_CD = 1] Not sampled forest condition: too rocky to sample.",
+   "04": "[METHOD_CD = 1] Not sampled forest condition: water or boggy.",
+   "05": "[METHOD_CD = 1] Not sampled forest condition: access denied.",
+   "06": "[METHOD_CD = 1] Not sampled forest condition: too dangerous to sample.",
+   "07": "[METHOD_CD = 1] Not sampled forest condition: obstruction in sampling area.",
+   "08": "[METHOD_CD = 1] Not sampled forest condition: broken or lost equipment.",
+   "09": "[METHOD_CD = 1] Not sampled forest condition: other.",
+   "11": "[METHOD_CD = 1] Sampled: forest that has NOT been identified as a condition on the plot.",
+   "1": "[METHOD_CD = 2, 3, 4] Sampled.",
+   "2": "[METHOD_CD = 2, 3, 4] Not sampled: standing water.",
+   "3": "[METHOD_CD = 2, 3, 4] Not sampled: access denied.",
+   "4": "[METHOD_CD = 2, 3, 4] Not sampled: hazardous.",
+   "5": "[METHOD_CD = 2, 3, 4] Not sampled: other."
+  },
+  "note": "two tables: codes 01-11 when SOILS_SAMPLE_METHOD_CD = 1; codes 1-5 when SOILS_SAMPLE_METHOD_CD = 2, 3, 4",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "SUBP_SOIL_SAMPLE_LOC.CORE_BOTTOM_CD": {
+  "section": "8.1.18",
+  "codes": {
+   "1": "Identifiable plant parts.",
+   "2": "Unidentifiable plant parts.",
+   "5": "Mineral soil.",
+   "6": "Unknown material."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SUBP_SOIL_SAMPLE_LOC.RESTRICTION_DEPTH_CD_1": {
+  "section": "8.1.20",
+  "codes": {
+   "1": "Frozen soil.",
+   "2": "Gravel.",
+   "3": "Substrate not reached >40 inches.",
+   "4": "Substrate unknown.",
+   "5": "Bedrock.",
+   "6": "Sand."
+  },
+  "note": "CD_2, CD_3, CD_4 at 8.1.21-8.1.23 use same codes",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SUBP_SOIL_SAMPLE_LOC.RESTRICTION_DEPTH_CD_2": {
+  "section": "8.1.21",
+  "codes": {
+   "1": "Frozen soil.",
+   "2": "Gravel.",
+   "3": "Substrate not reached >40 inches.",
+   "4": "Substrate unknown.",
+   "5": "Bedrock.",
+   "6": "Sand."
+  },
+  "note": "see RESTRICTION_DEPTH_CD_1",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SUBP_SOIL_SAMPLE_LOC.RESTRICTION_DEPTH_CD_3": {
+  "section": "8.1.22",
+  "codes": {
+   "1": "Frozen soil.",
+   "2": "Gravel.",
+   "3": "Substrate not reached >40 inches.",
+   "4": "Substrate unknown.",
+   "5": "Bedrock.",
+   "6": "Sand."
+  },
+  "note": "see RESTRICTION_DEPTH_CD_1",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SUBP_SOIL_SAMPLE_LOC.RESTRICTION_DEPTH_CD_4": {
+  "section": "8.1.23",
+  "codes": {
+   "1": "Frozen soil.",
+   "2": "Gravel.",
+   "3": "Substrate not reached >40 inches.",
+   "4": "Substrate unknown.",
+   "5": "Bedrock.",
+   "6": "Sand."
+  },
+  "note": "see RESTRICTION_DEPTH_CD_1",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SUBP_SOIL_SAMPLE_LOC.USED_IN_ESTIMATION_CD": {
+  "section": "8.1.30",
+  "codes": {
+   "0": "The soil core is not included in population estimates.",
+   "1": "The soil core is included in population estimates."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SUBP_SOIL_SAMPLE_LAYER.SUBP": {
+  "section": "8.2.11",
+  "codes": {
+   "2": "North subplot.",
+   "3": "Southeast subplot.",
+   "4": "Southwest subplot."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SUBP_SOIL_SAMPLE_LAYER.SAMPLER_TYPE": {
+  "section": "8.2.13",
+  "codes": {
+   "BD": "Bulk density.",
+   "SF": "Sample frame.",
+   "O": "Other."
+  },
+  "oracle_type": "VARCHAR2(2)",
+  "numeric": false
+ },
+ "SUBP_SOIL_SAMPLE_LAYER.LAYER_TYPE": {
+  "section": "8.2.15",
+  "codes": {
+   "LITTER": "[1 P3; 3 Interior Alaska] Litter layer.",
+   "FOREST FLOOR": "[1 P3] Forest floor.",
+   "MINERAL_SOIL_0-4_IN": "[1 P3] Mineral soil layer collected at 0-4 inches in depth.",
+   "MINERAL_SOIL_4-8_IN": "[1 P3] Mineral soil layer collected at 4-8 inches in depth.",
+   "IDENT_PARTS": "[2 Interior Alaska pilot; 3 Interior Alaska] Identifiable parts.",
+   "UNIDENT_PARTS": "[2; 3] Unidentifiable parts.",
+   "MINERAL_SOIL": "[2; 3] Mineral soil.",
+   "UNK_SOIL": "[2; 3] Unknown soil.",
+   "GREEN_MOSS_LICHEN": "[3 Interior Alaska] Green moss / lichen layer.",
+   "MINERAL_SOIL_0-20_CM": "[4 Hawaii] 0-20 cm mineral soil layer.",
+   "MINERAL_SOIL_20-40_CM": "[4 Hawaii] 20-40 cm mineral soil layer.",
+   "MINERAL_SOIL_40-60_CM": "[4 Hawaii] 40-60 cm mineral soil layer.",
+   "MINERAL_SOIL_60-80_CM": "[4 Hawaii] 60-80 cm mineral soil layer.",
+   "MINERAL_SOIL_80-100_CM": "[4 Hawaii] 80-100 cm mineral soil layer."
+  },
+  "note": "code set depends on SUBP_SOIL_SAMPLE_LOC.SOILS_SAMPLE_METHOD_CD; prefix in [] gives the method",
+  "oracle_type": "VARCHAR2(30)",
+  "numeric": false
+ },
+ "SUBP_SOIL_SAMPLE_LAYER.LAYER_COLLECTED_CD": {
+  "section": "8.2.18",
+  "codes": {
+   "1": "Sample collected for analysis.",
+   "2": "Sample not collected for analysis; other reason."
+  },
+  "note": "table printed under a misplaced 'Codes: TEXTURE_CD' label; matched by content",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "SUBP_SOIL_SAMPLE_LAYER.TEXTURE_CD": {
+  "section": "8.2.29",
+  "codes": {
+   "0": "Organic. [P3 only]",
+   "1": "Loamy.",
+   "2": "Clayey.",
+   "3": "Sandy.",
+   "4": "Coarse sand.",
+   "9": "Not measured."
+  },
+  "note": "code 0 Organic only in the P3 table, SOILS_SAMPLE_METHOD_CD = 1; Interior Alaska table (METHOD_CD = 2, 3) has 1-4, 9",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "PLOT.MEASMON": {
+  "section": "2.4.13",
+  "codes": {
+   "1": "January.",
+   "2": "February.",
+   "3": "March.",
+   "4": "April.",
+   "5": "May.",
+   "6": "June.",
+   "7": "July.",
+   "8": "August.",
+   "9": "September.",
+   "10": "October.",
+   "11": "November.",
+   "12": "December."
+  },
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "PLOT.FUTFORCD_RMRS": {
+  "section": "2.4.55",
+  "codes": {
+   "0": "No, there is no chance this plot will meet the forest definition at the next cycle.",
+   "1": "Yes, there is some chance that this plot could become forested in the next cycle; there are trees present, or forest land is present within 1/2 mile.",
+   "2": "There are no forest tree species on the site, but other woody species not currently defined as forest species occupy the site (such as salt cedar, palo verde, ironwood, big sage)."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "PLOT.PLOT_SEASON_NERS": {
+  "section": "2.4.60",
+  "codes": {
+   "1": "Winter.",
+   "2": "Summer.",
+   "3": "Anytime."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "PLOT.PREV_MICROPLOT_LOC_RMRS": {
+  "section": "2.4.61",
+  "codes": {
+   "CENTER": "Microplot center located at subplot center.",
+   "OFFSET": "Microplot center offset from subplot center (e.g., 12 feet horizontal at 90 degrees from subplot center)."
+  },
+  "oracle_type": "VARCHAR2(12)",
+  "numeric": false
+ },
+ "PLOT.PREV_PLOT_STATUS_CD_RMRS": {
+  "section": "2.4.62",
+  "codes": {
+   "1": "Sampled - at least one accessible forest land condition present on plot.",
+   "2": "Sampled - no accessible forest land condition present on plot.",
+   "3": "Nonsampled."
+  },
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "PLOT.REUSECD1": {
+  "section": "2.4.63",
+  "codes": {
+   "0": "No evidence of recreation use.",
+   "1": "Motor vehicle (four wheel drive, ATV, motorcycle).",
+   "2": "Horse riding.",
+   "3": "Camping.",
+   "4": "Hiking.",
+   "5": "Hunting/shooting.",
+   "6": "Fishing.",
+   "7": "Boating - physical evidence such as launch sites or docks.",
+   "9": "Other - recreation use where evidence is present, such as human litter, but purpose is not clear or does not fit into above categories."
+  },
+  "note": "REUSECD2/3 same list",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE_GRM_MIDPT.STATUSCD": {
+  "section": "3.5.7",
+  "codes": {
+   "0": "No status - Tree is not presently in the sample (remeasurement plots only). Tree was incorrectly tallied at the previous inventory, currently not tallied due to definition or procedural change, or is not tallied because it is located on a nonsampled condition. RECONCILECD = 5-9 required for remeasured annual inventory data.",
+   "1": "Live tree.",
+   "2": "Dead tree.",
+   "3": "Retired code - Starting with PLOT.MANUAL = 9.3, this code is only valid for some periodic-to-periodic, periodic-to-annual, and modeled GRM estimates (SURVEY.RSCD = 23, 24). Removed - Cut and removed by direct human activity related to harvesting, silviculture, or land clearing. This tree is assumed to be utilized."
+  },
+  "note": "see TREE.STATUSCD",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE_GRM_MIDPT.STANDING_DEAD_CD": {
+  "section": "3.5.12",
+  "codes": {
+   "0": "No - tree does not qualify as standing dead.",
+   "1": "Yes - tree does qualify as standing dead."
+  },
+  "note": "see TREE.STANDING_DEAD_CD",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE_GRM_MIDPT.DIAHTCD": {
+  "section": "3.5.13",
+  "codes": {
+   "1": "Breast height (d.b.h.).",
+   "2": "Root collar (d.r.c.)."
+  },
+  "note": "see TREE.DIAHTCD",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE_GRM_MIDPT.DECAYCD": {
+  "section": "3.5.18",
+  "codes": {
+   "1": "All limbs and branches are present; the top of the crown is still present; all bark remains; sapwood is intact, with minimal decay; heartwood is sound and hard.",
+   "2": "There are few limbs and no fine branches; the top may be broken; a variable amount of bark remains; sapwood is sloughing with advanced decay; heartwood is sound at base but beginning to decay in the outer part of the upper bole.",
+   "3": "Only limb stubs exist; the top is broken; a variable amount of bark remains; sapwood is sloughing; heartwood has advanced decay in upper bole and is beginning at the base.",
+   "4": "Few or no limb stubs remain; the top is broken; a variable amount of bark remains; sapwood is sloughing; heartwood has advanced decay at the base and is sloughing in the upper bole.",
+   "5": "No evidence of branches remains; the top is broken; <20 percent of the bark remains; sapwood is gone; heartwood is sloughing throughout."
+  },
+  "note": "see TREE.DECAYCD",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE_GRM_MIDPT.TREECLCD": {
+  "section": "3.5.19",
+  "codes": {
+   "2": "Growing stock - All live trees of commercial species that meet minimum merchantability standards (at least one solid 8-foot section, reasonably free of form defect, at least 34 percent (26 percent in CA, OR, WA, AK) of the volume merchantable). Excludes rough or rotten cull trees.",
+   "3": "Rough cull - Live trees without a solid 8-foot section reasonably free of form defect, or with 67 percent (75 percent in CA, OR, WA, AK) or more of merchantable volume cull, mostly due to sound dead wood or severe form defect. Also all trees of noncommercial species or SPGRPCD 23, 43, 48. For dead trees, this code indicates that the tree is salvable (sound).",
+   "4": "Rotten cull - All live trees with 67 percent (75 percent in CA, OR, WA, AK) or more of the merchantable volume cull, more than half due to rotten or missing cubic-foot volume loss. For dead trees, this code indicates that the tree is nonsalvable (not sound)."
+  },
+  "note": "see TREE.TREECLCD",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE_GRM_MIDPT.STDORGCD": {
+  "section": "3.5.22",
+  "codes": {
+   "0": "Natural stands.",
+   "1": "Clear evidence of artificial regeneration."
+  },
+  "note": "see COND.STDORGCD",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE_GRM_BEGIN.STATUSCD": {
+  "section": "3.6.7",
+  "codes": {
+   "0": "No status - Tree is not presently in the sample (remeasurement plots only). Tree was incorrectly tallied at the previous inventory, currently not tallied due to definition or procedural change, or is not tallied because it is located on a nonsampled condition. RECONCILECD = 5-9 required for remeasured annual inventory data.",
+   "1": "Live tree.",
+   "2": "Dead tree.",
+   "3": "Retired code - Starting with PLOT.MANUAL = 9.3, this code is only valid for some periodic-to-periodic, periodic-to-annual, and modeled GRM estimates (SURVEY.RSCD = 23, 24). Removed - Cut and removed by direct human activity related to harvesting, silviculture, or land clearing. This tree is assumed to be utilized."
+  },
+  "note": "see TREE.STATUSCD",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE_GRM_BEGIN.STANDING_DEAD_CD": {
+  "section": "3.6.12",
+  "codes": {
+   "0": "No - tree does not qualify as standing dead.",
+   "1": "Yes - tree does qualify as standing dead."
+  },
+  "note": "see TREE.STANDING_DEAD_CD",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE_GRM_BEGIN.DIAHTCD": {
+  "section": "3.6.13",
+  "codes": {
+   "1": "Breast height (d.b.h.).",
+   "2": "Root collar (d.r.c.)."
+  },
+  "note": "see TREE.DIAHTCD",
+  "oracle_type": "NUMBER(1)",
+  "numeric": true
+ },
+ "TREE_GRM_BEGIN.DECAYCD": {
+  "section": "3.6.18",
+  "codes": {
+   "1": "All limbs and branches are present; the top of the crown is still present; all bark remains; sapwood is intact, with minimal decay; heartwood is sound and hard.",
+   "2": "There are few limbs and no fine branches; the top may be broken; a variable amount of bark remains; sapwood is sloughing with advanced decay; heartwood is sound at base but beginning to decay in the outer part of the upper bole.",
+   "3": "Only limb stubs exist; the top is broken; a variable amount of bark remains; sapwood is sloughing; heartwood has advanced decay in upper bole and is beginning at the base.",
+   "4": "Few or no limb stubs remain; the top is broken; a variable amount of bark remains; sapwood is sloughing; heartwood has advanced decay at the base and is sloughing in the upper bole.",
+   "5": "No evidence of branches remains; the top is broken; <20 percent of the bark remains; sapwood is gone; heartwood is sloughing throughout."
+  },
+  "note": "see TREE.DECAYCD",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE_GRM_BEGIN.TREECLCD": {
+  "section": "3.6.19",
+  "codes": {
+   "2": "Growing stock - All live trees of commercial species that meet minimum merchantability standards (at least one solid 8-foot section, reasonably free of form defect, at least 34 percent (26 percent in CA, OR, WA, AK) of the volume merchantable). Excludes rough or rotten cull trees.",
+   "3": "Rough cull - Live trees without a solid 8-foot section reasonably free of form defect, or with 67 percent (75 percent in CA, OR, WA, AK) or more of merchantable volume cull, mostly due to sound dead wood or severe form defect. Also all trees of noncommercial species or SPGRPCD 23, 43, 48. For dead trees, this code indicates that the tree is salvable (sound).",
+   "4": "Rotten cull - All live trees with 67 percent (75 percent in CA, OR, WA, AK) or more of the merchantable volume cull, more than half due to rotten or missing cubic-foot volume loss. For dead trees, this code indicates that the tree is nonsalvable (not sound)."
+  },
+  "note": "see TREE.TREECLCD",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "TREE_GRM_BEGIN.STDORGCD": {
+  "section": "3.6.22",
+  "codes": {
+   "0": "Natural stands.",
+   "1": "Clear evidence of artificial regeneration."
+  },
+  "note": "see COND.STDORGCD",
+  "oracle_type": "NUMBER(2)",
+  "numeric": true
+ },
+ "unresolved": [
+  {
+   "col": "TREE.TREEGRCD",
+   "reason": "3.1.26: no code table in the guide; tree grade codes are in the Northern (RSCD 23, 24) and Southern (RSCD 33) regional field guides."
+  },
+  {
+   "col": "TREE.TREEHISTCD",
+   "reason": "3.1.55: no code table; guide says to contact the appropriate FIA work unit for definitions (RSCD 23, 24, 33)."
+  },
+  {
+   "col": "TREE.DAMAGE_AGENT_CD1 (full list)",
+   "reason": "Only the general agent codes from 3.1.120 plus requested specifics (0, 21000, 22500, 26009) transcribed; the complete specific-code list is appendix H (not transcribed). Same applies to DAMAGE_AGENT_CD2/CD3, SEEDLING.DAMAGE_AGENT_CD1-3_SRS (3.9.25-29) and SITETREE.DAMAGE_AGENT_CD1-3_RMRS (3.10.35-37)."
+  },
+  {
+   "col": "PLOT.DESIGNCD (other regions)",
+   "reason": "Only DESIGNCD 1, all SRS codes (210-299) and 999 from appendix G transcribed; NRS-NE (101-1xx), NRS-NC, RMRS (4xx), PNWRS (5xx/6xx) codes omitted. Same appendix applies to PLOT.DESIGNCD_P2A."
+  },
+  {
+   "col": "SUBP_COND (all columns)",
+   "reason": "Section 2.7 has no 'Codes:' tables; no coded columns."
+  },
+  {
+   "col": "POP_PLOT_STRATUM_ASSGN (all columns)",
+   "reason": "Section 9.6 has no 'Codes:' tables (STRATUMCD/ESTN_UNIT are identifiers, not enumerated)."
+  },
+  {
+   "col": "COND_DWM_CALC (other columns)",
+   "reason": "Section 5.8: PHASE is the only column with a code table."
+  },
+  {
+   "col": "SITETREE.SIBASE / AGEDIA / SITREE_EST",
+   "reason": "3.10.14, 3.10.17, 3.10.22: numeric measurements (years / feet), no code tables. SIBASE text: commonly 25, 50, 80, 100 years."
+  },
+  {
+   "col": "TREE.TREECLCD code 1",
+   "reason": "3.1.23 table lists only codes 2, 3, 4; no code 1 printed."
+  }
+ ],
+ "_notes": [
+  "Transcribed from the public FIADB User Guide v9.4 (Database Description, Aug 2025). Descriptions trimmed to first sentence(s) plus essential qualifiers.",
+  "Text extraction dropped most >= / <= glyphs (e.g. 'trees 5 inches d.b.h.' means >=5). Where restored, shown in brackets like [>=] or [<=].",
+  "Code keys are strings exactly as printed (e.g. '01' vs '1'); see oracle_type/numeric to know whether the DB column is NUMBER (then '01' == 1).",
+  "SOILS tables are named SUBP_SOIL_SAMPLE_LOC (8.1) and SUBP_SOIL_SAMPLE_LAYER (8.2) in the guide."
+ ]
+}

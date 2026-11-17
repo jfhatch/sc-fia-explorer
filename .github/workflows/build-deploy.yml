@@ -1,0 +1,148 @@
+# Monthly rebuild of the SC FIA explorer from the FIADB DataMart, deployed to GitHub Pages.
+# The site is only redeployed when every step succeeds; otherwise the live site stays as it is.
+name: build-deploy
+
+on:
+  schedule:
+    - cron: "17 9 3 * *"          # 09:17 UTC on the 3rd of every month
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Rebuild even if the DataMart headers are unchanged"
+        type: boolean
+        default: false
+      source:
+        description: "datamart = download and build here; local-release = deploy the site zip uploaded by scripts/publish_local.ps1"
+        type: choice
+        options: [datamart, local-release]
+        default: datamart
+
+permissions:
+  contents: write                  # commit ci/datamart_manifest.json
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    outputs:
+      deploy: ${{ steps.decide.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: Check DataMart headers against the committed manifest (and reachability)
+        id: check
+        if: ${{ inputs.source != 'local-release' }}
+        run: python -I scripts/ci_manifest.py check --out "$GITHUB_OUTPUT"
+
+      - name: Decide
+        id: decide
+        run: |
+          if [ "${{ inputs.source }}" = "local-release" ] || [ "${{ inputs.force }}" = "true" ] || [ "${{ steps.check.outputs.changed }}" = "true" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"; echo "Rebuilding and deploying."
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"; echo "No DataMart changes since the last build: nothing to do."
+          fi
+
+      # ---------------- build from the DataMart
+      - name: Restore cached DataMart downloads
+        if: ${{ steps.decide.outputs.deploy == 'true' && inputs.source != 'local-release' }}
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw
+          key: datamart-raw-${{ hashFiles('ci/datamart_headers_now.json') }}
+          restore-keys: datamart-raw-
+
+      - name: Download, build SQLite, validate (incl. Plot 91-25 regression) and run the test suite
+        if: ${{ steps.decide.outputs.deploy == 'true' && inputs.source != 'local-release' }}
+        run: python -I scripts/build_db.py
+
+      - name: Save DataMart downloads to the cache
+        if: ${{ steps.decide.outputs.deploy == 'true' && inputs.source != 'local-release' }}
+        uses: actions/cache/save@v4
+        with:
+          path: data/raw
+          key: datamart-raw-${{ hashFiles('ci/datamart_headers_now.json') }}
+
+      - name: Export the static site
+        if: ${{ steps.decide.outputs.deploy == 'true' && inputs.source != 'local-release' }}
+        run: |
+          python -I scripts/export_static.py --out site
+          python -I scripts/ci_manifest.py write
+
+      # ---------------- or take the site built on a PC (scripts/publish_local.ps1)
+      - name: Fetch the locally built site
+        if: ${{ inputs.source == 'local-release' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download local-site --pattern site.zip --dir .
+          unzip -q site.zip -d site
+          python - <<'EOF'
+          import os, sys
+          tot = 0
+          for dp, dn, fn in os.walk("site"):
+              for f in fn:
+                  s = os.path.getsize(os.path.join(dp, f)); tot += s
+                  if s > 50 * 2**20: sys.exit(f"{f} exceeds 50 MB")
+          if tot > 900 * 2**20: sys.exit(f"site is {tot / 2**20:.0f} MB > 900 MB")
+          print(f"site from release: {tot / 2**20:.1f} MB")
+          EOF
+
+      - name: Upload the site as the Pages artifact
+        if: ${{ steps.decide.outputs.deploy == 'true' }}
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+          retention-days: 90
+
+      - name: Keep the new manifest for the commit job
+        if: ${{ steps.decide.outputs.deploy == 'true' && inputs.source != 'local-release' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: datamart-manifest
+          path: ci/datamart_manifest.json
+          retention-days: 90
+
+  deploy:
+    needs: build
+    if: ${{ needs.build.outputs.deploy == 'true' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  commit-manifest:
+    needs: [build, deploy]
+    if: ${{ needs.build.outputs.deploy == 'true' && inputs.source != 'local-release' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: datamart-manifest
+          path: ci
+      - name: Commit the manifest of the deployed build
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ci/datamart_manifest.json
+          if git diff --cached --quiet; then echo "manifest unchanged"; exit 0; fi
+          git commit -m "Update DataMart manifest after deployed build"
+          git push

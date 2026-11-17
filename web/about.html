@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>About · SC FIA plot explorer</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="page prose">
+  <p><a href="index.html">← Map</a></p>
+  <h1>About the SC FIA plot explorer</h1>
+  <p>A map and plot-by-plot history of South Carolina's Forest Inventory and Analysis (FIA) plots: every visit, tree, condition and
+    the decoded field codes, with species composition, growth, mortality, ingrowth and invasive plants over time.</p>
+
+  <h2>Public data only</h2>
+  <p>Everything here comes from the public <a href="https://apps.fs.usda.gov/fia/datamart/datamart.html" rel="noopener noreferrer">FIADB DataMart</a>
+    (USDA Forest Service) CSV files for South Carolina plus the FIADB reference tables. No confidential data, true plot locations or
+    landowner information are used. Codes are decoded from the FIADB User Guide v9.4 and the REF tables; a value that is not in those
+    sources is shown flagged (⚠) and is never guessed. This is not an official Forest Service product.</p>
+  <p id="asof" class="note"></p>
+
+  <h2>Caveats</h2>
+  <ul>
+    <li><b>Fuzzed and swapped coordinates.</b> Public FIA plot coordinates are altered to protect plot integrity and landowner privacy:
+      locations are fuzzed (usually within 0.5 mi, some up to 1 mi), and for a share of private plots the coordinates are swapped with
+      another similar plot in the same county. A marker is therefore not the plot's true location, and the plot nearest to a point you
+      search for may not be the one physically nearest.</li>
+    <li><b>Unadjusted per-acre values.</b> Per-acre numbers are single-plot expansions, Σ(value × TPA_UNADJ), without stratum
+      adjustment (POP_STRATUM.ADJ_FACTOR_*). They describe one plot and are not population estimates. A sapling on a 6.8-ft microplot
+      represents about 75 trees/ac and a tree ≥5 in on a 24-ft subplot about 6 trees/ac, so single trees move per-acre values a lot.</li>
+    <li><b>Periodic designs.</b> Pre-annual (periodic, variable-radius) plots used different designs; their per-acre values are not
+      comparable with national-design (annual) visits.</li>
+    <li><b>Inferred predecessors.</b> Periodic plots are not linked to annual plots in FIADB. The site lists <i>inferred candidates, not
+      database links</i>: periodic plots in the same county within 1.5 mi (public coordinates) whose last measurement date plus the first
+      annual visit's remeasurement period is within 0.5 yr of that visit, scored by matching bridge trees, date fit and distance.</li>
+    <li><b>Additions are not all ingrowth.</b> Ingrowth is RECONCILECD 1. Trees added for other reasons (for example when the microplot
+      was relocated) are shown separately.</li>
+    <li><b>Bridge records</b> (TREE rows on SUBP &gt; 4, periodic-to-annual GRM records) are shown but excluded from totals.</li>
+  </ul>
+
+  <h2>Privacy</h2>
+  <p>No analytics, no cookies, no third-party scripts; all JavaScript libraries (Leaflet, Leaflet.markercluster, Plotly) are served from
+    this site. The location search runs entirely in your browser: the point you enter is not sent anywhere, not stored and not added to the
+    address bar. The only outside requests are map tiles from USGS The National Map (basemap.nationalmap.gov), which receives the map area
+    you view; the <i>Plain</i> basemap makes no tile requests.</p>
+
+  <h2>Updates</h2>
+  <p>The site is rebuilt automatically each month when the FIADB DataMart publishes new South Carolina data. Each build is validated
+    (row counts, key relationships, regression totals for a reference plot, and an automated test suite) before it is published.</p>
+</div>
+<footer id="footer" class="footer"></footer>
+<script src="fia.js"></script>
+<script src="about.js"></script>
+</body>
+</html>

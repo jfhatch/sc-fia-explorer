@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>SC FIA plot explorer</title>
+<link rel="stylesheet" href="/static/vendor/leaflet/1.9.4/leaflet.css">
+<link rel="stylesheet" href="/static/vendor/leaflet.markercluster/1.5.3/MarkerCluster.css">
+<link rel="stylesheet" href="/static/vendor/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div id="top">
+  <h1>SC FIA plot explorer</h1>
+  <input id="idq" type="text" autocomplete="off" spellcheck="false" placeholder="Plot ID: 91-25, 45-3-91-25, York 25, or PLOT CN" aria-label="Plot ID">
+  <button id="idgo" type="button">Find plot</button>
+  <button id="locbtn" type="button">Search by location</button>
+  <button id="attrbtn" type="button">Search by attributes</button>
+  <span class="grow"></span>
+  <span class="muted" id="buildinfo"></span>
+  <button id="databtn" type="button">Data<span id="updbadge" class="badge hidden" title="New data available on the DataMart">new</span></button>
+</div>
+<div id="main">
+  <aside id="side">
+    <h2>Showing <span id="count">…</span> plot locations</h2>
+    <div class="row"><label for="f_cty">County</label><select id="f_cty"><option value="">All counties</option></select></div>
+    <div class="row"><label for="f_ft">Forest type</label><select id="f_ft"><option value="">All forest types</option></select></div>
+    <div class="row"><label for="f_own">Owner group</label><select id="f_own"><option value="">All owners</option></select></div>
+    <div class="row"><label>Last visit</label><input id="f_last0" type="number" aria-label="Last visit from"><input id="f_last1" type="number" aria-label="Last visit to"></div>
+    <div class="row"><label for="f_nv">Visits ≥</label><input id="f_nv" type="number" min="1" value="1"></div>
+    <div class="row"><label for="f_des">Design</label><select id="f_des"><option value="">Any</option><option value="a">Annual (national design)</option><option value="p">Periodic only</option><option value="ap">Both at one key</option></select></div>
+    <div class="row"><label for="f_inv">Invasives</label><select id="f_inv"><option value="">Any</option><option value="1">Present</option><option value="0">None recorded</option></select></div>
+    <div class="row"><label for="f_new">New data</label><select id="f_new"><option value="">All plots</option><option value="hl">Highlight plots with new data</option><option value="only">Only plots with new data</option></select></div>
+    <div class="row"><button id="f_reset" type="button">Reset filters</button></div>
+    <h2>Latest forest type group</h2>
+    <div id="legend"></div>
+    <p class="muted" id="coordnote"></p>
+    <p class="muted">Basemap: <select id="basemap" aria-label="Basemap"><option value="osm">OpenStreetMap</option><option value="plain">Plain (offline)</option></select></p>
+  </aside>
+  <div id="map" role="region" aria-label="Map of plot locations"></div>
+</div>
+
+<div id="drawer" class="hidden" role="dialog" aria-modal="false"></div>
+
+<template id="tpl-loc">
+  <h3>Search by location <button class="close" type="button" aria-label="Close">×</button></h3>
+  <p class="muted">Enter a point as decimal degrees (dd.dddd and -dd.dddd; west is negative) or degrees-minutes-seconds (dd° mm' ss" N and dd° mm' ss" W). The search runs in this browser
+    over the public plot coordinates already loaded; the point is not sent to the server, not saved and not added to the address bar.</p>
+  <div class="row"><label for="l_lat">Latitude</label><input id="l_lat" type="text" autocomplete="off" spellcheck="false"></div>
+  <div class="row"><label for="l_lon">Longitude</label><input id="l_lon" type="text" autocomplete="off" spellcheck="false"></div>
+  <div class="row"><label for="l_rad">Radius (mi)</label><input id="l_rad" type="number" min="0.1" step="0.1" value="2" autocomplete="off"></div>
+  <div class="row"><button id="l_go" type="button" class="primary">Find nearest plots</button><button id="l_clear" type="button">Clear and forget</button></div>
+  <div class="note" id="l_note"></div>
+  <div id="l_out"></div>
+</template>
+
+<template id="tpl-attr">
+  <h3>Search by attributes <button class="close" type="button" aria-label="Close">×</button></h3>
+  <div class="row"><label for="a_cty">County</label><select id="a_cty"><option value="">Any</option></select></div>
+  <div class="row"><label for="a_grp">Type group</label><select id="a_grp"><option value="">Any</option></select></div>
+  <div class="row"><label for="a_ft">Forest type</label><select id="a_ft"><option value="">Any</option></select></div>
+  <div class="row"><label for="a_own">Owner</label><select id="a_own"><option value="">Any</option></select></div>
+  <div class="row"><label>Stand age</label><input id="a_age0" type="number" placeholder="min"><input id="a_age1" type="number" placeholder="max"></div>
+  <div class="row"><label>Last visit</label><input id="a_last0" type="number" placeholder="from"><input id="a_last1" type="number" placeholder="to"></div>
+  <div class="row"><label for="a_des">Design</label><select id="a_des"><option value="">Any</option><option value="annual">Annual</option><option value="periodic">Periodic</option></select></div>
+  <div class="row"><label for="a_inv">Invasives</label><select id="a_inv"><option value="">Any</option><option value="1">Present</option><option value="0">None</option></select></div>
+  <div class="row"><button id="a_go" type="button" class="primary">Search</button><button id="a_map" type="button" disabled>Show only these on the map</button></div>
+  <p class="muted">Stand age and forest type are from the latest visit's dominant accessible forest condition.</p>
+  <div id="a_out"></div>
+</template>
+
+<template id="tpl-data">
+  <h3>Data <button class="close" type="button" aria-label="Close">×</button></h3>
+  <div id="d_status"></div>
+  <div class="actions">
+    <button id="d_check" type="button">Check for updates</button>
+    <button id="d_import" type="button" class="primary" disabled>Import updates</button>
+    <button id="d_rollback" type="button">Restore previous</button>
+  </div>
+  <label><input id="d_startup" type="checkbox"> Check for updates when the app starts</label>
+  <div id="d_checkout"></div>
+  <div id="d_job" class="hidden">
+    <h3 style="font-size:14px;margin-top:12px">Update job <span id="d_jobstate" class="muted"></span></h3>
+    <div class="progress"><div id="d_bar"></div></div>
+    <div class="muted" id="d_msg"></div>
+    <div class="actions"><button id="d_cancel" type="button">Cancel</button><button id="d_confirm" type="button" class="hidden">Confirm and switch</button>
+      <button id="d_logtoggle" type="button">Show log</button></div>
+    <pre class="log hidden" id="d_log"></pre>
+  </div>
+  <div id="d_whatsnew"></div>
+  <h3 style="font-size:14px;margin-top:12px">Tables in the live build</h3>
+  <div class="tables-wrap" id="d_tables"></div>
+</template>
+
+<script src="/static/vendor/leaflet/1.9.4/leaflet.js"></script>
+<script src="/static/vendor/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

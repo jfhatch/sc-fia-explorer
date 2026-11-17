@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>FIA plot</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="page">
+  <p><a href="/">← Map</a></p>
+  <h1 id="title">Loading…</h1>
+  <p class="muted" id="subtitle"></p>
+  <div class="actions">
+    <a id="csv_trees" download><button type="button">Tree history CSV</button></a>
+    <a id="csv_visits" download><button type="button">Visit summary CSV</button></a>
+    <a id="pdf" target="_blank" rel="noopener"><button type="button">Printable PDF summary</button></a>
+    <span class="muted" id="pdfnote">The PDF is generated on first request (a few seconds) and validated against the totals below.</span>
+  </div>
+  <div class="note" id="notes"></div>
+
+  <h2>Visit timeline</h2>
+  <p class="muted" id="tldesc"></p>
+  <div class="timeline" id="timeline"></div>
+  <div id="predbox"></div>
+
+  <h2>Stand totals by visit</h2>
+  <div class="scroll" style="max-height:none"><table id="totals"></table></div>
+
+  <h2>Visit details <span class="muted" id="vsel"></span></h2>
+  <div class="tabs" id="tabs"></div>
+  <div id="tab"></div>
+
+  <h2>History</h2>
+  <div id="hist">Loading…</div>
+</div>
+<script src="/static/vendor/plotly-7.1.0.min.js"></script>
+<script src="/static/plot.js"></script>
+</body>
+</html>

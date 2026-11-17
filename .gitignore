@@ -1,0 +1,18 @@
+# environments and caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# data, downloads, builds, generated site, test sandboxes, logs
+data/
+_downloads/
+_e2e/
+site/
+*.sqlite
+*.sqlite-*
+*.building
+*.part
+*.part.meta
+*.log
+*.zip
+ci/datamart_headers_now.json
