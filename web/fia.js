@@ -10,8 +10,11 @@ const ACTIVE_YEARS = 7;
 const ACTIVE_FROM = new Date().getFullYear() - ACTIVE_YEARS;
 const histBadge = last => `<span class="histbadge">Historical plot — last measured ${esc(last)}</span>`;
 
+// site version from this script's own ?v= (set by export_static.py), appended to every data fetch so a browser never
+// combines cached data from one deploy with code from another
+const SITE_V = (() => { try { return new URL(document.currentScript.src).searchParams.get('v') || ''; } catch (e) { return ''; } })();
 async function getJSON(url) {
-  const r = await fetch(url, { cache: 'default' });
+  const r = await fetch(SITE_V ? `${url}${url.includes('?') ? '&' : '?'}v=${SITE_V}` : url, { cache: 'default' });
   if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
   return r.json();
 }

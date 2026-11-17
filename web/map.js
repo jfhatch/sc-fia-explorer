@@ -6,7 +6,8 @@ const S = { meta: null, rows: [], col: {}, markers: new Map(), attrKeys: null, l
 window.APP = S;     // read by the headless test
 
 // ---------------------------------------------------------------- map and USGS National Map basemaps
-const map = L.map('map', { preferCanvas: true, zoomControl: true }).setView([0, 0], 2);   // fitted to the county boundaries on load
+// start over South Carolina; init() fits the view to the plot locations (synchronously, before any markers are added)
+const map = L.map('map', { preferCanvas: true, zoomControl: true }).setView([33.6, -80.9], 7);
 const TNM = s => `https://basemap.nationalmap.gov/arcgis/rest/services/${s}/MapServer/tile/{z}/{y}/{x}`;
 const ATTR = 'Basemap: <a href="https://www.usgs.gov/programs/national-geospatial-program/national-map" rel="noopener noreferrer">USGS The National Map</a>';
 const tileOpts = { maxZoom: 16, maxNativeZoom: 16, attribution: ATTR, referrerPolicy: 'no-referrer', crossOrigin: false };
@@ -47,9 +48,8 @@ const canvas = L.canvas({ padding: 0.3 });
 const histCanvas = L.canvas({ padding: 0.3, pane: 'histPane' });
 S.histCluster = histCluster;
 getJSON('data/counties.geojson').then(gj => {
-  const lyr = L.geoJSON(gj, { style: { color: '#6b6a66', weight: 1, fill: false, opacity: 0.8 }, interactive: false }).addTo(map);
-  map.fitBounds(lyr.getBounds(), { padding: [10, 10] });
-}).catch(() => {});
+  L.geoJSON(gj, { style: { color: '#6b6a66', weight: 1, fill: false, opacity: 0.8 }, interactive: false }).addTo(map);
+}).catch(e => console.error('county boundaries:', e));    // boundaries are decoration only; the view does not depend on them
 
 // mobile: collapsible filter panel
 function toggleSide(open) {
@@ -116,6 +116,9 @@ async function init() {
     S.attrKeys = null; S.pin = null; applyFilters();
   };
   const c = S.col;
+  // fit the view before adding markers, without animation, so the clusters are built for the final zoom level
+  map.invalidateSize(false);
+  if (S.rows.length) map.fitBounds(L.latLngBounds(S.rows.map(r => [r[c.la], r[c.lo]])), { padding: [10, 10], animate: false });
   for (const r of S.rows) {
     const m = isActive(r)
       ? L.circleMarker([r[c.la], r[c.lo]], { renderer: canvas, radius: 6, weight: 1, color: '#222', fillOpacity: 0.9, fillColor: S.groupColor[r[c.g]] || '#9a9893' })

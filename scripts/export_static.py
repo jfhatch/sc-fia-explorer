@@ -14,7 +14,7 @@ site/
 Fails if the site exceeds 900 MB or any file exceeds 50 MB, or if the exported Plot 45-3-91-25 totals differ from the
 published 35/82/82/101/92 ft²/ac.
 """
-import os, sys, json, math, time, shutil, re
+import os, sys, json, math, time, shutil, re, hashlib
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.stdout.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)
@@ -113,6 +113,19 @@ def main():
     if os.path.exists(out):
         shutil.rmtree(out)
     shutil.copytree(WEB, out)
+    # cache busting: GitHub Pages lets browsers cache files for 10 minutes, so after a deploy a browser could mix new
+    # code with old data (or the reverse). Every page references its scripts/styles with ?v=<site version>, and fia.js
+    # appends the same version to every data fetch.
+    hv = hashlib.sha256(json.dumps(bi.get("build_name")).encode())
+    for dp, dn, fn in sorted(os.walk(WEB)):
+        for f in sorted(fn):
+            hv.update(f.encode()); hv.update(open(os.path.join(dp, f), "rb").read())
+    site_v = hv.hexdigest()[:12]
+    for f in os.listdir(out):
+        if f.endswith(".html"):
+            fp = os.path.join(out, f); h = open(fp, encoding="utf-8").read()
+            h2 = re.sub(r'((?:src|href)="(?!https?:|//|#)[^"?]+\.(?:js|css))"', lambda m: f'{m.group(1)}?v={site_v}"', h)
+            open(fp, "w", encoding="utf-8").write(h2)
     os.makedirs(os.path.join(out, "data")); os.makedirs(os.path.join(out, "p"))
     print(f"export {os.path.basename(db)} -> {out}")
 

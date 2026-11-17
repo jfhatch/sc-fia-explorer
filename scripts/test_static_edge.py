@@ -102,6 +102,16 @@ def main():
         is_act = lambda r: r[ci["m"]] >= act_from
         n_act = sum(map(is_act, P["r"])); n_hist = len(P["r"]) - n_act
         per_key = next(r[ci["k"]] for r in P["r"] if r[ci["d"]] == "p")          # a periodic-only plot: historical
+        try:
+            c.wait("document.querySelectorAll('.marker-cluster').length > 0", 20, "cluster icons")
+        except TimeoutError:
+            pass
+        cl0 = c.js("({z: map.getZoom(), icons: document.querySelectorAll('.marker-cluster').length,"
+                   " inView: cluster.getLayers().filter(m => map.getBounds().contains(m.getLatLng())).length})")
+        vreq = [r["url"] for r in requests() if "/data/plots.json" in r["url"] or r["url"].split("?")[0].endswith("/map.js")]
+        check("numbered cluster circles are drawn on load, the view is fitted to the plots, and scripts/data are versioned (?v=)",
+              cl0["icons"] > 0 and cl0["z"] >= 6 and cl0["inView"] == n_act and vreq and all("?v=" in u for u in vreq),
+              f"{cl0['icons']} cluster icons at zoom {cl0['z']}; {cl0['inView']:,} active plots in view; {len(vreq)} versioned requests")
         st0 = c.js("({act: +document.body.dataset.active, hist: +document.body.dataset.historical, txt: document.querySelector('#count').textContent,"
                    " onMap: cluster.getLayers().length, histOnMap: histCluster.getLayers().length, box: document.querySelector('#f_hist').checked,"
                    " note: document.querySelector('#histnote').textContent,"
@@ -210,6 +220,11 @@ def main():
         c.call("Emulation.setTouchEmulationEnabled", enabled=True)
         c.goto(base + "index.html")
         c.wait("document.body.dataset.ready === '1'", what="mobile map")
+        try:
+            mcl = c.wait("document.querySelectorAll('.marker-cluster').length > 0 && map.getZoom() >= 5", 20, "phone cluster icons")
+        except TimeoutError:
+            mcl = False
+        check("phone: numbered cluster circles drawn on load", mcl, c.js("`${document.querySelectorAll('.marker-cluster').length} icons at zoom ${map.getZoom()}`"))
         st = c.js("(() => { const s = document.querySelector('#side').getBoundingClientRect(), m = document.querySelector('#map').getBoundingClientRect();"
                   " return [s.right <= 1, m.width, m.height, document.documentElement.scrollWidth]; })()")
         c.js("document.querySelector('#filtbtn').click(); true")
