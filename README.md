@@ -48,6 +48,8 @@ gh run rerun <run-id> --job <deploy-job-id>
 ```
 
 Re-run only the **deploy** job. Re-running the whole run would rebuild from the current DataMart data.
+- A re-run never commits that run's (older) DataMart manifest. The `commit-manifest` job only runs on a run's first attempt.
+- After a rollback, the next monthly run rebuilds only if the DataMart changes again. Use `-f force=true` to rebuild and deploy the latest data sooner.
 
 **Fallback if the DataMart blocks GitHub's runners:** run `powershell -ExecutionPolicy Bypass -File scripts\publish_local.ps1` on a PC (add `-SkipBuild` to use the current local build). It:
 1. builds the database and exports the site;

@@ -130,10 +130,13 @@ jobs:
 
   commit-manifest:
     needs: [build, deploy]
-    if: ${{ needs.build.outputs.deploy == 'true' && inputs.source != 'local-release' }}
+    # first attempt only: re-running an old deploy job (a rollback) must not commit that run's older manifest
+    if: ${{ needs.build.outputs.deploy == 'true' && inputs.source != 'local-release' && github.run_attempt == 1 }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/download-artifact@v4
         with:
           name: datamart-manifest
@@ -145,4 +148,5 @@ jobs:
           git add ci/datamart_manifest.json
           if git diff --cached --quiet; then echo "manifest unchanged"; exit 0; fi
           git commit -m "Update DataMart manifest after deployed build"
+          git pull --rebase
           git push
