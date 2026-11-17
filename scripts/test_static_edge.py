@@ -158,7 +158,10 @@ def main():
                   " return [s.right <= 1, m.width, m.height, document.documentElement.scrollWidth]; })()")
         c.js("document.querySelector('#filtbtn').click(); true")
         try:
-            opened = c.wait("document.querySelector('#side').getBoundingClientRect().left >= 0", 10, "filter panel")
+            # headless Edge can report the page as hidden and then never advances CSS transitions: finish them, then
+            # measure the panel's final position
+            opened = c.wait("document.getAnimations().forEach(x => x.finish()), "
+                            "document.body.classList.contains('side-open') && document.querySelector('#side').getBoundingClientRect().left >= 0", 10, "filter panel")
         except TimeoutError:
             opened = False
             print("   DEBUG panel state:", c.js("JSON.stringify({cls: document.body.className, left: document.querySelector('#side').getBoundingClientRect().left, "
