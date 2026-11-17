@@ -107,6 +107,7 @@ async function openPopup(m) {
   m.bindPopup('Loading…', { maxWidth: 460 }).openPopup();
   try {
     const P = await getJSON(`p/${encodeURIComponent(m.key)}.json`);
+    if (!m.isPopupOpen()) return;                 // closed (or another plot opened) while loading
     const M = S.meta.metrics, ix = k => M.indexOf(k);
     const ev = rowsOf(P.ev);
     const rows = P.v.map((v, i) => {
@@ -119,7 +120,7 @@ async function openPopup(m) {
       <div class="popscroll"><table><thead><tr><th>Survey</th><th>Design</th><th class="n">BA ft²/ac</th><th class="n">TPA</th><th class="n">C t/ac</th><th class="n">Died</th><th class="n">Ingr.</th><th class="n">Inv.</th></tr></thead>
       <tbody>${rows}</tbody></table></div>
       <p style="margin:6px 0 0"><a href="${plotUrl(m.key)}">Open plot page →</a></p>`);
-  } catch (e) { m.setPopupContent('Could not load: ' + esc(e.message)); }
+  } catch (e) { if (m.isPopupOpen()) m.setPopupContent('Could not load: ' + esc(e.message)); }
 }
 function focusKey(key, open = true) {
   const m = S.markers.get(key);

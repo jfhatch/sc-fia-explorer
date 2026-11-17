@@ -121,6 +121,7 @@ async function openPopup(m) {
   m.bindPopup('Loading…', { maxWidth: 460 }).openPopup();
   try {
     const p = await api('/api/popup/' + encodeURIComponent(m.key));
+    if (!m.isPopupOpen()) return;                 // closed (or another plot opened) while loading
     const r = S.rows.find(x => x[S.col.key] === m.key);
     const rows = p.visits.map(v => `<tr><td>${esc(v.date)}</td><td>${esc(v.design)}</td><td class="n">${fmt(v.ba)}</td><td class="n">${fmt(v.tpa, 0)}</td>
         <td class="n">${fmt(v.carbon)}</td><td class="n">${v.mort ?? '—'}</td><td class="n">${v.ing ?? '—'}</td><td class="n">${v.inv}</td></tr>`).join('');
@@ -129,7 +130,7 @@ async function openPopup(m) {
       <table><thead><tr><th>Survey</th><th>Design</th><th class="n">BA ft²/ac</th><th class="n">TPA</th><th class="n">C t/ac</th><th class="n">Died</th><th class="n">Ingr.</th><th class="n">Inv.</th></tr></thead>
       <tbody>${rows}</tbody></table>
       <p style="margin:6px 0 0"><a href="/plot/${encodeURIComponent(m.key)}" target="_blank" rel="noopener">Open plot page →</a></p>`);
-  } catch (e) { m.setPopupContent('Could not load: ' + esc(e.message)); }
+  } catch (e) { if (m.isPopupOpen()) m.setPopupContent('Could not load: ' + esc(e.message)); }
 }
 
 function focusKey(key, open = true) {

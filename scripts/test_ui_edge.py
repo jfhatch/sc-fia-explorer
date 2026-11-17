@@ -59,8 +59,10 @@ class CDP:
         raise TimeoutError(f"timed out waiting for {what or expr}")
 
     def goto(self, url):
+        """Navigate and wait until the new document (not the previous page) has finished loading."""
+        self.js("window.__old_doc = 1; true")
         self.call("Page.navigate", url=url)
-        time.sleep(0.5)
+        self.wait(f"!window.__old_doc && location.href === {json.dumps(url)} && document.readyState === 'complete'", 90, "navigation to " + url)
 
 
 def main():
