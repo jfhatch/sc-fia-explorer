@@ -19,6 +19,26 @@ from test_ui_edge import CDP, free_port
 from fiasc import summary_pdf, core
 
 KEY = "45-3-91-25"
+POPUP_KEY = "45-3-91-5"          # the popup reported with unreadable headers / a clipped last column
+# WCAG contrast of every element matching SEL against its effective (first non-transparent ancestor) background
+CONTRAST_JS = """((sel) => {
+  const rgb = c => c.match(/[\\d.]+/g).map(Number);
+  const lum = c => { const f = v => (v /= 255) <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; const [r, g, b] = rgb(c); return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+  const bg = el => { for (let e = el; e; e = e.parentElement) { const c = getComputedStyle(e).backgroundColor, a = rgb(c); if (a.length < 4 || a[3] > 0.5) return c; } return 'rgb(255, 255, 255)'; };
+  const els = [...document.querySelectorAll(sel)];
+  const r = els.map(el => { const a = lum(getComputedStyle(el).color), b = lum(bg(el)); return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05); });
+  return { n: els.length, min: r.length ? Math.min(...r) : null };
+})"""
+POPUP_FIT_JS = """(() => {
+  const w = document.querySelector('.leaflet-popup-content-wrapper'), pc = document.querySelector('.leaflet-popup-content'),
+        ps = pc && pc.querySelector('.popscroll'), t = ps && ps.querySelector('table');
+  if (!t) return null;
+  const W = w.getBoundingClientRect(), C = pc.getBoundingClientRect(), R = ps.getBoundingClientRect(), M = map.getContainer().getBoundingClientRect();
+  const ox = getComputedStyle(ps).overflowX;
+  return { fits: t.scrollWidth <= ps.clientWidth + 1, scroll: ox === 'auto' || ox === 'scroll',
+           inside: R.left >= C.left - 1 && R.right <= C.right + 1 && W.left >= M.left - 1 && W.right <= M.right + 1,
+           tw: t.scrollWidth, bw: ps.clientWidth, pw: Math.round(W.width), mw: Math.round(M.width) };
+})()"""
 TILE_HOST = "basemap.nationalmap.gov"
 
 
@@ -154,6 +174,37 @@ def main():
         st3 = c.js("[location.search, +document.body.dataset.visible, histCluster.getLayers().length]")
         check("shared link ?historical=1 opens with the toggle on; turning it off restores the active-only view and URL",
               st2 == [True, n_rows] and st3 == ["", n_act, 0], f"link: {st2}; off: {st3}")
+        # 1c. map popup: header contrast (light + dark) and no clipped table (1280 px and 390 px)
+        pop = []
+        for width, height, mobile in ((1280, 900, False), (390, 844, True)):
+            c.call("Emulation.setDeviceMetricsOverride", width=width, height=height, deviceScaleFactor=1, mobile=mobile)
+            for scheme in ("light", "dark"):
+                c.call("Emulation.setEmulatedMedia", features=[{"name": "prefers-color-scheme", "value": scheme}])
+                c.goto(base + "index.html")
+                c.wait("document.body.dataset.ready === '1'", what="map for popup")
+                c.js(f"focusKey('{POPUP_KEY}'); true")
+                try:
+                    c.wait("!!document.querySelector('.leaflet-popup-content .popscroll table')", 60, "popup table")
+                    # measure only once the map has finished panning to the popup (position unchanged over 400 ms)
+                    pos = lambda: c.js("JSON.stringify(document.querySelector('.leaflet-popup-content-wrapper').getBoundingClientRect())")
+                    for _ in range(40):
+                        p0 = pos(); time.sleep(0.4)
+                        if pos() == p0:
+                            break
+                    con_ = c.js(CONTRAST_JS + "('.leaflet-popup-content th')")
+                    fit = c.js(POPUP_FIT_JS)
+                except TimeoutError:
+                    con_, fit = {"n": 0, "min": 0}, None
+                pop.append((width, scheme, con_, fit))
+        c.call("Emulation.setEmulatedMedia", features=[])
+        c.call("Emulation.clearDeviceMetricsOverride")
+        check(f"popup ({POPUP_KEY}) header contrast ≥ 4.5:1 in light and dark mode",
+              all(p[2]["n"] >= 8 and p[2]["min"] >= 4.5 for p in pop), "; ".join(f"{w}px {sc}: {cn['min'] and round(cn['min'], 1)}:1 over {cn['n']} headers" for w, sc, cn, _ in pop))
+        check("popup table not clipped: fits at 1280 px; at 390 px fits or scrolls inside the popup",
+              all(f and f["inside"] and (f["fits"] if w == 1280 else (f["fits"] or f["scroll"])) for w, _, _, f in pop),
+              "; ".join(f"{w}px {sc}: table {f and f['tw']}px in {f and f['bw']}px box, popup {f and f['pw']}px, scroll={f and f['scroll']}" for w, sc, _, f in pop))
+        c.goto(base + "index.html")
+        c.wait("document.body.dataset.ready === '1'", what="map")
         # 2. ID search
         c.js("document.querySelector('#idq').value = '91-25'; document.querySelector('#idgo').click(); true")
         check("search by plot ID 91-25 (active)", c.wait(f"document.querySelector('#id_out li[data-key=\"{KEY}\"]')?.dataset.active === '1'", what="ID result")
@@ -215,6 +266,22 @@ def main():
         cond = c.js("document.querySelector('#tab').textContent")
         check("visit tabs render decoded data", ntr > 10 and "Private" in cond, f"{ntr} tree rows; conditions decoded")
         flag = c.js("[...document.querySelectorAll('#tab .flag')].length")
+        hc = []
+        for scheme in ("light", "dark"):
+            c.call("Emulation.setEmulatedMedia", features=[{"name": "prefers-color-scheme", "value": scheme}])
+            time.sleep(0.3)
+            hc.append((scheme, c.js(CONTRAST_JS + "('th')")))
+        c.goto(base + "index.html")
+        c.wait("document.body.dataset.ready === '1'", what="map")
+        c.js("document.querySelector('#attrbtn').click(); document.querySelector('#a_cty').value = '91'; document.querySelector('#a_go').click(); true")
+        c.wait("document.querySelectorAll('#a_out th').length > 0", what="attribute results")
+        for scheme in ("light", "dark"):
+            c.call("Emulation.setEmulatedMedia", features=[{"name": "prefers-color-scheme", "value": scheme}])
+            time.sleep(0.3)
+            hc.append((scheme + " (attribute search)", c.js(CONTRAST_JS + "('th')")))
+        c.call("Emulation.setEmulatedMedia", features=[])
+        check("table headers elsewhere (plot page, attribute search) ≥ 4.5:1 in light and dark mode",
+              all(x["n"] and x["min"] >= 4.5 for _, x in hc), "; ".join(f"{s_}: {round(x['min'], 1)}:1 over {x['n']}" for s_, x in hc))
         # 5. phone viewport
         c.call("Emulation.setDeviceMetricsOverride", width=390, height=844, deviceScaleFactor=3, mobile=True)
         c.call("Emulation.setTouchEmulationEnabled", enabled=True)

@@ -178,9 +178,15 @@ function setPin(key) {
   if (!clusterOf(r).hasLayer(m)) clusterOf(r).addLayer(m);
   renderCount();
 }
+// compact popup headers; the full name is the tooltip
+const POP_COLS = [['Survey', 'Survey date', 0], ['Design', 'Design: annual (national design) or periodic', 0], ['BA', 'BA ft²/ac: live basal area per acre', 1],
+  ['TPA', 'TPA: live trees per acre', 1], ['C', 'C t/ac: aboveground carbon, tons per acre', 1], ['Died', 'Died: trees that died since the previous survey', 1],
+  ['Ingr.', 'Ingrowth: trees that grew into the tally since the previous survey', 1], ['Inv.', 'Invasives: number of invasive plant species recorded', 1]];
 async function openPopup(m) {
   if (!m._map) return;
-  m.bindPopup('Loading…', { maxWidth: 460 }).openPopup();
+  // as wide as the table needs on desktop; on narrow screens the table scrolls sideways inside the popup
+  const mw = Math.max(240, Math.min(600, map.getSize().x - 60));
+  m.bindPopup('Loading…', { maxWidth: mw, minWidth: Math.min(290, mw) }).openPopup();
   try {
     const P = await getJSON(`p/${encodeURIComponent(m.key)}.json`);
     if (!m.isPopupOpen()) return;                 // closed (or another plot opened) while loading
@@ -194,7 +200,7 @@ async function openPopup(m) {
     }).join('');
     const r = rowOf(m.key), hb = isActive(r) ? '' : `<br>${histBadge(r[S.col.t])}`;
     m.setPopupContent(`<b>Plot ${esc(m.key)}</b>${hb}<br><span class="muted">public location ${P.la.toFixed(4)}, ${P.lo.toFixed(4)} (fuzzed)</span>
-      <div class="popscroll"><table><thead><tr><th>Survey</th><th>Design</th><th class="n">BA ft²/ac</th><th class="n">TPA</th><th class="n">C t/ac</th><th class="n">Died</th><th class="n">Ingr.</th><th class="n">Inv.</th></tr></thead>
+      <div class="popscroll"><table><thead><tr>${POP_COLS.map(([s, full, n]) => `<th${n ? ' class="n"' : ''}><abbr title="${full}">${s}</abbr></th>`).join('')}</tr></thead>
       <tbody>${rows}</tbody></table></div>
       <p style="margin:6px 0 0"><a href="${plotUrl(m.key)}">Open plot page →</a></p>`);
   } catch (e) { if (m.isPopupOpen()) m.setPopupContent('Could not load: ' + esc(e.message)); }
