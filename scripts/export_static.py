@@ -116,7 +116,7 @@ def main():
     # cache busting: GitHub Pages lets browsers cache files for 10 minutes, so after a deploy a browser could mix new
     # code with old data (or the reverse). Every page references its scripts/styles with ?v=<site version>, and fia.js
     # appends the same version to every data fetch.
-    hv = hashlib.sha256(json.dumps(bi.get("build_name")).encode())
+    hv = hashlib.sha256(json.dumps([bi.get("build_name"), bi.get("built_at")]).encode())   # new version on every build
     for dp, dn, fn in sorted(os.walk(WEB)):
         for f in sorted(fn):
             hv.update(f.encode()); hv.update(open(os.path.join(dp, f), "rb").read())
