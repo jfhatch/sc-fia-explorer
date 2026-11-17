@@ -45,10 +45,18 @@ def main():
                              f"--user-data-dir={prof}", f"--remote-debugging-port={dport}", "--window-size=1400,900", "about:blank"],
                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     results = []
+    c = None
+
+    seen = [0]
 
     def check(name, cond, detail=""):
         results.append(bool(cond))
         print(f"{'PASS' if cond else 'FAIL'}  {name}  {detail}")
+        if "--debug" in a and c is not None:
+            ex = [e for e in c.events if e.get("method") == "Runtime.exceptionThrown"]
+            if len(ex) != seen[0]:
+                print("   DEBUG new JS exception(s) during this step:", ex[-1]["params"]["exceptionDetails"].get("exception", {}).get("description", "")[:1200])
+            seen[0] = len(ex)
 
     try:
         for _ in range(80):
@@ -75,7 +83,7 @@ def main():
                     if "Content Security Policy" in t or "Content-Security-Policy" in t:
                         out.append(t[:160])
                 if e.get("method") == "Runtime.exceptionThrown":
-                    out.append("JS exception: " + json.dumps(e["params"]["exceptionDetails"].get("exception", {}).get("description", ""))[:200])
+                    out.append("JS exception: " + json.dumps(e["params"]["exceptionDetails"].get("exception", {}).get("description", ""))[:1500])
             return out
 
         # 1. map + tiles
@@ -106,7 +114,7 @@ def main():
         c.js("document.querySelector('#idq').value = '809203876290487'; document.querySelector('#idgo').click(); true")
         check("search by PLOT CN (2021 visit of 91-25)", c.wait(f"!!document.querySelector('#id_out li[data-key=\"{KEY}\"]')", what="CN result"))
         # 3. location search (client-side only)
-        c.events.clear()
+        c.events.clear(); seen[0] = 0
         c.js("document.querySelector('#locbtn').click(); true")
         c.wait("!!document.querySelector('#l_lat')")
         c.js(f"document.querySelector('#l_lat').value = {json.dumps(lat_s)}; document.querySelector('#l_lon').value = {json.dumps(lon_s)};"
@@ -153,6 +161,9 @@ def main():
             opened = c.wait("document.querySelector('#side').getBoundingClientRect().left >= 0", 10, "filter panel")
         except TimeoutError:
             opened = False
+            print("   DEBUG panel state:", c.js("JSON.stringify({cls: document.body.className, left: document.querySelector('#side').getBoundingClientRect().left, "
+                  "tf: getComputedStyle(document.querySelector('#side')).transform, vis: document.visibilityState, anims: document.getAnimations().length, "
+                  "w: innerWidth, btn: getComputedStyle(document.querySelector('#filtbtn')).display, exp: document.querySelector('#filtbtn').getAttribute('aria-expanded')})"))
         check("phone: filter panel collapsed by default and opens; map fills the screen; no horizontal scroll",
               st[0] and opened and st[1] >= 380 and st[2] > 500 and st[3] <= 390, f"collapsed={st[0]} opens={opened} map {st[1]:.0f}×{st[2]:.0f}px, page width {st[3]}px")
         c.goto(f"{base}plot.html?k={KEY}")

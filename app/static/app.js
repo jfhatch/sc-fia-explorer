@@ -118,6 +118,7 @@ function applyFilters() {
 }
 
 async function openPopup(m) {
+  if (!m._map) return;
   m.bindPopup('Loading…', { maxWidth: 460 }).openPopup();
   try {
     const p = await api('/api/popup/' + encodeURIComponent(m.key));
@@ -137,7 +138,10 @@ function focusKey(key, open = true) {
   const m = S.markers.get(key);
   if (!m) return;
   if (newLayer.hasLayer(m)) { map.setView(m.getLatLng(), Math.max(map.getZoom(), 12)); if (open) openPopup(m); return; }
-  cluster.zoomToShowLayer(m, () => { if (open) openPopup(m); });
+  const token = (focusKey.token = (focusKey.token || 0) + 1);
+  // the cluster plugin calls back after its zoom animation, which can be late on slow networks: open the popup only if
+  // this is still the latest request and the marker is on the map (otherwise Leaflet would pan a detached popup)
+  cluster.zoomToShowLayer(m, () => { if (open && token === focusKey.token && m._map) openPopup(m); });
 }
 
 // ---------------------------------------------------------------- drawer
