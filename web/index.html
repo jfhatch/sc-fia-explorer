@@ -27,11 +27,14 @@
 </div>
 <div id="main">
   <aside id="side" aria-label="Filters">
-    <h2>Showing <span id="count">…</span> plot locations <button id="sideclose" type="button" class="mobile-only close" aria-label="Close filters">×</button></h2>
+    <h2>Showing <span id="count">…</span> <button id="sideclose" type="button" class="mobile-only close" aria-label="Close filters">×</button></h2>
+    <div class="toggle-row"><input id="f_hist" type="checkbox"><label for="f_hist">Show historical plots
+      <span class="muted" id="histnote">Active plots were measured in the last 7 years.</span></label></div>
     <div class="row"><label for="f_cty">County</label><select id="f_cty"><option value="">All counties</option></select></div>
     <div class="row"><label for="f_ft">Forest type</label><select id="f_ft"><option value="">All forest types</option></select></div>
     <div class="row"><label for="f_own">Owner group</label><select id="f_own"><option value="">All owners</option></select></div>
-    <div class="row"><label>Last visit</label><input id="f_last0" type="number" inputmode="numeric" aria-label="Last visit from"><input id="f_last1" type="number" inputmode="numeric" aria-label="Last visit to"></div>
+    <div class="row"><label>Last measured</label><input id="f_last0" type="number" inputmode="numeric" placeholder="from" aria-label="Last measured from (year)"><input id="f_last1" type="number" inputmode="numeric" placeholder="to" aria-label="Last measured to (year)"></div>
+    <p class="muted filtnote hidden" id="lastnote"></p>
     <div class="row"><label for="f_nv">Visits ≥</label><input id="f_nv" type="number" inputmode="numeric" min="1" value="1"></div>
     <div class="row"><label for="f_des">Design</label><select id="f_des"><option value="">Any</option><option value="a">Annual (national design)</option><option value="p">Periodic only</option><option value="ap">Both at one key</option></select></div>
     <div class="row"><label for="f_inv">Invasives</label><select id="f_inv"><option value="">Any</option><option value="1">Present</option><option value="0">None recorded</option></select></div>
@@ -69,7 +72,8 @@
   <div class="row"><label for="a_ft">Forest type</label><select id="a_ft"><option value="">Any</option></select></div>
   <div class="row"><label for="a_own">Owner</label><select id="a_own"><option value="">Any</option></select></div>
   <div class="row"><label>Stand age</label><input id="a_age0" type="number" inputmode="numeric" placeholder="min"><input id="a_age1" type="number" inputmode="numeric" placeholder="max"></div>
-  <div class="row"><label>Last visit</label><input id="a_last0" type="number" inputmode="numeric" placeholder="from"><input id="a_last1" type="number" inputmode="numeric" placeholder="to"></div>
+  <div class="row"><label>Last measured</label><input id="a_last0" type="number" inputmode="numeric" placeholder="from"><input id="a_last1" type="number" inputmode="numeric" placeholder="to"></div>
+  <p class="muted" id="a_scope"></p>
   <div class="row"><label for="a_des">Design</label><select id="a_des"><option value="">Any</option><option value="annual">Annual</option><option value="periodic">Periodic</option></select></div>
   <div class="row"><label for="a_inv">Invasives</label><select id="a_inv"><option value="">Any</option><option value="1">Present</option><option value="0">None</option></select></div>
   <div class="row"><button id="a_go" type="button" class="primary">Search</button><button id="a_map" type="button" disabled>Show only these on the map</button></div>

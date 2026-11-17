@@ -3,12 +3,15 @@
 Usage: python -I scripts/test_static_edge.py --latlon "<lat>,<lon>" (--site DIR | --url https://.../)
 
 The location is typed into the page only: never written to disk or printed, and the test asserts no request carried it.
-Checks: map loads every plot; USGS tiles answer HTTP 200; plot 91-25 via ID search and via location search; plot page
+Checks: map loads every plot and shows only active plots (last MEASYEAR within 7 years of the current year) by default;
+"Show historical plots" adds the rest as hollow markers and is kept in the URL (?historical=1); USGS tiles answer HTTP 200;
+plot 91-25 and a periodic-only (historical) plot via ID search; 91-25 via location search, with historical plots listed
+separately; plot page
 totals = 35/82/82/101/92 ft²/ac; history charts and tabs render; phone viewport (filter panel collapses, map and plot
 page usable without horizontal scrolling); no CSP violations, no cookies, no requests to hosts other than the site
 and basemap.nationalmap.gov.
 """
-import os, sys, json, time, shutil, subprocess, tempfile, urllib.request, functools, threading, http.server
+import os, sys, json, math, time, datetime, shutil, subprocess, tempfile, urllib.request, functools, threading, http.server
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT); sys.path.insert(0, os.path.join(ROOT, "scripts"))
 sys.stdout.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)
@@ -92,7 +95,22 @@ def main():
         c.wait("document.body.dataset.ready === '1' || document.body.dataset.ready === 'error'", what="map ready")
         n_rows = c.js("APP.rows.length"); n_vis = int(c.js("document.body.dataset.visible || 0"))
         n_meta = c.js("FIA.meta.build.locations")
-        check("map loads every plot location", n_rows == n_meta and n_vis == n_rows and n_rows > ("--allow-subset" in a and 100 or 1000), f"{n_rows:,} locations in {time.time() - t0:.1f}s")
+        # expected counts, computed here from the published plots.json (not from the page's own logic)
+        P = json.load(urllib.request.urlopen(base + "data/plots.json", timeout=60))
+        ci = {k: i for i, k in enumerate(P["c"])}
+        act_from = datetime.date.today().year - 7
+        is_act = lambda r: r[ci["m"]] >= act_from
+        n_act = sum(map(is_act, P["r"])); n_hist = len(P["r"]) - n_act
+        per_key = next(r[ci["k"]] for r in P["r"] if r[ci["d"]] == "p")          # a periodic-only plot: historical
+        st0 = c.js("({act: +document.body.dataset.active, hist: +document.body.dataset.historical, txt: document.querySelector('#count').textContent,"
+                   " onMap: cluster.getLayers().length, histOnMap: histCluster.getLayers().length, box: document.querySelector('#f_hist').checked,"
+                   " note: document.querySelector('#histnote').textContent,"
+                   " legend: [...document.querySelectorAll('#legend [data-gn]')].reduce((t, e) => t + +e.textContent.replace(/[^0-9]/g, ''), 0)})")
+        check("map loads every plot location", n_rows == n_meta == len(P["r"]) and n_rows > ("--allow-subset" in a and 100 or 1000), f"{n_rows:,} locations in {time.time() - t0:.1f}s")
+        check(f"default view: active plots only (last measured {act_from}+): map, count and legend",
+              st0["act"] == n_act and st0["hist"] == 0 and n_vis == n_act and st0["onMap"] == n_act and st0["histOnMap"] == 0 and not st0["box"]
+              and f"{n_act:,} active plot locations" in st0["txt"] and str(act_from) in st0["note"] and st0["legend"] == n_act,
+              f"{n_act:,} active of {n_rows:,}; count '{st0['txt']}'; legend total {st0['legend']:,}")
         c.js("map.setView([34.0, -81.0], 9); true")
         c.wait("TILES.ok() >= 4", 60, "tiles")
         time.sleep(1.5)
@@ -108,22 +126,60 @@ def main():
         img = [r for r in responses() if "USGSImageryOnly" in r["url"]]
         check("Imagery + Topo basemap tiles return HTTP 200", img and all(r["status"] == 200 for r in img), f"{len(img)} imagery tiles")
         c.js("document.querySelector('#basemap').value='plain'; document.querySelector('#basemap').dispatchEvent(new Event('change')); true")
+        # 1b. "Show historical plots" toggle, kept in the URL
+        c.js("document.querySelector('#f_hist').click(); true")
+        c.wait("+document.body.dataset.historical > 0", 30, "historical plots")
+        st1 = c.js("({act: +document.body.dataset.active, hist: +document.body.dataset.historical, txt: document.querySelector('#count').textContent,"
+                   " onMap: cluster.getLayers().length, histOnMap: histCluster.getLayers().length, q: location.search,"
+                   " legend: !document.querySelector('#histlegend').classList.contains('hidden'),"
+                   " hollow: (m => m.options.fill === false && m.options.color !== '#222')(histCluster.getLayers()[0])})")
+        check("toggle on: historical plots added as hollow markers in their own clusters; count 'N active + M historical'; ?historical=1",
+              st1["act"] == n_act and st1["hist"] == n_hist and st1["onMap"] == n_act and st1["histOnMap"] == n_hist and st1["hollow"] and st1["legend"]
+              and f"{n_act:,} active + {n_hist:,} historical" in st1["txt"] and st1["q"] == "?historical=1", f"'{st1['txt']}', URL {st1['q']}")
+        c.goto(base + "index.html?historical=1")
+        c.wait("document.body.dataset.ready === '1'", what="map with ?historical=1")
+        st2 = c.js("[document.querySelector('#f_hist').checked, +document.body.dataset.visible]")
+        c.js("document.querySelector('#f_hist').click(); true")
+        c.wait("+document.body.dataset.historical === 0", 30, "toggle off")
+        st3 = c.js("[location.search, +document.body.dataset.visible, histCluster.getLayers().length]")
+        check("shared link ?historical=1 opens with the toggle on; turning it off restores the active-only view and URL",
+              st2 == [True, n_rows] and st3 == ["", n_act, 0], f"link: {st2}; off: {st3}")
         # 2. ID search
         c.js("document.querySelector('#idq').value = '91-25'; document.querySelector('#idgo').click(); true")
-        check("search by plot ID 91-25", c.wait(f"!!document.querySelector('#id_out li[data-key=\"{KEY}\"]')", what="ID result"))
+        check("search by plot ID 91-25 (active)", c.wait(f"document.querySelector('#id_out li[data-key=\"{KEY}\"]')?.dataset.active === '1'", what="ID result")
+              and c.wait(f"APP.markers.get('{KEY}').isPopupOpen() && !!document.querySelector('.leaflet-popup-content table')", 60, "91-25 popup"))
         c.js("document.querySelector('#idq').value = '809203876290487'; document.querySelector('#idgo').click(); true")
         check("search by PLOT CN (2021 visit of 91-25)", c.wait(f"!!document.querySelector('#id_out li[data-key=\"{KEY}\"]')", what="CN result"))
+        c.js(f"document.querySelector('#idq').value = '{per_key}'; document.querySelector('#idgo').click(); true")
+        ok = c.wait(f"document.querySelector('#id_out li[data-key=\"{per_key}\"]')?.dataset.active === '0' && /Historical plot — last measured/.test(document.querySelector('#id_out').textContent)", what="periodic ID result")
+        ok = ok and c.wait(f"APP.markers.get('{per_key}').isPopupOpen() && /Historical plot — last measured/.test(document.querySelector('.leaflet-popup-content').textContent)", 60, "historical popup")
+        st4 = c.js("[+document.body.dataset.historical, document.querySelector('#count').textContent, document.querySelector('.leaflet-popup-content .histbadge').textContent]")
+        check(f"ID search finds a periodic-only historical plot ({per_key}) while historical plots are hidden; opened with badge",
+              ok and st4[0] == 0 and "+ 1 search result" in st4[1], f"badge '{st4[2]}'; count '{st4[1]}'")
         # 3. location search (client-side only)
         c.events.clear(); seen[0] = 0
         c.js("document.querySelector('#locbtn').click(); true")
         c.wait("!!document.querySelector('#l_lat')")
         c.js(f"document.querySelector('#l_lat').value = {json.dumps(lat_s)}; document.querySelector('#l_lon').value = {json.dumps(lon_s)};"
              "document.querySelector('#l_rad').value = '2'; document.querySelector('#l_go').click(); true")
-        c.wait("!!document.querySelector('#l_list') || /No public plot/.test(document.querySelector('#l_out').textContent)")
-        items = c.js("[...document.querySelectorAll('#l_list li')].map(li => [li.dataset.key, +li.dataset.dist])")
-        keys = [k for k, _ in items]
+        c.wait("!!document.querySelector('#l_list') || /No active public plot/.test(document.querySelector('#l_out').textContent)")
+        items = c.js("[...document.querySelectorAll('#l_list li')].map(li => [li.dataset.key, +li.dataset.dist, li.dataset.active])")
+        keys = [k for k, _, _ in items]
         rank = keys.index(KEY) + 1 if KEY in keys else None
         check("location search finds 91-25", rank is not None, f"rank {rank} of {len(items)} within 2 mi" if rank else "")
+
+        def mi(la1, lo1, la2, lo2):
+            r = math.pi / 180
+            x = math.sin((la2 - la1) * r / 2) ** 2 + math.cos(la1 * r) * math.cos(la2 * r) * math.sin((lo2 - lo1) * r / 2) ** 2
+            return 2 * 3958.8 * math.asin(math.sqrt(x))
+        near = [r for r in P["r"] if mi(float(lat_s), float(lon_s), r[ci["la"]], r[ci["lo"]]) <= 2]
+        e_act = min(50, sum(map(is_act, near))); e_hist = min(50, len(near) - sum(map(is_act, near)))
+        hl = c.js("[document.querySelectorAll('#l_hist_list li').length, !!document.querySelector('#l_hist') && !document.querySelector('#l_hist').open,"
+                  " [...document.querySelectorAll('#l_hist_list li')].every(li => li.dataset.active === '0')]")
+        check("location results: active plots listed; historical plots in a collapsed 'Historical plots nearby' section",
+              all(x[2] == "1" for x in items) and len(items) == e_act and hl[0] == e_hist and (hl[1] or e_hist == 0) and hl[2],
+              f"{len(items)} active + {hl[0]} historical within 2 mi (expected {e_act} + {e_hist}); collapsed={hl[1]}")
+        del near
         time.sleep(0.5)
         reqs = requests()
         leaked = [r["url"] for r in reqs if lat_s in r["url"] or lon_s in r["url"] or lat_s in (r.get("postData") or "") or lon_s in (r.get("postData") or "")]

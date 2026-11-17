@@ -5,6 +5,10 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const fmt = (v, d = 1) => v == null || v === '' || isNaN(v) ? '—' : Number(v).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
 const FIA = { meta: null, codes: null, plots: null };
 const BA_K = 0.005454154;
+// Active plot = most recent measurement (MEASYEAR) within the last ACTIVE_YEARS years, from the viewer's current year.
+const ACTIVE_YEARS = 7;
+const ACTIVE_FROM = new Date().getFullYear() - ACTIVE_YEARS;
+const histBadge = last => `<span class="histbadge">Historical plot — last measured ${esc(last)}</span>`;
 
 async function getJSON(url) {
   const r = await fetch(url, { cache: 'default' });

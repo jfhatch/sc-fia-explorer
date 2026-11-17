@@ -26,6 +26,8 @@ async function init() {
   const county = (meta.counties.find(c => c.code === P.c) || {}).name || '';
   document.title = `FIA plot ${P.k}`;
   $('#title').textContent = `Plot ${P.k} · ${county} County, SC`;
+  const lastV = P.v[P.v.length - 1];
+  if (lastV && parseInt(lastV.d, 10) < ACTIVE_FROM) $('#title').insertAdjacentHTML('afterend', `<p>${histBadge(lastV.d)}</p>`);
   const last = P.v[P.v.length - 1];
   $('#subtitle').innerHTML = `STATECD ${P.s} · UNITCD ${P.u} · COUNTYCD ${P.c} · PLOT ${P.p} · public location ${fmt(P.la, 5)}, ${fmt(P.lo, 5)} (fuzzed) ·
     ${P.v.length} visit${P.v.length > 1 ? 's' : ''} (${esc(P.dsg)}) · owner group ${dvs(decode('COND.OWNGRPCD', P.og), 30)} · latest forest type ${esc(ftName(P.ft) || 'none (no accessible forest)')}`;

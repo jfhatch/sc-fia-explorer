@@ -5,7 +5,7 @@
 A map and plot-by-plot history of South Carolina's Forest Inventory and Analysis (FIA) plots, built only from public FIADB DataMart CSVs.
 
 It provides:
-- Every plot location at its public (fuzzed) coordinates, with filters.
+- Every plot location at its public (fuzzed) coordinates, with filters. By default the map shows **active plots** only: those whose most recent measurement (MEASYEAR) is within the last 7 years, computed from the viewer's current year. "Show historical plots" adds the rest as hollow grey markers. The setting is kept in the URL (`?historical=1`) so it can be shared. Plot ID search always finds any plot.
 - Search by plot ID, location or attributes.
 - A plot page for each plot, covering:
   - the visit timeline and inferred periodic predecessors;

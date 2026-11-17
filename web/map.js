@@ -33,9 +33,19 @@ for (const k in BASE) BASE[k].forEach(l => {
 });
 setBasemap(navigator.onLine === false ? 'plain' : 'topo');
 $('#basemap').onchange = e => setBasemap(e.target.value);
-const cluster = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 45, disableClusteringAtZoom: 12, showCoverageOnHover: false });
+// active plots: filled markers coloured by forest type group; historical plots: hollow grey markers in their own
+// cluster group and panes, drawn beneath the active ones
+map.createPane('histPane').style.zIndex = 390;
+map.createPane('histClusterPane').style.zIndex = 590;
+const CL_OPTS = { chunkedLoading: true, maxClusterRadius: 45, disableClusteringAtZoom: 12, showCoverageOnHover: false };
+const cluster = L.markerClusterGroup(CL_OPTS);
+const histCluster = L.markerClusterGroup(Object.assign({}, CL_OPTS, { clusterPane: 'histClusterPane',
+  iconCreateFunction: cl => L.divIcon({ html: `<div>${cl.getChildCount()}</div>`, className: 'marker-cluster hist-cluster', iconSize: L.point(40, 40) }) }));
+map.addLayer(histCluster);
 map.addLayer(cluster);
 const canvas = L.canvas({ padding: 0.3 });
+const histCanvas = L.canvas({ padding: 0.3, pane: 'histPane' });
+S.histCluster = histCluster;
 getJSON('data/counties.geojson').then(gj => {
   const lyr = L.geoJSON(gj, { style: { color: '#6b6a66', weight: 1, fill: false, opacity: 0.8 }, interactive: false }).addTo(map);
   map.fitBounds(lyr.getBounds(), { padding: [10, 10] });
@@ -51,6 +61,36 @@ $('#filtbtn').onclick = () => toggleSide(!document.body.classList.contains('side
 $('#sideclose').onclick = () => toggleSide(false);
 
 // ---------------------------------------------------------------- data + filters
+// Active = most recent measurement (MEASYEAR, column m) in ACTIVE_FROM or later (fia.js: current year - 7).
+const isActive = r => r[S.col.m] >= ACTIVE_FROM;
+const rowOf = key => S.rows[FIA.plots.byKey.get(key)];
+const clusterOf = r => isActive(r) ? cluster : histCluster;
+S.showHist = new URLSearchParams(location.search).get('historical') === '1';
+S.pin = null;                                     // a plot opened from a search that the current filters would hide
+const inScope = r => S.showHist || isActive(r);
+function setShowHist(on) {
+  S.showHist = on;
+  $('#f_hist').checked = on;
+  const u = new URL(location.href);
+  if (on) u.searchParams.set('historical', '1'); else u.searchParams.delete('historical');
+  history.replaceState(null, '', u);
+  updateCounts(); applyFilters();
+}
+function updateCounts() {
+  const c = S.col, act = {}, ft = {}, own = {};
+  let nh = 0;
+  for (const r of S.rows) {
+    if (isActive(r)) act[r[c.g]] = (act[r[c.g]] || 0) + 1; else nh++;
+    if (!inScope(r)) continue;
+    if (r[c.f] != null) ft[r[c.f]] = (ft[r[c.f]] || 0) + 1;
+    if (r[c.o] != null) own[r[c.o]] = (own[r[c.o]] || 0) + 1;
+  }
+  document.querySelectorAll('#legend [data-gn]').forEach(el => el.textContent = (act[el.dataset.gn] || 0).toLocaleString());
+  $('#histn').textContent = nh.toLocaleString();
+  $('#histlegend').classList.toggle('hidden', !S.showHist);
+  for (const o of $('#f_ft').options) if (o.value) o.textContent = `${o.value} ${o.dataset.name} (${(ft[o.value] || 0).toLocaleString()})`;
+  for (const o of $('#f_own').options) if (o.value) o.textContent = `${o.dataset.name} (${(own[o.value] || 0).toLocaleString()})`;
+}
 async function init() {
   const [meta, P] = await Promise.all([loadMeta(), loadPlots(), loadCodes()]);
   S.meta = meta; S.col = P.col; S.rows = P.rows;
@@ -58,35 +98,45 @@ async function init() {
   footer();
   $('#coordnote').textContent = meta.coord_note;
   for (const c of meta.counties) $('#f_cty').append(new Option(`${c.name} (${c.code})`, c.code));
-  for (const t of meta.types) $('#f_ft').append(new Option(`${t.code} ${t.name} (${t.n})`, t.code));
-  for (const o of meta.owners) $('#f_own').append(new Option(`${o.name} (${o.n})`, o.code));
-  $('#f_last0').value = meta.last_invyr[0]; $('#f_last1').value = meta.last_invyr[1];
+  for (const t of meta.types) { const o = new Option(`${t.code} ${t.name}`, t.code); o.dataset.name = t.name; $('#f_ft').append(o); }
+  for (const o of meta.owners) { const op = new Option(o.name, o.code); op.dataset.name = o.name; $('#f_own').append(op); }
+  $('#histnote').textContent = `Active plots were last measured ${ACTIVE_FROM} or later (the last ${ACTIVE_YEARS} years). ` +
+    'Historical plots appear as hollow grey markers.';
   $('#legend').innerHTML = meta.groups.map(g => `<label class="legend-item"><input type="checkbox" data-grp="${g.code}" checked>
-      <span class="sw" style="background:${g.color}"></span>${esc(g.name)}<span class="n">${g.n.toLocaleString()}</span></label>`).join('');
-  document.querySelectorAll('#side select:not(#basemap), #side input').forEach(el => el.addEventListener('change', applyFilters));
+      <span class="sw" style="background:${g.color}"></span>${esc(g.name)}<span class="n" data-gn="${g.code}"></span></label>`).join('') +
+    `<div class="legend-item hidden" id="histlegend"><span class="sw hollow"></span>Historical: last measured before ${ACTIVE_FROM}<span class="n" id="histn"></span></div>
+     <p class="muted">Group counts are active plots.</p>`;
+  $('#f_hist').checked = S.showHist;
+  $('#f_hist').addEventListener('change', e => setShowHist(e.target.checked));
+  document.querySelectorAll('#side select:not(#basemap), #side input:not(#f_hist)').forEach(el => el.addEventListener('change', applyFilters));
   $('#f_reset').onclick = () => {
-    ['#f_cty', '#f_ft', '#f_own', '#f_des', '#f_inv'].forEach(s => $(s).value = '');
-    $('#f_nv').value = 1; $('#f_last0').value = meta.last_invyr[0]; $('#f_last1').value = meta.last_invyr[1];
+    ['#f_cty', '#f_ft', '#f_own', '#f_des', '#f_inv', '#f_last0', '#f_last1'].forEach(s => $(s).value = '');
+    $('#f_nv').value = 1;
     document.querySelectorAll('#legend input').forEach(i => i.checked = true);
-    S.attrKeys = null; applyFilters();
+    S.attrKeys = null; S.pin = null; applyFilters();
   };
   const c = S.col;
   for (const r of S.rows) {
-    const m = L.circleMarker([r[c.la], r[c.lo]], { renderer: canvas, radius: 6, weight: 1, color: '#222', fillOpacity: 0.9, fillColor: S.groupColor[r[c.g]] || '#9a9893' });
+    const m = isActive(r)
+      ? L.circleMarker([r[c.la], r[c.lo]], { renderer: canvas, radius: 6, weight: 1, color: '#222', fillOpacity: 0.9, fillColor: S.groupColor[r[c.g]] || '#9a9893' })
+      : L.circleMarker([r[c.la], r[c.lo]], { renderer: histCanvas, radius: 5, weight: 1.5, color: '#7a7974', fill: false });
     m.key = r[c.k];
     m.on('click', () => openPopup(m));
     S.markers.set(m.key, m);
   }
+  updateCounts();
   applyFilters();
   document.body.dataset.ready = '1';
 }
-function visible(r) {
+// the current filters, without the search pin
+function passes(r) {
   const c = S.col, v = id => $(id).value;
+  if (!inScope(r)) return false;
   if (v('#f_cty') && r[c.y] != +v('#f_cty')) return false;
   if (v('#f_ft') && r[c.f] != +v('#f_ft')) return false;
   if (v('#f_own') && r[c.o] != +v('#f_own')) return false;
-  if (v('#f_last0') && r[c.l] < +v('#f_last0')) return false;
-  if (v('#f_last1') && r[c.l] > +v('#f_last1')) return false;
+  if (v('#f_last0') && r[c.m] < +v('#f_last0')) return false;
+  if (v('#f_last1') && r[c.m] > +v('#f_last1')) return false;
   if (r[c.n] < +(v('#f_nv') || 1)) return false;
   if (v('#f_des') && r[c.d] !== v('#f_des')) return false;
   if (v('#f_inv') !== '' && r[c.i] != +v('#f_inv')) return false;
@@ -96,12 +146,34 @@ function visible(r) {
   return true;
 }
 function applyFilters() {
-  const layers = [];
-  for (const r of S.rows) if (visible(r)) layers.push(S.markers.get(r[S.col.k]));
-  cluster.clearLayers();
-  cluster.addLayers(layers);
-  $('#count').textContent = layers.length.toLocaleString();
-  document.body.dataset.visible = layers.length;
+  const act = [], hist = [], c = S.col;
+  for (const r of S.rows) if (passes(r)) (isActive(r) ? act : hist).push(S.markers.get(r[c.k]));
+  S.nAct = act.length; S.nHist = hist.length;
+  const pr = S.pin && rowOf(S.pin);
+  if (pr && !passes(pr)) (isActive(pr) ? act : hist).push(S.markers.get(S.pin));
+  cluster.clearLayers(); cluster.addLayers(act);
+  histCluster.clearLayers(); histCluster.addLayers(hist);
+  const y0 = +$('#f_last0').value || 0, y1 = +$('#f_last1').value || 0;
+  const ln = $('#lastnote');
+  ln.textContent = !S.showHist && ((y0 && y0 < ACTIVE_FROM) || (y1 && y1 < ACTIVE_FROM) || $('#f_des').value === 'p')
+    ? `Only active plots (last measured ${ACTIVE_FROM} or later) are shown; turn on “Show historical plots” to include earlier years.` : '';
+  ln.classList.toggle('hidden', !ln.textContent);
+  renderCount();
+}
+function renderCount() {
+  const pr = S.pin && rowOf(S.pin), extra = pr && !passes(pr) ? ' + 1 search result' : '';
+  $('#count').textContent = (S.showHist ? `${S.nAct.toLocaleString()} active + ${S.nHist.toLocaleString()} historical plot locations`
+    : `${S.nAct.toLocaleString()} active plot locations`) + extra;
+  Object.assign(document.body.dataset, { visible: S.nAct + S.nHist, active: S.nAct, historical: S.nHist });
+}
+// keep a searched plot on the map even when the current filters (or the active-only view) would hide it
+function setPin(key) {
+  const old = S.pin;
+  S.pin = key;
+  if (old && old !== key) { const r = rowOf(old); if (!passes(r)) clusterOf(r).removeLayer(S.markers.get(old)); }
+  const r = rowOf(key), m = S.markers.get(key);
+  if (!clusterOf(r).hasLayer(m)) clusterOf(r).addLayer(m);
+  renderCount();
 }
 async function openPopup(m) {
   if (!m._map) return;
@@ -117,7 +189,8 @@ async function openPopup(m) {
       return `<tr><td>${esc(v.d)}</td><td>${esc(v.ds)}</td><td class="n">${fmt(v.m[ix('ba')])}</td><td class="n">${fmt(v.m[ix('live_tpa')], 0)}</td>
         <td class="n">${fmt(v.m[ix('carbon')])}</td><td class="n">${died}</td><td class="n">${ing}</td><td class="n">${v.ni ?? 0}</td></tr>`;
     }).join('');
-    m.setPopupContent(`<b>Plot ${esc(m.key)}</b><br><span class="muted">public location ${P.la.toFixed(4)}, ${P.lo.toFixed(4)} (fuzzed)</span>
+    const r = rowOf(m.key), hb = isActive(r) ? '' : `<br>${histBadge(r[S.col.t])}`;
+    m.setPopupContent(`<b>Plot ${esc(m.key)}</b>${hb}<br><span class="muted">public location ${P.la.toFixed(4)}, ${P.lo.toFixed(4)} (fuzzed)</span>
       <div class="popscroll"><table><thead><tr><th>Survey</th><th>Design</th><th class="n">BA ft²/ac</th><th class="n">TPA</th><th class="n">C t/ac</th><th class="n">Died</th><th class="n">Ingr.</th><th class="n">Inv.</th></tr></thead>
       <tbody>${rows}</tbody></table></div>
       <p style="margin:6px 0 0"><a href="${plotUrl(m.key)}">Open plot page →</a></p>`);
@@ -127,10 +200,12 @@ function focusKey(key, open = true) {
   const m = S.markers.get(key);
   if (!m) return;
   if (window.innerWidth < 760) toggleSide(false);
+  const r = rowOf(key);
+  if (!clusterOf(r).hasLayer(m)) setPin(key);
   const token = (focusKey.token = (focusKey.token || 0) + 1);
   // the cluster plugin calls back after its zoom animation, which can be late on slow networks: open the popup only if
   // this is still the latest request and the marker is on the map (otherwise Leaflet would pan a detached popup)
-  cluster.zoomToShowLayer(m, () => { if (open && token === focusKey.token && m._map) openPopup(m); });
+  clusterOf(r).zoomToShowLayer(m, () => { if (open && token === focusKey.token && m._map) openPopup(m); });
 }
 function drawer(tplId) {
   const d = $('#drawer');
@@ -168,8 +243,8 @@ async function idSearch() {
   if (!keys.length) { $('#id_out').innerHTML = `<p>No plot matches <b>${esc(q)}</b>. Use county-plot (91-25), the full key (45-3-91-25), county name and plot (York 25), or a PLOT CN.</p>`; return; }
   const c = S.col;
   $('#id_out').innerHTML = '<ul class="results">' + keys.map(k => { const r = S.rows[FIA.plots.byKey.get(k)];
-    return `<li data-key="${esc(k)}"><a href="#" data-focus="${esc(k)}">Plot ${esc(k)}</a> · ${r[c.n]} visits · last ${esc(r[c.t])} ·
-      <a href="${plotUrl(k)}">plot page</a></li>`; }).join('') + '</ul>';
+    return `<li data-key="${esc(k)}" data-active="${isActive(r) ? 1 : 0}"><a href="#" data-focus="${esc(k)}">Plot ${esc(k)}</a> · ${r[c.n]} visits · last ${esc(r[c.t])} ·
+      <a href="${plotUrl(k)}">plot page</a>${isActive(r) ? '' : '<br>' + histBadge(r[c.t])}</li>`; }).join('') + '</ul>';
   d.querySelectorAll('[data-focus]').forEach(a => a.onclick = e => { e.preventDefault(); focusKey(a.dataset.focus); });
   if (keys.length === 1) focusKey(keys[0]);
 }
@@ -199,12 +274,12 @@ function haversineMi(a, b, c, d) {
   const x = Math.sin((c - a) * r / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin((d - b) * r / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(x));
 }
-function nearest(lat, lon, radius, limit = 50) {
+function nearest(lat, lon, radius, keep) {
   const c = S.col, out = [];
-  for (const r of S.rows) { const dmi = haversineMi(lat, lon, r[c.la], r[c.lo]); if (dmi <= radius) out.push({ key: r[c.k], d: dmi, r }); }
-  out.sort((a, b) => a.d - b.d);
-  return out.slice(0, limit);
+  for (const r of S.rows) { if (!keep(r)) continue; const dmi = haversineMi(lat, lon, r[c.la], r[c.lo]); if (dmi <= radius) out.push({ key: r[c.k], d: dmi, r }); }
+  return out.sort((a, b) => a.d - b.d);
 }
+const LIMIT = 50;
 function clearLocation() {
   if (S.locLayer) { map.removeLayer(S.locLayer); S.locLayer = null; }
   ['#l_lat', '#l_lon'].forEach(s => { const el = $(s); if (el) el.value = ''; });
@@ -217,15 +292,19 @@ $('#locbtn').onclick = () => {
   const run = () => {
     const lat = parseCoord($('#l_lat').value, true), lon = parseCoord($('#l_lon').value, false), rad = +$('#l_rad').value || 2;
     if (isNaN(lat) || isNaN(lon)) { $('#l_out').innerHTML = '<p class="bad">Could not read the coordinates. Use decimal degrees (dd.dddd and -dd.dddd) or degrees-minutes-seconds (dd° mm\' ss" N and dd° mm\' ss" W).</p>'; return; }
-    const res = nearest(lat, lon, rad);
+    const res = nearest(lat, lon, rad, S.showHist ? () => true : isActive).slice(0, LIMIT);
+    const hres = S.showHist ? [] : nearest(lat, lon, rad, r => !isActive(r)).slice(0, LIMIT);
     if (S.locLayer) map.removeLayer(S.locLayer);
     S.locLayer = L.layerGroup([L.circle([lat, lon], { radius: rad * 1609.344, color: '#2a78d6', weight: 1, fillOpacity: 0.05, interactive: false }),
                                L.circleMarker([lat, lon], { radius: 6, color: '#2a78d6', fillColor: '#fff', fillOpacity: 1, weight: 2, interactive: false })]).addTo(map);
-    $('#l_out').innerHTML = res.length ? `<p>${res.length} public plot location${res.length > 1 ? 's' : ''} within ${rad} mi, nearest first. The map does not move
-      automatically; use “Zoom to results”.</p><button type="button" id="l_zoom">Zoom to results</button><ol class="results" id="l_list">` + res.map(x =>
-      `<li data-key="${esc(x.key)}" data-dist="${x.d.toFixed(3)}"><a href="#" data-focus="${esc(x.key)}">Plot ${esc(x.key)}</a> · ${x.d.toFixed(2)} mi ·
-        ${x.r[S.col.n]} visits, last ${esc(x.r[S.col.t])} · <a href="${plotUrl(x.key)}">plot page</a></li>`).join('') + '</ol>'
-      : `<p>No public plot location within ${rad} mi. Try a larger radius.</p>`;
+    const li = x => `<li data-key="${esc(x.key)}" data-dist="${x.d.toFixed(3)}" data-active="${isActive(x.r) ? 1 : 0}"><a href="#" data-focus="${esc(x.key)}">Plot ${esc(x.key)}</a> · ${x.d.toFixed(2)} mi ·
+        ${x.r[S.col.n]} visits, last ${esc(x.r[S.col.t])}${isActive(x.r) ? '' : ' · <span class="histbadge">historical</span>'} · <a href="${plotUrl(x.key)}">plot page</a></li>`;
+    const what = S.showHist ? 'public plot location' : 'active public plot location';
+    $('#l_out').innerHTML = (res.length ? `<p>${res.length} ${what}${res.length > 1 ? 's' : ''} within ${rad} mi, nearest first${res.length === LIMIT ? ` (nearest ${LIMIT} listed)` : ''}. The map does not move
+      automatically; use “Zoom to results”.</p><button type="button" id="l_zoom">Zoom to results</button><ol class="results" id="l_list">` + res.map(li).join('') + '</ol>'
+      : `<p>No ${what} within ${rad} mi.${hres.length ? '' : ' Try a larger radius.'}</p>`) +
+      (hres.length ? `<details class="histnear" id="l_hist"><summary>Historical plots nearby (${hres.length}${hres.length === LIMIT ? '+' : ''}), last measured before ${ACTIVE_FROM}</summary>
+        <ol class="results" id="l_hist_list">${hres.map(li).join('')}</ol></details>` : '');
     $('#l_out').querySelectorAll('[data-focus]').forEach(a => a.onclick = e => { e.preventDefault(); focusKey(a.dataset.focus); });
     const z = $('#l_zoom'); if (z) z.onclick = () => map.fitBounds(L.latLngBounds(res.map(x => [x.r[S.col.la], x.r[S.col.lo]]).concat([[lat, lon]])).pad(0.2));
   };
@@ -241,14 +320,16 @@ $('#attrbtn').onclick = () => {
   for (const g of S.meta.groups) if (g.code > 0) $('#a_grp').append(new Option(g.name, g.code));
   for (const t of S.meta.types) $('#a_ft').append(new Option(`${t.code} ${t.name}`, t.code));
   for (const o of S.meta.owners) $('#a_own').append(new Option(o.name, o.code));
+  $('#a_scope').textContent = S.showHist ? 'Searching active and historical plots.'
+    : `Searching active plots only (last measured ${ACTIVE_FROM} or later). Turn on “Show historical plots” in the filter panel to include older plots.`;
   let keys = [];
   $('#a_go').onclick = () => {
     const c = S.col, v = s => $(s).value, n = s => v(s) === '' ? null : +v(s);
-    const res = S.rows.filter(r =>
+    const res = S.rows.filter(r => inScope(r) &&
       (n('#a_cty') === null || r[c.y] === n('#a_cty')) && (n('#a_grp') === null || r[c.g] === n('#a_grp')) &&
       (n('#a_ft') === null || r[c.f] === n('#a_ft')) && (n('#a_own') === null || r[c.o] === n('#a_own')) &&
       (n('#a_age0') === null || (r[c.a] != null && r[c.a] >= n('#a_age0'))) && (n('#a_age1') === null || (r[c.a] != null && r[c.a] <= n('#a_age1'))) &&
-      (n('#a_last0') === null || r[c.l] >= n('#a_last0')) && (n('#a_last1') === null || r[c.l] <= n('#a_last1')) &&
+      (n('#a_last0') === null || r[c.m] >= n('#a_last0')) && (n('#a_last1') === null || r[c.m] <= n('#a_last1')) &&
       (!v('#a_des') || r[c.d].includes(v('#a_des')[0])) && (n('#a_inv') === null || r[c.i] === n('#a_inv')))
       .sort((a, b) => a[c.y] - b[c.y] || a[c.p] - b[c.p]);
     keys = res.map(r => r[c.k]);

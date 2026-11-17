@@ -143,3 +143,16 @@ body.mapbody #main { flex: 1; min-height: 0; height: auto; position: relative; }
   .timeline { display: flex; flex-wrap: wrap; }
   .note { background: #fff; border: 1px solid #999; }
 }
+
+/* active vs historical plots */
+.histbadge { display: inline-block; font-size: 12px; border: 1.5px solid var(--muted); color: var(--ink2); border-radius: 10px; padding: 0 8px; background: var(--chip); }
+.toggle-row { display: flex; align-items: flex-start; gap: 8px; padding: 8px 9px; margin: 0 0 10px; border: 1px solid var(--line2); border-radius: 6px; background: var(--chip); }
+.toggle-row input { margin-top: 3px; flex: none; width: 16px; height: 16px; }
+.toggle-row label { color: var(--ink); font-size: 13.5px; font-weight: 600; cursor: pointer; }
+.toggle-row .muted { display: block; font-weight: 400; }
+.sw.hollow { background: transparent !important; border: 2px solid #8a8984; }
+.hist-cluster { background: transparent !important; }
+.hist-cluster div { background: rgba(255,255,255,.75) !important; border: 2px dashed #7a7974; color: #52514e; width: 30px; height: 30px; margin: 5px 0 0 5px; border-radius: 15px; text-align: center; font: 12px/26px "Segoe UI", system-ui, sans-serif; box-sizing: border-box; }
+details.histnear { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 6px; }
+details.histnear summary { cursor: pointer; color: var(--ink2); }
+.filtnote { margin: 2px 0 6px; }

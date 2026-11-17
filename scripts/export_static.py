@@ -129,12 +129,14 @@ def main():
     grp = loc.FORTYP_GRP.fillna(-1).astype(int)
     grp[loc.FORTYP_GRP.isna() & (loc.PLOT_STATUS_CD == 3)] = -2
     des = loc.DESIGNS.map(lambda d: {"annual": "a", "periodic": "p"}.get(d, "ap" if "annual" in d else "o"))
-    pcols = ["k", "la", "lo", "g", "f", "y", "p", "o", "l", "n", "i", "d", "a", "x", "q", "t", "b"]
+    # m = MEASYEAR of the most recent measurement; the page decides "active" from it and the viewer's current year
+    lastmeas = q("SELECT KEY, MAX(MEASYEAR) AS M FROM visit GROUP BY KEY").set_index("KEY").M
+    pcols = ["k", "la", "lo", "g", "f", "y", "p", "o", "l", "n", "i", "d", "a", "x", "q", "t", "b", "m"]
     prow = []
-    for r, g, d in zip(loc.itertuples(), grp, des):
+    for r, g, d, my in zip(loc.itertuples(), grp, des, lastmeas.reindex(loc.KEY).fillna(loc.LAST_INVYR.set_axis(loc.KEY)).astype(int)):
         prow.append([r.KEY, round(r.LAT, 5), round(r.LON, 5), int(g), num(r.FORTYPCD), int(r.COUNTYCD), int(r.PLOT), num(r.OWNGRPCD),
                      int(r.LAST_INVYR), int(r.N_VISITS), int(r.HAS_INVASIVES), d, num(r.STDAGE), int(r.COORDS_DIFFER), int(r.N_PRED_CAND),
-                     r.LAST_DATE, num(r.BA, 1)])
+                     r.LAST_DATE, num(r.BA, 1), int(my)])
     kidx = {k: i for i, k in enumerate(loc.KEY)}
     json.dump({"c": pcols, "r": prow}, open(os.path.join(out, "data", "plots.json"), "w", encoding="utf-8"), separators=(",", ":"))
     ft = loc.FORTYPCD.dropna().astype(int).value_counts()
