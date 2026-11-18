@@ -129,6 +129,16 @@ def main():
                       "pinOn: APP.pin && !!APP.markers.get(APP.pin)._map, pinOpen: APP.pin && APP.markers.get(APP.pin).isPopupOpen(), pinInHist: APP.pin && APP.histCluster.hasLayer(APP.markers.get(APP.pin)), "
                       "pinVis: APP.pin && APP.histCluster.getVisibleParent(APP.markers.get(APP.pin)) === APP.markers.get(APP.pin), popTxt: (document.querySelector('.leaflet-popup-content')||{}).textContent})"))
                 return False
+        def expert_wait():
+            try:
+                c.wait("document.body.dataset.expertReady === '1' || document.body.dataset.expertReady === 'error'", 60, "expert panels")
+            except TimeoutError:
+                pass
+            st_ = c.js("document.body.dataset.expertReady || 'not set'")
+            if st_ != "1":
+                ex_ = [e["params"]["exceptionDetails"].get("exception", {}).get("description", "")[:300] for e in c.events if e.get("method") == "Runtime.exceptionThrown"][-2:]
+                print("   DEBUG expert panels:", st_, c.js("(document.querySelector('#expert') || {}).textContent?.slice(0, 200)"), ex_)
+                raise TimeoutError("expert panels: " + st_)
         # 1. map + tiles
         t0 = time.time()
         c.goto(base + "index.html")
@@ -393,13 +403,13 @@ def main():
               f"hover {bool(hover)}, keyboard {bool(kb)}, contrast {round(min(con2), 1)}:1; timeline: '{tl2[:90]}…'")
         # view switch: URL and localStorage round trip
         c.js("document.querySelector('.viewsw button[data-v=expert]').click(); true")
-        c.wait("document.body.dataset.expertReady === '1'", 60, "expert panels")
+        expert_wait()
         v1 = c.js("[location.search.includes('view=expert'), localStorage.getItem('fia_view')]")
         hcov.append(("plot page, expert", c.js(HELP_JS + "()")))
         c.goto(f"{base}plot.html?k={KEY}")
         c.wait("document.body.dataset.ready === '1'", what="plot page (stored view)")
         v2 = c.js("document.documentElement.dataset.view")
-        c.wait("document.body.dataset.expertReady === '1'", 60, "expert panels")
+        expert_wait()
         # expert values: same calculations as standard; SDI and 2-in classes against a hand calculation from the plot's tree records
         PJ = json.load(urllib.request.urlopen(f"{base}p/{KEY}.json", timeout=60))
         tc = {k_: i for i, k_ in enumerate(PJ["tr"]["c"])}
@@ -426,7 +436,7 @@ def main():
             c.goto(f"{base}plot.html?k={KEY}&view={view}")
             c.wait("document.body.dataset.ready === '1'", what="plot page for print")
             if view == "expert":
-                c.wait("document.body.dataset.expertReady === '1'", 60, "expert panels")
+                expert_wait()
             time.sleep(1.5)
             c.js("window.__pp = 0; PLOT.preparePrint({secs: null, trees: true, raw: false}).then(() => { window.__pp = 1; }); true")
             c.wait("window.__pp === 1", 90, "print preparation")
@@ -475,7 +485,7 @@ def main():
                 c.goto(f"{base}plot.html?k={k_}&view={view}")
                 c.wait("document.body.dataset.ready === '1' || document.body.dataset.ready === 'error'", what="other plot")
                 if view == "expert":
-                    c.wait("document.body.dataset.expertReady === '1'", 60, "expert panels")
+                    expert_wait()
                 time.sleep(1)
                 exc = [e for e in c.events[n0:] if e.get("method") == "Runtime.exceptionThrown"]
                 empty = c.js("[...document.querySelectorAll('section.psec')].filter(s_ => s_.getClientRects().length).filter(s_ => { const t = s_.cloneNode(true); t.querySelectorAll('.intro, h2').forEach(x => x.remove()); return t.textContent.trim().length < 20; }).map(s_ => s_.dataset.sec)")

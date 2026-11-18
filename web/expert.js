@@ -10,22 +10,26 @@
 
   async function loadX(PL) {
     if (PL.X) return PL.X;
-    if (!XS.loading) XS.loading = getJSON(`x/${encodeURIComponent(PL.P.k)}.json`).then(x => (PL.X = x));
+    const url = `x/${encodeURIComponent(PL.P.k)}.json`;
+    if (!XS.loading) XS.loading = getJSON(url).catch(() => new Promise(r => setTimeout(r, 1500)).then(() => getJSON(url)))   // one retry
+      .then(x => (PL.X = x)).catch(e => { XS.loading = null; throw e; });
     return XS.loading;
   }
   window.renderExpert = async function (PL) {
     const el = $('#expert');
     el.innerHTML = 'Loading expert records…';
     let X;
-    try { X = await loadX(PL); } catch (e) { el.innerHTML = `<p class="bad">Could not load expert records: ${esc(e.message)}</p>`; return; }
+    try { X = await loadX(PL); } catch (e) { el.innerHTML = `<p class="bad">Could not load expert records: ${esc(e.message)}</p>`; document.body.dataset.expertReady = 'error'; return; }
     if (!isExpert()) return;
-    const P = PL.P, vi = PL.vi, v = P.v[vi];
-    $('#xsel').textContent = `— ${v.d} (INVYR ${v.y})`;
-    el.innerHTML = [meta(P, X, vi), conds(P, vi), structure(P, PL, vi), treeTable(P, X, vi), grm(P, X, vi), subplots(P, X, vi), raw(P, X)].join('');
-    drawStructure(P, PL, vi);
-    wireTreeTable(P, X, vi);
-    wireRaw(P, X);
-    document.body.dataset.expertReady = '1';
+    try {
+      const P = PL.P, vi = PL.vi, v = P.v[vi];
+      $('#xsel').textContent = `— ${v.d} (INVYR ${v.y})`;
+      el.innerHTML = [meta(P, X, vi), conds(P, vi), structure(P, PL, vi), treeTable(P, X, vi), grm(P, X, vi), subplots(P, X, vi), raw(P, X)].join('');
+      drawStructure(P, PL, vi);
+      wireTreeTable(P, X, vi);
+      wireRaw(P, X);
+      document.body.dataset.expertReady = '1';
+    } catch (e) { console.error(e); el.insertAdjacentHTML('afterbegin', `<p class="bad">Could not show an expert panel: ${esc(e.message)}</p>`); document.body.dataset.expertReady = 'error'; }
   };
 
   // ---------------------------------------------------------------- plot/visit metadata
