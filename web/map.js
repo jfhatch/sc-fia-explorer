@@ -85,7 +85,7 @@ function updateCounts() {
     if (r[c.f] != null) ft[r[c.f]] = (ft[r[c.f]] || 0) + 1;
     if (r[c.o] != null) own[r[c.o]] = (own[r[c.o]] || 0) + 1;
   }
-  document.querySelectorAll('#legend [data-gn]').forEach(el => el.textContent = (act[el.dataset.gn] || 0).toLocaleString());
+  document.querySelectorAll('#legend [data-gn]').forEach(el => el.textContent = el.dataset.gn.split(',').reduce((a, g) => a + (act[g] || 0), 0).toLocaleString());
   $('#histn').textContent = nh.toLocaleString();
   $('#histlegend').classList.toggle('hidden', !S.showHist);
   for (const o of $('#f_ft').options) if (o.value) o.textContent = `${o.value} ${o.dataset.name} (${(ft[o.value] || 0).toLocaleString()})`;
@@ -103,10 +103,20 @@ async function init() {
   for (const o of meta.owners) { const op = new Option(o.name, o.code); op.dataset.name = o.name; $('#f_own').append(op); }
   $('#histnote').textContent = `Active plots were last measured ${ACTIVE_FROM} or later (the last ${ACTIVE_YEARS} years). ` +
     'Historical plots appear as hollow grey markers.';
-  $('#legend').innerHTML = meta.groups.map(g => `<label class="legend-item"><input type="checkbox" data-grp="${g.code}" checked>
-      <span class="sw" style="background:${g.color}"></span>${esc(g.name)}<span class="n" data-gn="${g.code}"></span></label>`).join('') +
+  // groups that share a legend row (lg: the rare forest types, one colour) get one row and one checkbox
+  const lrows = [];
+  for (const g of meta.groups) {
+    const lr = g.lg && lrows.find(x => x.lg === g.lg);
+    if (lr) { lr.codes.push(g.code); lr.names.push(g.name); } else lrows.push({ lg: g.lg, name: g.lg || g.name, color: g.color, codes: [g.code], names: [g.name] });
+  }
+  const NOTREES = { '-1': 'latest survey found no forest land', '-2': 'latest survey could not be done' };
+  $('#legend').innerHTML = lrows.map(lr => { const cs = lr.codes.join(','), sub = lr.lg ? lr.names.map(n => n.replace(/ group$/, '')).join(', ') : NOTREES[cs];
+    return `<label class="legend-item"><input type="checkbox" data-grp="${cs}" checked>
+      <span class="sw" style="background:${lr.color}"></span><span>${esc(lr.name)}${sub ? `<small class="muted lsub"> (${esc(sub)})</small>` : ''}</span><span class="n" data-gn="${cs}"></span></label>`; }).join('') +
     `<div class="legend-item hidden" id="histlegend"><span class="sw hollow"></span>Historical: last measured before ${ACTIVE_FROM}<span class="n" id="histn"></span></div>
-     <p class="muted">Group counts are active plots.</p>`;
+     <p class="muted">Group counts are active plots. Grey markers: no trees were measured at the latest survey (earlier surveys may have tree data; click to see).</p>`;
+  S.grpBox = {};
+  document.querySelectorAll('#legend input[data-grp]').forEach(i => i.dataset.grp.split(',').forEach(code => S.grpBox[code] = i));
   $('#f_hist').checked = S.showHist;
   $('#f_hist').addEventListener('change', e => setShowHist(e.target.checked));
   document.querySelectorAll('#side select:not(#basemap), #side input:not(#f_hist)').forEach(el => el.addEventListener('change', applyFilters));
@@ -144,7 +154,7 @@ function passes(r) {
   if (r[c.n] < +(v('#f_nv') || 1)) return false;
   if (v('#f_des') && r[c.d] !== v('#f_des')) return false;
   if (v('#f_inv') !== '' && r[c.i] != +v('#f_inv')) return false;
-  const g = document.querySelector(`#legend input[data-grp="${r[c.g]}"]`);
+  const g = S.grpBox[r[c.g]];
   if (g && !g.checked) return false;
   if (S.attrKeys && !S.attrKeys.has(r[c.k])) return false;
   if (window.MAPX && isExpert() && !window.MAPX.passes(r)) return false;
@@ -207,16 +217,27 @@ async function openPopup(m, token) {
     const rows = P.v.map((v, i) => {
       const e = ev.filter(x => x.Y1 === v.y);
       const died = i ? e.filter(x => x.t === 0).length : '—', ing = i ? e.filter(x => x.t === 3).length : '—';
-      return `<tr><td>${esc(v.d)}</td><td>${esc(v.ds)}</td><td class="n">${fmt(v.m[ix('ba')])}</td><td class="n">${fmt(v.m[ix('live_tpa')], 0)}</td>
-        <td class="n">${fmt(v.m[ix('carbon')])}</td><td class="n">${died}</td><td class="n">${ing}</td><td class="n">${v.ni ?? 0}</td></tr>`;
+      const why = noTrees(v);                     // no forest / not sampled: say so instead of a row of dashes
+      const mid = why ? `<td colspan="3" class="notrees" title="${esc(why.full)}">${esc(why.short)}</td>`
+        : `<td class="n">${fmt(v.m[ix('ba')])}</td><td class="n">${fmt(v.m[ix('live_tpa')], 0)}</td><td class="n">${fmt(v.m[ix('carbon')])}</td>`;
+      return `<tr><td>${esc(v.d)}</td><td>${esc(v.ds)}</td>${mid}<td class="n">${died}</td><td class="n">${ing}</td><td class="n">${v.ni ?? 0}</td></tr>`;
     }).join('');
+    const lv = P.v[P.v.length - 1], lw = lv && noTrees(lv), hadTrees = P.v.some(v => !noTrees(v));
+    const note = lw ? `<p class="popnote">Latest survey (${esc(lv.d.slice(0, 4))}): ${esc(lw.long)}, so no trees were measured.${hadTrees ? ' Earlier surveys with tree data are shown below.' : ''}</p>` : '';
     const r = rowOf(m.key), hb = isActive(r) ? '' : `<br>${histBadge(r[S.col.t])}`;
     m.setPopupContent(`<b>Plot ${esc(m.key)}</b>${hb}<br><span class="muted">public location ${P.la.toFixed(4)}, ${P.lo.toFixed(4)} (fuzzed)</span>
-      ${window.MAPX && isExpert() ? window.MAPX.popupLine(m.key) : ''}
+      ${window.MAPX && isExpert() ? window.MAPX.popupLine(m.key) : ''}${note}
       <div class="popscroll"><table><thead><tr>${POP_COLS.map(([s, k, n]) => th(k, { l: s, n, unit: false })).join('')}</tr></thead>
       <tbody>${rows}</tbody></table></div>
       <p style="margin:6px 0 0"><a href="${plotUrl(m.key)}">Open plot page →</a></p>`);
   } catch (e) { if (m.isPopupOpen()) m.setPopupContent('Could not load: ' + esc(e.message)); }
+}
+// a visit with no tree data because the plot had no accessible forest (PLOT_STATUS_CD 2) or was not sampled (3)
+function noTrees(v) {
+  if (v.st === 2) return { short: 'no forest', long: 'no accessible forest land on the plot', full: decode('PLOT.PLOT_STATUS_CD', 2).text };
+  if (v.st !== 3) return null;
+  const d = decode('PLOT.PLOT_NONSAMPLE_REASN_CD', v.ns), m = /^\d+ = ([^-.]+)/.exec(d.text || ''), r = m ? m[1].trim().replace(/ area$/i, '').toLowerCase() : '';
+  return { short: r ? `not sampled: ${r}` : 'not sampled', long: `the plot was not sampled${r ? ` (${r})` : ''}`, full: [decode('PLOT.PLOT_STATUS_CD', 3).text, d.text].filter(Boolean).join(' ') };
 }
 function focusKey(key, open = true) {
   const m = S.markers.get(key);

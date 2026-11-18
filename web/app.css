@@ -321,3 +321,7 @@ th.n .sortb { text-align: center; } th.n small.thc { text-align: center; }
 td:has(> .wrapcell) { white-space: normal; min-width: 14em; max-width: 34em; }
 .grid2 > *, .xgrid > *, .kpis > * { min-width: 0; }      /* grid children may shrink: wide tables scroll inside their box */
 .ni { display: inline-block; text-align: right; } .nf, .nsuf { display: inline-block; text-align: left; }
+/* map popup: surveys without tree data (no forest / not sampled) */
+.leaflet-popup-content td.notrees { text-align: center; color: var(--ink2); font-style: italic; }
+.popnote { margin: 4px 0; padding: 4px 6px; border-left: 3px solid var(--line2); color: var(--ink2); font-size: 12px; max-width: 34em; }
+.legend-item .lsub { font-size: 11px; }

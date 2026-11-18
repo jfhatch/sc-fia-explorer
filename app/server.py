@@ -114,7 +114,7 @@ def meta():
     groups = []
     for i, (g, n) in enumerate(gcount.items()):
         groups.append({"code": int(g), "name": ref.FGN.get(int(g), f"group {g}"), "n": int(n),
-                       "color": core.PAL[i] if i < len(core.PAL) else core.OTHER})
+                       "color": core.PAL[i] if i < len(core.PAL) else core.GROUP_OTHER})
     groups.append({"code": -1, "name": GROUP_EXTRA[-1][0], "n": int(((loc.FORTYP_GRP.isna()) & (loc.PLOT_STATUS_CD != 3)).sum()), "color": GROUP_EXTRA[-1][1]})
     groups.append({"code": -2, "name": GROUP_EXTRA[-2][0], "n": int(((loc.FORTYP_GRP.isna()) & (loc.PLOT_STATUS_CD == 3)).sum()), "color": GROUP_EXTRA[-2][1]})
     ft = loc.FORTYPCD.dropna().astype(int).value_counts()

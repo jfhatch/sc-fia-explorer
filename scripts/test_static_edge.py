@@ -255,6 +255,21 @@ def main():
         st4 = c.js("[+document.body.dataset.historical, document.querySelector('#count').textContent, document.querySelector('.leaflet-popup-content .histbadge').textContent]")
         check(f"ID search finds a periodic-only historical plot ({per_key}) while historical plots are hidden; opened with badge",
               ok and st4[0] == 0 and "+ 1 search result" in st4[1], f"badge '{st4[2]}'; count '{st4[1]}'")
+        # grey markers: plots whose latest survey has no tree data (no forest / not sampled) say why in the popup; the rare
+        # forest-type groups are not grey and share one legend row
+        lg = c.js(r"""(() => { const G = APP.meta.groups, grey = c => /^#([0-9a-f]{2})\1\1$/i.test(c) || ['#9a9893', '#c9c8c2', '#6b6a66'].includes(c.toLowerCase());
+          const forestGrey = G.filter(g => g.code > 0 && grey(g.color)).map(g => g.name), other = document.querySelector('#legend input[data-grp*=","]');
+          const pick = code => (APP.rows.find(r => r[APP.col.g] === code && r[APP.col.m] >= ACTIVE_FROM) || [])[APP.col.k];
+          return { forestGrey, other: other && other.dataset.grp, rows: document.querySelectorAll('#legend input[data-grp]').length, nf: pick(-1), ns: pick(-2) }; })()""")
+        nt = []
+        for code, kk, rx in (("nf", lg["nf"], "no accessible forest land"), ("ns", lg["ns"], "not sampled")):
+            if not kk: continue
+            c.js("map.closePopup(); true"); c.js(f"focusKey('{kk}'); true")
+            okp = c.wait(f"APP.markers.get('{kk}').isPopupOpen() && !!document.querySelector('.leaflet-popup-content table')", 60, f"{code} popup")
+            nt.append((kk, okp and c.js(rf"(() => {{ const p = document.querySelector('.leaflet-popup-content'); return /Latest survey \(\d{{4}}\): .*{rx}.*so no trees were measured/.test(p.querySelector('.popnote')?.textContent || '') && p.querySelectorAll('td.notrees').length > 0; }})()")))
+        check("grey markers explained: popups of no-forest / nonsampled plots say why the latest survey has no tree data; rare forest types not grey, one legend row",
+              not lg["forestGrey"] and lg["other"] is not None and len(nt) == 2 and all(x[1] for x in nt),
+              f"grey forest groups {lg['forestGrey']}; combined row {lg['other']}; popups {nt}")
         # 3. location search (client-side only)
         c.events.clear(); seen[0] = 0
         c.js("document.querySelector('#locbtn').click(); true")

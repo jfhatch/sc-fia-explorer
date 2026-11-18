@@ -19,6 +19,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 BA_K = 0.005454154            # ft^2 per in^2 of DBH squared
 PAL = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]
 OTHER = "#9a9893"
+# forest type groups past the 8 palette colours (rare in SC) share one non-grey colour, so grey markers only ever mean
+# "no trees measured at the latest visit" (nonforest / nonsampled). Checked >= 15 OKLab dE from every other marker
+# colour under normal, protan, deutan and tritan vision.
+GROUP_OTHER = "#5c3814"
 SNAME = {0: "not in sample", 1: "live", 2: "dead", 3: "cut"}
 CN_COLS = {"CN", "PLT_CN", "PREV_PLT_CN", "TRE_CN", "PREV_TRE_CN", "CND_CN", "STRATUM_CN", "SRV_CN", "CTY_CN", "SBP_CN",
            "PREV_SBP_CN", "PREV_CND_CN", "PRJ_CN", "EVAL_CN", "EVAL_GRP_CN", "ESTN_UNIT_CN", "TRE_CN_BEGIN", "TRE_CN_MIDPT",

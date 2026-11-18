@@ -187,7 +187,8 @@ def main():
                                            tuple(core.REGRESSION_BA))}
         loc = loc[loc.KEY.isin(keep)].reset_index(drop=True)
     gcount = loc.FORTYP_GRP.dropna().astype(int).value_counts()
-    groups = [{"code": int(g), "name": ref.FGN.get(int(g), f"group {g}"), "n": int(n), "color": core.PAL[i] if i < len(core.PAL) else core.OTHER}
+    groups = [{"code": int(g), "name": ref.FGN.get(int(g), f"group {g}"), "n": int(n), "color": core.PAL[i] if i < len(core.PAL) else core.GROUP_OTHER,
+               **({} if i < len(core.PAL) else {"lg": "Other forest types"})}
               for i, (g, n) in enumerate(gcount.items())]
     groups.append({"code": -1, "name": "Nonforest / no accessible forest", "n": int((loc.FORTYP_GRP.isna() & (loc.PLOT_STATUS_CD != 3)).sum()), "color": "#c9c8c2"})
     groups.append({"code": -2, "name": "Nonsampled", "n": int((loc.FORTYP_GRP.isna() & (loc.PLOT_STATUS_CD == 3)).sum()), "color": "#6b6a66"})
