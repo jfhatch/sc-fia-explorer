@@ -43,8 +43,8 @@
       <span class="muted sphint">Hover or tap a dot for details; hover a line or a tree in the list to pick it out.</span></div>
     <div class="spmain"><div class="spchart" id="sp_chart"></div><div class="splist" id="sp_list"></div></div>
     <div id="sp_leg"></div>
-    <div class="sptip" id="sp_tip" role="status" hidden></div>
   </div>
+  <div class="sptip" id="sp_tip" role="status" hidden></div>
 </div>`);
     const root = el('spview');
     root.addEventListener('click', e => { if (e.target.dataset.close) close(); });
@@ -54,12 +54,18 @@
     el('sp_same').onchange = e => { SPV.same = e.target.checked; draw(); };
     el('sp_print').onclick = () => window.print();
     const ch = el('sp_chart');
-    ch.addEventListener('pointerover', e => { const h = e.target.closest('.dhit, .lhit'); if (!h) return; hl(+h.dataset.ti); if (h.classList.contains('dhit')) tip(h); });
-    ch.addEventListener('pointerout', e => {
-      const h = e.target.closest('.dhit, .lhit'), to = e.relatedTarget;
-      if (!h || (to && to.closest && to.closest('.dhit, .lhit'))) return;
+    // hover follows the pointer's own movements, not enter/leave events (Chrome can re-fire those at a stale position once the
+    // tooltip appears, which closed it at once): over a dot -> its tooltip; over a line -> that tree; elsewhere the tooltip
+    // closes once the pointer is more than 14 px from its dot. Touch uses taps (click below).
+    ch.addEventListener('pointermove', e => {
+      if (e.pointerType === 'touch') return;
+      const h = e.target.closest('.dhit, .lhit');
+      if (h) { hl(+h.dataset.ti); if (h.classList.contains('dhit')) { if (SPV.tipEl !== h) tip(h); } else if (!SPV.pinTip) tip(null); return; }
+      const t = SPV.tipEl;
+      if (t && t.isConnected) { const r = t.getBoundingClientRect(); if (Math.hypot(e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2) <= 14) return; }
       hl(SPV.pin); if (!SPV.pinTip) tip(null);
     });
+    ch.addEventListener('pointerleave', e => { if (e.pointerType === 'touch') return; hl(SPV.pin); if (!SPV.pinTip) tip(null); });
     // a tap is judged by what was under the finger when it went down (the click can land on the chart after the press)
     ch.addEventListener('pointerdown', e => { SPV.down = e.target.closest('.dhit, .lhit'); });
     ch.addEventListener('click', e => {
@@ -69,6 +75,8 @@
       SPV.pin = +h.dataset.ti; hl(SPV.pin);
       if (h.classList.contains('dhit')) { SPV.pinTip = true; tip(h); } else { SPV.pinTip = false; tip(null); }
     });
+    // the tooltip is fixed to the viewport: hide it when the dialog scrolls under it
+    root.querySelector('.spbox').addEventListener('scroll', () => { SPV.pinTip = false; tip(null); }, { passive: true });
     const list = el('sp_list');
     list.addEventListener('pointerover', e => { const r = e.target.closest('tr[data-ti]'); if (r) hl(+r.dataset.ti); });
     list.addEventListener('pointerout', e => { const r = e.target.closest('tr[data-ti]'); if (r && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('tr[data-ti]'))) hl(SPV.pin); });
@@ -183,18 +191,22 @@
   function tip(h) {
     const T = el('sp_tip');
     if (!T) return;
+    SPV.tipEl = h || null;
     if (!h) { T.hidden = true; return; }
     const t = PL.sm.T.find(x => x.ti === +h.dataset.ti), p = t && t.pts.find(q => q.vi === +h.dataset.vi);
     if (!p) { T.hidden = true; return; }
+    // fixed to the viewport (not inside the scrolling dialog): measuring it there could add a scrollbar, narrow the chart and
+    // slide the dot out from under the pointer, which closed the tooltip again (seen in Chrome)
     T.innerHTML = tipHtml(t, p);
+    T.style.left = '0px'; T.style.top = '0px';
     T.hidden = false;
-    const box = el('spview').querySelector('.spbox').getBoundingClientRect(), r = h.getBoundingClientRect();
-    const cx = r.left + r.width / 2 - box.left, cy = r.top + r.height / 2 - box.top + el('spview').querySelector('.spbox').scrollTop;
+    const r = h.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
     const w = T.offsetWidth, hgt = T.offsetHeight;
     let x = cx + 14, y = cy - hgt - 10;
-    if (x + w > box.width - 6) x = cx - w - 14;
+    if (x + w > innerWidth - 6) x = cx - w - 14;
     if (x < 6) x = 6;
-    if (y < 6 + el('spview').querySelector('.spbox').scrollTop) y = cy + 14;
+    if (y < 6) y = cy + 14;
+    if (y + hgt > innerHeight - 6) y = Math.max(6, innerHeight - hgt - 6);
     T.style.left = x + 'px'; T.style.top = y + 'px';
   }
   function tipHtml(t, p) {
