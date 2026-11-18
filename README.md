@@ -13,6 +13,7 @@ It provides:
   - the survey summary and tree totals;
   - visit details, every section expanded;
   - volume and carbon, species, species composition and individual trees;
+  - each species' diameter panel opens a full-size view (`web/spview.js`): every measurement at its date with its DBH printed, tooltips, a tree list, prev/next, a shareable `#species=<SPCD>` link, and a one-page print;
   - growth, mortality, invasives and plot-specific caveats.
 - **The same computations as the PDF summary.** `fiasc/summary.py` is shared by the static export and the local PDF (`fiasc/summary_pdf.py`). It covers the stand totals, species tables, highlights and caveats. Periodic visits count their tallied points as in the Plot 25 PDF.
 - **Plain-language help.** Every column header and section has an ⓘ with the plain name, units and meaning. A glossary page (`glossary.html`) lists terms with real examples.

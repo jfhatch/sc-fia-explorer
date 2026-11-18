@@ -466,6 +466,130 @@ def main():
             c.call("Emulation.setEmulatedMedia", features=[{"name": "prefers-color-scheme", "value": scheme}])
             time.sleep(0.3)
             hc.append((scheme, c.js(CONTRAST_JS + "('th')")))
+        # per-species full-size view (spview.js): open/close by click, keyboard, back button and shared link; labels = Trees DBH
+        c.call("Emulation.setEmulatedMedia", media="", features=[])
+        def click_xy(x, y):
+            for t_ in ("mousePressed", "mouseReleased"):
+                c.call("Input.dispatchMouseEvent", type=t_, x=x, y=y, button="left", clickCount=1)
+        def key(k, code, vk):
+            for t_ in ("rawKeyDown", "keyUp"):
+                c.call("Input.dispatchKeyEvent", type=t_, key=k, code=code, windowsVirtualKeyCode=vk)
+        def center(sel):
+            c.js(f"document.querySelector({json.dumps(sel)}).scrollIntoView({{block: 'center'}}); true"); time.sleep(0.3)
+            r_ = json.loads(c.js(f"JSON.stringify(document.querySelector({json.dumps(sel)}).getBoundingClientRect())"))
+            return r_["x"] + r_["width"] / 2, r_["y"] + r_["height"] / 2
+        def sw(expr, t_, what):
+            try: return c.wait(expr, t_, what)
+            except TimeoutError: return False
+        SPV_OPEN = "SPV.cur != null && !document.querySelector('#spview').hidden && /species=\\d+/.test(location.hash)"
+        SPV_SHUT = "SPV.cur == null && (!document.querySelector('#spview') || document.querySelector('#spview').hidden) && !/species=/.test(location.hash)"
+        spv = {}
+        for label, dims in (("desktop", None), ("390 px", (390, 844))):
+            if dims:
+                c.call("Emulation.setDeviceMetricsOverride", width=dims[0], height=dims[1], deviceScaleFactor=2, mobile=True)
+            c.goto(f"{base}plot.html?k={KEY}&view=standard&reload=sp{len(spv)}"); c.wait("document.body.dataset.ready === '1'", what="plot page")
+            o = {}
+            # hover cue on the small panels
+            x_, y_ = center("#smult figure.smz")
+            c.call("Input.dispatchMouseEvent", type="mouseMoved", x=x_ - 20, y=y_ - 10); c.call("Input.dispatchMouseEvent", type="mouseMoved", x=x_, y=y_); time.sleep(0.5)
+            o["cue"] = c.js(f"(() => {{ const f = document.querySelector('#smult figure.smz'), q = f.querySelector('.smcue'), e = document.elementFromPoint({x_}, {y_}); return [getComputedStyle(f).cursor, +getComputedStyle(q).opacity, q.textContent, f.matches(':hover'), e && (e.tagName + '.' + e.getAttribute('class'))]; }})()")
+            h0 = c.js("history.length")
+            click_xy(x_, y_)
+            o["click"] = sw(SPV_OPEN, 10, "species view (click)") and c.js("document.activeElement.id") == "sp_close" and c.js("history.length") == h0 + 1
+            o["fit"] = c.js("(() => { const b = document.querySelector('.spbox').getBoundingClientRect(), x = document.querySelector('#sp_close').getBoundingClientRect(), s = document.querySelector('#sp_chart svg');"
+                            " return { box: Math.round(b.width), left: Math.round(b.left), sw: document.documentElement.scrollWidth, vw: innerWidth, close: x.right <= innerWidth && x.top >= 0 && x.bottom <= innerHeight,"
+                            " svg: Math.round(s.getBoundingClientRect().width), list: document.querySelectorAll('#sp_list tr[data-ti]').length, labels: document.querySelectorAll('#sp_chart .splab').length }; })()")
+            # every species (next button): each measured DBH has a label (or is listed as dropped) equal to the tree record, and the
+            # first / latest DBH in the Trees table match the labels at those surveys
+            o["labels"] = c.js(r"""(async () => {
+  const P = PLOT.P, cols = P.tr.c, ix = Object.fromEntries(cols.map((k, i) => [k, i])), recs = P.tr.r;
+  const hk = [...document.querySelectorAll('#trees_t thead th')].map(h => h.dataset.hk), fc = hk.indexOf('d:first_dbh'), lc = hk.indexOf('d:last_dbh');
+  const n = document.querySelectorAll('#smult figure.smz').length, bad = [], seen = new Set(); let labels = 0, dropped = 0, tableChecked = 0;
+  const h0 = history.length;
+  for (let k = 0; k < n; k++) {
+    const L = SPV.last, tis = new Set(PLOT.sm.T.filter(t => t.pts[t.pts.length - 1].spcd === L.code).map(t => t.ti));
+    seen.add(L.code);
+    const got = new Map(L.placed.concat(L.dropped).map(l => [l.ti + ':' + l.vi, l.txt]));
+    const want = new Map(recs.filter(r => tis.has(r[ix.ti]) && r[ix.DIA] != null).map(r => [r[ix.ti] + ':' + r[ix.vi], r[ix.DIA].toFixed(1)]));
+    for (const [kk, v] of want) if (got.get(kk) !== v) bad.push(`${L.code} ${kk}: label ${got.get(kk)} vs record ${v}`);
+    if (got.size !== want.size) bad.push(`${L.code}: ${got.size} labels for ${want.size} measurements`);
+    for (const l of L.placed) { const t = document.querySelector(`#sp_chart .splab[data-ti="${l.ti}"][data-vi="${l.vi}"]`); if (!t || t.textContent !== l.txt) bad.push(`${L.code} ${l.ti}:${l.vi} not drawn`); }
+    for (const r of PLOT.treeRows.filter(r => tis.has(r.ti))) {
+      const tr = document.querySelector(`#trees_t tr.trow[data-ti="${r.ti}"]`);
+      for (const [p, c] of [[r.first, fc], [r.last, lc]]) if (p && p.dia != null) { tableChecked++; if (tr.cells[c].textContent.trim() !== got.get(r.ti + ':' + p.vi)) bad.push(`${r.id} table ${tr.cells[c].textContent.trim()} vs label ${got.get(r.ti + ':' + p.vi)}`); }
+    }
+    labels += L.placed.length; dropped += L.dropped.length;
+    document.querySelector('#sp_next').click(); await new Promise(r => setTimeout(r, 60));
+  }
+  return { n, species: seen.size, labels, dropped, tableChecked, bad: bad.slice(0, 6), nbad: bad.length, hist: history.length - h0, back: SPV.cur === [...seen][0] };
+})()""")
+            # hover / tap a dot: tooltip; the tree is picked out
+            d_ = json.loads(c.js("JSON.stringify(document.querySelectorAll('#sp_chart .dhit')[2].getBoundingClientRect())"))
+            dx_, dy_ = d_["x"] + d_["width"] / 2, d_["y"] + d_["height"] / 2
+            if dims: click_xy(dx_, dy_)
+            else: c.call("Input.dispatchMouseEvent", type="mouseMoved", x=dx_, y=dy_)
+            time.sleep(0.3)
+            o["tip"] = c.js("(() => { const t = document.querySelector('#sp_tip'), r = t.getBoundingClientRect(); return { shown: !t.hidden, txt: t.innerText, inside: r.left >= 0 && r.right <= innerWidth + 1,"
+                            " hl: document.querySelector('#sp_chart').classList.contains('hl'), on: document.querySelectorAll('#sp_chart .sptree.on').length }; })()")
+            # hover a tree in the list: its line is picked out
+            if not dims:
+                lx_, ly_ = center("#sp_list tr[data-ti]:nth-child(2)")
+                c.call("Input.dispatchMouseEvent", type="mouseMoved", x=lx_, y=ly_); time.sleep(0.2)
+                o["listhl"] = c.js("(() => { const ti = document.querySelector('#sp_list tr[data-ti]:nth-child(2)').dataset.ti, on = [...document.querySelectorAll('#sp_chart .sptree.on')].map(g => g.dataset.ti); return on.length === 1 && on[0] === ti; })()")
+            # same-axes toggle
+            c.js("document.querySelector('#sp_same').click(); true"); time.sleep(0.2)
+            o["same"] = c.js("[...document.querySelectorAll('#sp_chart .tick')].map(t => t.textContent).includes(String(PLOT.sm.ymax))")
+            c.js("document.querySelector('#sp_same').click(); true"); time.sleep(0.2)
+            # keyboard: → next species; Esc closes and returns focus to a panel
+            c0 = c.js("SPV.cur"); key("ArrowRight", "ArrowRight", 39); time.sleep(0.2)
+            o["arrow"] = c.js("SPV.cur") != c0 and f"species={c.js('SPV.cur')}" in c.js("location.hash")
+            if dims:   # swipe left = next species
+                c1 = c.js("SPV.cur")
+                c.js("(() => { const m = document.querySelector('.spmain'), T = (x) => new Touch({ identifier: 1, target: m, clientX: x, clientY: 300 });"
+                     " m.dispatchEvent(new TouchEvent('touchstart', { touches: [T(300)], changedTouches: [T(300)], bubbles: true }));"
+                     " m.dispatchEvent(new TouchEvent('touchend', { touches: [], changedTouches: [T(150)], bubbles: true })); return true; })()"); time.sleep(0.2)
+                o["swipe"] = c.js("SPV.cur") != c1
+            key("Escape", "Escape", 27)
+            o["esc"] = sw(SPV_SHUT, 10, "species view closed (Esc)") and c.js("!!document.activeElement.closest('#smult figure.smz')")
+            # keyboard open: Enter on a focused panel; the back button closes and stays on the page
+            c.js("document.querySelectorAll('#smult figure.smz')[1].focus(); true"); key("Enter", "Enter", 13)
+            ok_ = sw(SPV_OPEN, 10, "species view (Enter)")
+            c.js("history.back(); true")
+            o["kbd_back"] = ok_ and sw(SPV_SHUT, 10, "species view closed (back)") and "plot.html" in c.js("location.pathname")
+            # clicking a tree in the list opens its history in the Trees table
+            c.js("document.querySelectorAll('#smult figure.smz')[0].click(); true"); sw(SPV_OPEN, 10, "species view")
+            ti_ = c.js("document.querySelector('#sp_list tr[data-ti]').dataset.ti")
+            c.js("document.querySelector('#sp_list tr[data-ti] td').click(); true")
+            o["tree"] = sw(SPV_SHUT + f" && document.querySelector('#trees_t tr.trow[data-ti=\"{ti_}\"]').getAttribute('aria-expanded') === 'true'", 10, "tree history from list")
+            # print: the open view prints alone, drawn at page width with its labels
+            c.js("document.querySelectorAll('#smult figure.smz')[0].click(); true"); sw(SPV_OPEN, 10, "species view")
+            c.js("dispatchEvent(new Event('beforeprint')); true"); time.sleep(0.2)
+            c.call("Emulation.setEmulatedMedia", media="print"); time.sleep(0.3)
+            o["print"] = c.js("({ view: getComputedStyle(document.querySelector('#spview')).display !== 'none', page: getComputedStyle(document.querySelector('.page')).display, W: SPV.last.W,"
+                              " labels: document.querySelectorAll('#sp_chart .splab').length, dropped: SPV.last.dropped.length, close: getComputedStyle(document.querySelector('#sp_close')).display })")
+            c.call("Emulation.setEmulatedMedia", media=""); c.js("dispatchEvent(new Event('afterprint')); true")
+            # a shared link opens the view; back closes it without leaving the page
+            c.goto(f"{base}plot.html?k={KEY}&view=standard&reload=spd{len(spv)}#species=131"); c.wait("document.body.dataset.ready === '1'", what="plot page #species=131")
+            ok_ = sw(SPV_OPEN + " && SPV.cur === 131", 10, "species view from link")
+            c.js("history.back(); true")
+            o["deep"] = ok_ and sw(SPV_SHUT, 10, "species view closed (back after link)") and "plot.html" in c.js("location.pathname")
+            if dims:
+                c.call("Emulation.clearDeviceMetricsOverride")
+            spv[label] = o
+            L_, F_, P_ = o["labels"], o["fit"], o["print"]
+            ok_lab = L_["nbad"] == 0 and L_["species"] == L_["n"] and L_["labels"] > 50 and L_["tableChecked"] > 50 and L_["hist"] == 0 and L_["back"]
+            ok_fit = F_["sw"] <= F_["vw"] and F_["close"] and F_["box"] <= F_["vw"] and F_["svg"] >= (300 if dims else 600) and F_["list"] > 0 and F_["labels"] > 0
+            ok_int = (o["tip"]["shown"] and "DBH" in o["tip"]["txt"] and "Status" in o["tip"]["txt"] and o["tip"]["inside"] and o["tip"]["hl"] and o["tip"]["on"] == 1
+                      and o["same"] and o["arrow"] and o.get("swipe", True) and o.get("listhl", True))
+            ok_nav = o["click"] and o["esc"] and o["kbd_back"] and o["deep"] and o["tree"]
+            ok_pr = P_["view"] and P_["page"] == "none" and P_["W"] == 960 and P_["labels"] > 0 and P_["close"] == "none"
+            ok_cue = o["cue"][0] == "zoom-in" and (o["cue"][1] == 1 or dims) and o["cue"][2] == "Click to enlarge"
+            check(f"Species full-size view ({label}): opens by click, Enter and shared link #species=…; Esc, back button and tree list close it; ←/→{' and swipe' if dims else ''} step species; "
+                  "DBH labels equal the tree records and the Trees table at every survey; tooltip + highlight; same-axes toggle; prints alone with labels; panels show 'Click to enlarge'",
+                  ok_lab and ok_fit and ok_int and ok_nav and ok_pr and ok_cue,
+                  f"{L_['species']} species, {L_['labels']} labels ({L_['dropped']} hidden for overlap), {L_['tableChecked']} Trees-table values compared, mismatches {L_['bad']}; "
+                  f"fit {F_}; tip {o['tip']['txt'][:60]!r}; nav click={o['click']} esc={o['esc']} enter+back={o['kbd_back']} link={o['deep']} tree={o['tree']} arrow={o['arrow']} swipe={o.get('swipe')}; "
+                  f"print {P_}; cue {o['cue']}; parts lab={ok_lab} fit={ok_fit} int={ok_int} nav={ok_nav} print={ok_pr} cue={ok_cue}; tip {o['tip']}; same={o['same']} listhl={o.get('listhl')}")
         c.goto(base + "index.html")
         c.wait("document.body.dataset.ready === '1'", what="map")
         c.js("document.querySelector('#attrbtn').click(); document.querySelector('#a_cty').value = '91'; document.querySelector('#a_go').click(); true")

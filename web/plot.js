@@ -102,6 +102,9 @@ async function init() {
   $('#printbtn').onclick = openPrintDialog;
   PL.hist = buildHistory(P);
   PL.vi = P.v.length - 1;
+  // the data can arrive (e.g. from cache) while the scripts after this one (spview.js, expert.js) are still downloading:
+  // render only once every page script has run, or Expert view would stay on "Loading…"
+  if (document.readyState === 'loading') await new Promise(r => document.addEventListener('DOMContentLoaded', r, { once: true }));
   renderAll();
   window.addEventListener('viewchange', () => { renderAll(); });
   document.body.dataset.ready = '1';
@@ -533,7 +536,10 @@ function smPanel(sp, trees, xr, ymax) {
       : fate === 'cut' ? `<rect x="${ex - 3}" y="${ey - 3}" width="6" height="6" fill="#52514e"/>` : `<circle cx="${ex}" cy="${ey}" r="3" fill="none" stroke="#52514e" stroke-width="1.4"/>`;
     g += `<g><title>${esc(ttl)}</title>${seg}${pts.length === 1 && fate === 'live' ? '' : ''}${mk}</g>`;
   }
-  return `<figure><figcaption>${esc(sp)} (${trees.length})</figcaption><svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="${esc(sp)}: diameter of ${trees.length} trees over time">${g}</svg></figure>`;
+  // click / tap / Enter opens the full-size view (spview.js)
+  const code = trees.length ? trees[0].pts[trees[0].pts.length - 1].spcd : '';
+  return `<figure class="smz" tabindex="0" role="button" data-sp="${code}" aria-label="${esc(sp)}: enlarge the diameter chart of ${trees.length} trees">`
+    + `<span class="smcue noprint" aria-hidden="true">Click to enlarge</span><figcaption>${esc(sp)} (${trees.length})</figcaption><svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="${esc(sp)}: diameter of ${trees.length} trees over time">${g}</svg></figure>`;
 }
 // per-tree DBH history: first/latest live DBH, total and average increase (actual measurement dates), and the increase in
 // each survey interval where the tree was live at both ends; negative changes are kept as recorded
@@ -573,11 +579,13 @@ function renderIndiv(P) {
     + `<span><svg width="10" height="10"><rect x="2" y="2" width="6" height="6" fill="#52514e"/></svg> cut</span><span><svg width="10" height="10"><circle cx="5" cy="5" r="3" fill="none" stroke="#52514e" stroke-width="1.4"/></svg> left the sample</span>`
     + `<span>dotted line = 5.0 in</span></div>`;
   const R = PL.treeRows = treeRows();
+  PL.sm = { T, order, xr, ymax, legend };
   $('#indiv').innerHTML = intro('indiv') + `<h3>Diameter by species (same axes in every panel: ${xr[0]}–${xr[1]}, 0–${ymax} in)</h3>` + legend
     + `<div class="sm" id="smult">${order.map(s => smPanel(s, T.filter(t => t.sp === s), xr, ymax)).join('')}</div>`
     + `<h3 class="treetable">Trees (${R.length})</h3><p class="muted treetable">One row per tree. Click or tap a row for its full history. Increases use the actual measurement dates; `
     + `negative changes are kept as recorded (grey).</p><div class="treetable" id="treetab"></div>`;
   drawTreeTable(R);
+  if (window.SPV) SPV.sync();                     // a shared link with #species=<SPCD> opens the full-size view
 }
 function drawTreeTable(R) {
   const ivs = R.length ? R[0].ivs : [];
