@@ -154,7 +154,8 @@ function applyFilters() {
   const act = [], hist = [], c = S.col;
   for (const r of S.rows) if (passes(r)) (isActive(r) ? act : hist).push(S.markers.get(r[c.k]));
   S.nAct = act.length; S.nHist = hist.length;
-  dropPin();                                       // a pinned marker that now passes the filters goes back to its cluster
+  const pr = S.pin && rowOf(S.pin);                // keep the pinned marker in place unless it changed or now passes the filters
+  if (S.pinM && (!pr || S.pinM.key !== S.pin || passes(pr))) dropPin();
   cluster.clearLayers(); cluster.addLayers(act);
   histCluster.clearLayers(); histCluster.addLayers(hist);
   syncPin();
@@ -224,9 +225,12 @@ function focusKey(key, open = true) {
   const r = rowOf(key);
   if (!clusterOf(r).hasLayer(m)) setPin(key);
   const token = (focusKey.token = (focusKey.token || 0) + 1);
+  // reopen a search popup once if its marker is removed and re-added shortly after opening (cluster or filter re-render)
+  const guard = () => { const t0 = Date.now();
+    m.once('remove', () => { if (Date.now() - t0 < 4000) m.once('add', () => { if (token === focusKey.token && !m.isPopupOpen()) openPopup(m, token); }); }); };
   if (S.pinM === m) {                               // pinned search result: on the map directly, no cluster involved
     map.setView(m.getLatLng(), Math.max(map.getZoom(), 13), { animate: false });
-    if (open) openPopup(m, token);
+    if (open) { openPopup(m, token); guard(); }
     return;
   }
   // Not markercluster's zoomToShowLayer: it waits for a DOM icon (marker._icon or the parent cluster's icon), which canvas
@@ -235,9 +239,7 @@ function focusKey(key, open = true) {
   const go = () => {
     if (!open || token !== focusKey.token) return;
     if (m._map) openPopup(m, token); else m.once('add', () => { if (token === focusKey.token) openPopup(m, token); });
-    // a cluster re-render shortly after can remove and re-add the marker, closing its popup: reopen once if still the latest
-    const t0 = Date.now();
-    m.once('remove', () => { if (Date.now() - t0 < 4000) m.once('add', () => { if (token === focusKey.token && !m.isPopupOpen()) openPopup(m, token); }); });
+    guard();
   };
   const cl = clusterOf(r);
   if (cl.getVisibleParent(m) === m) { map.panTo(m.getLatLng(), { animate: false }); go(); return; }
