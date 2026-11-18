@@ -35,6 +35,9 @@ CONTRAST_JS = """((sel) => {
 })"""
 SORT_JS = "(() => {\n  const t = () => document.querySelector('#vd_trees'), bad = [];\n  const n = t().querySelectorAll('thead th').length;\n  for (let ci = 0; ci < n; ci++) {\n    for (const dir of ['ascending', 'descending', 'none']) {\n      t().querySelectorAll('thead th')[ci].querySelector('.sortb').click();\n      const th = t().querySelectorAll('thead th')[ci];\n      if (th.getAttribute('aria-sort') !== dir) { bad.push(ci + ':' + dir + ':state'); continue; }\n      const rows = [...t().tBodies[0].rows];\n      if (dir === 'none') { if (rows.some((r, i) => +r.dataset.i !== i)) bad.push(ci + ':original'); continue; }\n      const vals = rows.map(r => { const td = r.cells[ci], v = td.dataset.v ?? td.textContent.trim(); return v === '' || v === '—' ? null : v; }).filter(v => v !== null);\n      const num = vals.every(v => !isNaN(+v));\n      for (let i = 1; i < vals.length; i++) { const c = num ? +vals[i - 1] - +vals[i] : String(vals[i - 1]).localeCompare(String(vals[i]), undefined, { numeric: true });\n        if ((dir === 'ascending' && c > 0) || (dir === 'descending' && c < 0)) { bad.push(ci + ':' + dir); break; } }\n    }\n  }\n  return { n, bad, help: !!document.querySelector('#hpop:not([hidden])') };\n})()"
 COND_JS = "JSON.stringify({ hidden: document.querySelector('#condfields').hidden, line: document.querySelector('.condline').textContent,\n  hash: location.hash, exp: document.querySelector('.secttoggle').getAttribute('aria-expanded') })"
+TT_JS = '(() => {\n  const R = PLOT.treeRows, H = PLOT.hist, t = document.querySelector(\'#trees_t\'), hk = [...t.querySelectorAll(\'thead th\')].map(h => h.dataset.hk);\n  // interval increases add up to the total for trees live at every survey\n  const nv = PLOT.P.v.length, full = R.filter(r => r.inc.every(x => x != null) && r.inc.length === nv - 1);\n  const sumBad = full.filter(r => Math.abs(r.inc.reduce((a, x) => a + x, 0) - r.total) > 1e-9).map(r => r.id);\n  // per-species mean of the interval rates = Growth section means (an interval counts for the species recorded at its end, as there)\n  const by = {}; R.forEach(r => r.inc.forEach((x, i) => { if (x != null) (by[r.ivsp[i]] = by[r.ivsp[i]] || []).push(x / r.ivs[i].yrs); }));\n  // Growth section interval rates are stored rounded to 4 decimals in the export, so means agree to within 5e-5\n  const diffs = H.growth.map(g => by[g.sp] ? Math.abs(by[g.sp].reduce((a, x) => a + x, 0) / by[g.sp].length - g.mean) : Infinity);\n  const rateBad = H.growth.filter((g, i) => diffs[i] > 5e-5).map(g => g.sp), maxDiff = Math.max(...diffs);\n  const ivTitles = [...t.querySelectorAll(\'thead th[data-hk="d:ivl"] .sortb\')].map(b => b.title);\n  const fates = R.map(r => r.fate).filter(f => !/^(Live \\d{4}|Died \\d{4}–\\d{4}( \\(.+\\))?|Dead when first tallied \\d{4}|Dropped \\d{4} \\(.+\\)|Cut (\\d{4}–)?\\d{4})$/.test(f));\n  const fmtBad = [...t.tBodies[0].rows].slice(0, 20).flatMap(tr => [...tr.cells].slice(3, 9).map(td => td.textContent.trim())).filter(x => x && !/^-?\\d+\\.\\d{1,2}$|^\\d{4}$/.test(x));\n  return { n: R.length, full: full.length, sumBad, rateBad, maxDiff, growthN: H.growth.length, spark: !!document.querySelector(\'#treetab .spark\'), hk, ivTitles, fates, fmtBad,\n    neg: [...t.querySelectorAll(\'.negchg\')].length };\n})()'
+STICK_JS = "(() => {\n  const t = document.querySelector('#trees_t'), sc = t.closest('.scroll'); sc.scrollLeft = 260;\n  const r0 = sc.getBoundingClientRect(), c1 = t.tBodies[0].rows[0].cells[0].getBoundingClientRect(), c2 = t.tBodies[0].rows[0].cells[1].getBoundingClientRect();\n  const out = { scrolled: sc.scrollLeft, c1: Math.round(c1.left - r0.left), gap: Math.round(c2.left - c1.right), sticky: getComputedStyle(t.tBodies[0].rows[0].cells[1]).position };\n  sc.scrollLeft = 0; return out;\n})()"
+SORT_TT_JS = SORT_JS.replace("'#vd_trees'", "'#trees_t'")
 HELP_JS = """((sel) => {
   const ths = [...document.querySelectorAll(sel || 'th')].filter(t => t.getClientRects().length);
   const bad = ths.filter(t => { const k = t.dataset.hk, h = k && helpFor(k); return !t.querySelector('.hb') || !h || !h.text; })
@@ -354,6 +357,11 @@ def main():
             out = {}
             c.goto(f"{base}plot.html?k={KEY}&view=standard"); c.wait("document.body.dataset.ready === '1'", what="plot page")
             out["sort"] = c.js(SORT_JS)
+            out["tt"] = c.js(TT_JS)
+            out["ttsort"] = c.js(SORT_TT_JS)
+            out["stick"] = c.js(STICK_JS)
+            c.js("document.querySelector('#trees_t tr.trow').click(); true"); time.sleep(1.5)
+            out["hist"] = c.js("(() => { const d = document.querySelector('#trees_t tr.tdet'); return d ? [d.querySelectorAll('.js-plotly-plot').length, d.querySelectorAll('table tbody tr').length] : null; })()")
             out["fmt"] = c.js("(() => { const t = document.querySelector('#vd_trees'), hk = [...t.querySelectorAll('thead th')].map(h => h.dataset.hk), col = k => hk.indexOf(k);"
                               " const rows = [...t.tBodies[0].rows]; const cells = k => rows.map(r => r.cells[col(k)].textContent.trim());"
                               " return { first: hk[0], status: [...new Set(cells('TREE.STATUSCD'))], sp: cells('TREE.SPCD').slice(0, 3), dia: cells('TREE.DIA').slice(0, 3), ht: cells('TREE.HT').slice(0, 3),"
@@ -399,6 +407,16 @@ def main():
             check(f"Visit details ({label}): every tree column sorts both ways and back, ⓘ not triggered; plain formatting; Survey year first; 'Show all surveys' = all non-bridge TREE records",
                   ok_sort and ok_fmt and ok_all, f"{o['sort']['n']} columns, bad {o['sort']['bad'][:5]}; status {f_['status']}, species {f_['sp']}, DIA {f_['dia']}, HT {f_['ht']}, head '{f_['diaHead']}'; "
                   f"rows {o['all'][0]} → {o['all'][1]} (expected {n_expect})")
+            tt = o["tt"]
+            ok_tt = (tt["n"] > 50 and not tt["spark"] and tt["full"] > 5 and not tt["sumBad"] and not tt["rateBad"] and tt["growthN"] >= 5
+                     and tt["hk"][:9] == ["d:tree_id", "d:species", "d:first_y", "d:first_dbh", "d:last_y", "d:last_dbh", "d:dbh_total", "d:dbh_rate", "d:dbh_rate5"]
+                     and tt["hk"].count("d:ivl") == 4 and all("years" in x for x in tt["ivTitles"]) and not tt["fates"] and not tt["fmtBad"]
+                     and not o["ttsort"]["bad"] and o["ttsort"]["n"] == 14 and o["hist"] == [2, len(o["hist"]) and o["hist"][1]] and o["hist"][1] >= 1
+                     and o["stick"]["sticky"] == "sticky" and o["stick"]["scrolled"] > 0 and abs(o["stick"]["c1"]) <= 2 and abs(o["stick"]["gap"]) <= 2)
+            check(f"Trees history table ({label}): first/latest DBH, totals, rates, interval columns (dated tooltips); intervals sum to totals; rates = Growth means; "
+                  "plain fates; every column sorts; row opens charts + table; Tree and Species stay on the left",
+                  ok_tt, f"{tt['n']} trees, {tt['full']} live at every survey (sum mismatches {tt['sumBad']}), species rate mismatches {tt['rateBad']} (largest difference {tt['maxDiff']:.1e} in/yr), "
+                  f"{tt['neg']} negative cells, interval tooltips {tt['ivTitles'][:2]}; sort bad {o['ttsort']['bad'][:4]}; history {o['hist']}; sticky {o['stick']}; bad fates {tt['fates'][:3]} fmt {tt['fmtBad'][:3]}")
             check(f"Conditions and PLOT record ({label}): collapsed with a one-line summary; expand from the header or the control; #cond-open / #plot-open open them; print expands",
                   ok_cond, f"'{line}' | '{o['plot0'][1]}' | {o['plot0'][2][:70]}; states {[o[k]['hidden'] for k in ('cond0', 'cond1', 'cond2', 'cond3')]}, print open {o['print']}, after {o['after']}")
         hc = []

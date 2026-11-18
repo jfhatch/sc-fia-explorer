@@ -11118,6 +11118,54 @@
    "unit": "",
    "help": "1 if the record has a PREV_TRE_CN link to an earlier record. Added by this site; not an FIADB column.",
    "src": "TREE.PREV_TRE_CN §3.1.5"
+  },
+  "first_y": {
+   "label": "First year",
+   "unit": "INVYR",
+   "help": "Survey year of the tree's first live measurement (or its first record if it was never measured alive).",
+   "src": "TREE.DIA §3.1.18"
+  },
+  "first_dbh": {
+   "label": "First DBH",
+   "unit": "in",
+   "help": "Diameter at breast height at the tree's first live measurement.",
+   "src": "TREE.DIA §3.1.18"
+  },
+  "last_y": {
+   "label": "Latest year",
+   "unit": "INVYR",
+   "help": "Survey year of the tree's latest live measurement (for trees that died, the last survey at which they were alive).",
+   "src": "TREE.DIA §3.1.18"
+  },
+  "last_dbh": {
+   "label": "Latest DBH",
+   "unit": "in",
+   "help": "Diameter at breast height at the tree's latest live measurement.",
+   "src": "TREE.DIA §3.1.18"
+  },
+  "dbh_total": {
+   "label": "Total increase",
+   "unit": "in",
+   "help": "Latest live DBH minus first live DBH. Negative values are kept as recorded (measurement variation).",
+   "src": "TREE.DIA §3.1.18"
+  },
+  "dbh_rate": {
+   "label": "Increase per year",
+   "unit": "in/yr",
+   "help": "Total increase divided by the years between the actual first and latest live measurement dates.",
+   "src": "TREE.DIA §3.1.18, PLOT.MEASYEAR §2.4.12"
+  },
+  "dbh_rate5": {
+   "label": "Increase per 5 years",
+   "unit": "in/5 yr",
+   "help": "The per-year increase × 5.",
+   "src": "TREE.DIA §3.1.18"
+  },
+  "ivl": {
+   "label": "Interval increase",
+   "unit": "in",
+   "help": "DBH increase between two consecutive surveys, for trees live at both; blank otherwise. The header's tooltip gives the exact dates and the years elapsed. Negative values are kept as recorded.",
+   "src": "TREE.DIA §3.1.18"
   }
  },
  "glossary": [

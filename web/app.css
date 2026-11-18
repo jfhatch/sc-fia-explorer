@@ -302,3 +302,10 @@ table.stickyfirst thead th:first-child { position: sticky; left: 0; top: 0; z-in
   table.vt td, table.vt th { white-space: normal; }
   .sortb .arr { display: none; }
 }
+
+/* individual trees table: Tree and Species stay on the left while scrolling; negative changes in grey */
+table.sticky2 tbody td:nth-child(2), table.sticky2 thead th:nth-child(2) { position: sticky; left: var(--c1w, 64px); background: var(--panel); box-shadow: 1px 0 0 var(--line); }
+table.sticky2 tbody td:nth-child(2) { z-index: 1; } table.sticky2 thead th:nth-child(2) { z-index: 3; background: var(--chip); }
+table.sticky2 tbody td:first-child, table.sticky2 thead th:first-child { min-width: var(--c1w, 64px); max-width: var(--c1w, 64px); box-sizing: border-box; }
+.negchg { color: var(--muted); } tr.tdet td { white-space: normal; } .tdetin { max-width: calc(100vw - 40px); position: sticky; left: 0; } .tchart { height: 260px; }
+@media print { table.sticky2 td:nth-child(2), table.sticky2 th:nth-child(2) { position: static; box-shadow: none; } }

@@ -46,6 +46,7 @@ document.addEventListener('click', e => {
   const next = { none: 'ascending', ascending: 'descending', descending: 'none' }[thEl.getAttribute('aria-sort') || 'none'];
   table.querySelectorAll('thead th').forEach(x => x.setAttribute('aria-sort', 'none'));
   thEl.setAttribute('aria-sort', next);
+  table.querySelectorAll('tr.tdet').forEach(x => { if (x.previousElementSibling) x.previousElementSibling.setAttribute('aria-expanded', 'false'); x.remove(); });
   const tb = table.tBodies[0], rows = [...tb.rows];
   const key = tr => { const td = tr.cells[ci]; if (!td) return null; const v = td.dataset.v ?? td.textContent.trim(); return v === '' || v === '—' ? null : v; };
   const num = v => v !== null && v !== '' && !isNaN(+v);
@@ -534,14 +535,31 @@ function smPanel(sp, trees, xr, ymax) {
   }
   return `<figure><figcaption>${esc(sp)} (${trees.length})</figcaption><svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="${esc(sp)}: diameter of ${trees.length} trees over time">${g}</svg></figure>`;
 }
-function spark(t, ymax) {
-  const pts = t.pts.filter(p => p.dia != null), W = 90, Hh = 22, Y = PL.P.v.map(v => v.y), x0 = Y[0], x1 = Y[Y.length - 1];
-  if (!pts.length) return '';
-  const x = y => 2 + (W - 4) * (y - x0) / Math.max(1, x1 - x0), y = d => Hh - 2 - (Hh - 4) * d / ymax;
-  return `<svg class="spark" width="${W}" height="${Hh}" viewBox="0 0 ${W} ${Hh}" aria-hidden="true"><polyline fill="none" stroke="#2a78d6" stroke-width="1.5" points="${pts.map(p => `${x(p.y).toFixed(1)},${y(p.dia).toFixed(1)}`).join(' ')}"/>`
-    + `<circle cx="${x(pts[pts.length - 1].y)}" cy="${y(pts[pts.length - 1].dia)}" r="2" fill="${FATE(t) === 'live' ? '#2a78d6' : '#b3261e'}"/></svg>`;
+// per-tree DBH history: first/latest live DBH, total and average increase (actual measurement dates), and the increase in
+// each survey interval where the tree was live at both ends; negative changes are kept as recorded
+function treeRows() {
+  const P = PL.P, H = PL.hist, V = P.v, ivs = V.slice(1).map((v, i) => ({ i0: i, i1: i + 1, y0: V[i].y, y1: v.y, yrs: v.dy - V[i].dy, d0: V[i].d, d1: v.d }));
+  const moved = new Set(H.microplot_moved);
+  const short = (key, v) => { const d = decode(key, v); return d.status === 'decoded' ? d.text.replace(/^[^=]*=\s*/, '').split(' - ')[0].split('. ')[0].split(' (')[0].replace(/\.$/, '').toLowerCase() : `code ${v}`; };
+  return H.trees.map(t => {
+    const live = t.pts.filter(p => p.st === 1 && p.dia != null);
+    const first = live[0] || t.pts.find(p => p.dia != null) || null, last = live[live.length - 1] || null;
+    const total = live.length >= 2 ? last.dia - first.dia : null, yrs = live.length >= 2 ? V[last.vi].dy - V[first.vi].dy : null;
+    const byVi = Object.fromEntries(t.pts.map(p => [p.vi, p]));
+    const inc = ivs.map(iv => { const a = byVi[iv.i0], b = byVi[iv.i1]; return a && b && a.st === 1 && b.st === 1 && a.dia != null && b.dia != null ? b.dia - a.dia : null; });
+    // status / fate in plain words (full text in the tooltip and in Expert view)
+    const lp = t.pts[t.pts.length - 1], prevLive = p => { const k = t.pts.indexOf(p); for (let j = k - 1; j >= 0; j--) if (t.pts[j].st === 1) return t.pts[j]; return null; };
+    let fate;
+    if (lp.st === 1) fate = `Live ${lp.y}`;
+    else if (lp.st === 3) { const pl = prevLive(lp); fate = `Cut ${pl ? pl.y + '–' : ''}${lp.y}`; }
+    else if (lp.st === 0) fate = `Dropped ${lp.y} (${moved.has(lp.y) && (lp.dia ?? (last && last.dia) ?? 0) < 5 ? 'microplot moved' : short('TREE.RECONCILECD', lp.rc)})`;
+    else { const d = t.pts.find(p => p.st === 2), pl = prevLive(d);
+      fate = pl ? `Died ${pl.y}–${d.y}` + (d.agent != null ? ` (${short('TREE.AGENTCD', d.agent)})` : '') : `Dead when first tallied ${d.y}`; }
+    // species recorded at the end of each interval (records can name different species at different visits)
+    const ivsp = ivs.map(iv => byVi[iv.i1] ? spName(byVi[iv.i1].spcd) : null);
+    return { t, ti: t.ti, id: t.id, sp: t.sp, ivsp, first, last, total, yrs, rate: total != null && yrs > 0 ? total / yrs : null, inc, ivs, fate, full: `${t.entry}; ${t.fate}` };
+  });
 }
-let treeSort = { k: 'id', dir: 1 };
 function renderIndiv(P) {
   const H = PL.hist;
   if (H.empty) { $('#indiv').innerHTML = intro('indiv') + '<p class="muted">No TREE records at this location key.</p>'; return; }
@@ -554,35 +572,50 @@ function renderIndiv(P) {
     + `<span><svg width="10" height="10"><circle cx="5" cy="5" r="3" fill="#2a78d6"/></svg> live at last survey</span><span><svg width="10" height="10"><path d="M2 2L8 8M2 8L8 2" stroke="#b3261e" stroke-width="1.8"/></svg> died</span>`
     + `<span><svg width="10" height="10"><rect x="2" y="2" width="6" height="6" fill="#52514e"/></svg> cut</span><span><svg width="10" height="10"><circle cx="5" cy="5" r="3" fill="none" stroke="#52514e" stroke-width="1.4"/></svg> left the sample</span>`
     + `<span>dotted line = 5.0 in</span></div>`;
+  const R = PL.treeRows = treeRows();
   $('#indiv').innerHTML = intro('indiv') + `<h3>Diameter by species (same axes in every panel: ${xr[0]}–${xr[1]}, 0–${ymax} in)</h3>` + legend
     + `<div class="sm" id="smult">${order.map(s => smPanel(s, T.filter(t => t.sp === s), xr, ymax)).join('')}</div>`
-    + `<h3 class="treetable">Trees (${T.length})</h3><div class="treetable" id="treetab"></div>`;
-  drawTreeTable(T, ymax);
+    + `<h3 class="treetable">Trees (${R.length})</h3><p class="muted treetable">One row per tree. Click or tap a row for its full history. Increases use the actual measurement dates; `
+    + `negative changes are kept as recorded (grey).</p><div class="treetable" id="treetab"></div>`;
+  drawTreeTable(R);
 }
-function drawTreeTable(T, ymax) {
-  const key = { id: t => t.id, sp: t => t.sp, dbh: t => t.last ? t.last.dia : -1, g: t => t.g ?? -99, fate: t => t.fate };
-  const sorted = [...T].sort((a, b) => { const x = key[treeSort.k](a), y = key[treeSort.k](b);
-    return treeSort.dir * (typeof x === 'string' ? x.localeCompare(y, undefined, { numeric: true }) : x - y); });
-  const cols = [['id', 'd:tree_id'], ['sp', 'd:species'], ['dbh', 'd:dbh_last'], ['g', 'd:growth_tree'], ['fate', 'd:fate'], [null, 'd:spark']];
-  const head = cols.map(([k, h]) => th(h, { n: k === 'dbh' || k === 'g' }).replace('<th', `<th${k ? ` aria-sort="${treeSort.k === k ? (treeSort.dir > 0 ? 'ascending' : 'descending') : 'none'}" data-sort="${k}" tabindex="0"` : ''}`)).join('');
-  const body = sorted.map(t => `<tr class="trow" data-ti="${t.ti}" tabindex="0" aria-expanded="false"><td>${esc(t.id)}</td><td>${esc(t.sp)}</td><td class="n">${t.last ? fmt(t.last.dia, 1) : '—'}</td>`
-    + `<td class="n">${t.g != null ? fmt(t.g, 3) : '—'}</td><td>${esc(t.fate)}</td><td>${spark(t, ymax)}</td></tr>`).join('');
-  $('#treetab').innerHTML = `<div class="scroll"><table class="sortable" id="trees_t"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
-  $('#treetab').querySelectorAll('th[data-sort]').forEach(h => { const go = () => { const k = h.dataset.sort; treeSort = { k, dir: treeSort.k === k ? -treeSort.dir : 1 }; drawTreeTable(T, ymax); };
-    h.onclick = e => { if (!e.target.closest('.hb')) go(); }; h.onkeydown = e => { if (e.key === 'Enter') go(); }; });
-  $('#treetab').querySelectorAll('tr.trow').forEach(tr => { const go = () => toggleTree(tr); tr.onclick = go; tr.onkeydown = e => { if (e.key === 'Enter') go(); }; });
+function drawTreeTable(R) {
+  const ivs = R.length ? R[0].ivs : [];
+  const yy = y => String(y).slice(2);
+  const cols = [{ k: 'd:tree_id' }, { k: 'd:species' }, { k: 'd:first_y', n: 1 }, { k: 'd:first_dbh', n: 1 }, { k: 'd:last_y', n: 1 }, { k: 'd:last_dbh', n: 1 },
+    { k: 'd:dbh_total', n: 1 }, { k: 'd:dbh_rate', n: 1 }, { k: 'd:dbh_rate5', n: 1 }]
+    .concat(ivs.map(iv => ({ k: 'd:ivl', l: `${iv.y0}→${yy(iv.y1)}`, n: 1, title: `${iv.d0} → ${iv.d1}: ${iv.yrs.toFixed(2)} years` }))).concat([{ k: 'd:fate' }]);
+  const neg = (v, d) => v == null ? { h: '', v: null } : { h: v < 0 ? `<span class="negchg" title="Negative change = measurement variation">${fmt(v, d)}</span>` : fmt(v, d), v };
+  const rows = R.map(r => ({ attrs: ` class="trow" data-ti="${r.ti}" tabindex="0" aria-expanded="false"`,
+    cells: [{ h: esc(r.id), v: r.id }, { h: esc(r.sp), v: r.sp }, { h: r.first ? r.first.y : '', v: r.first ? r.first.y : null }, { h: r.first ? fmt(r.first.dia, 1) : '', v: r.first ? r.first.dia : null },
+      { h: r.last ? r.last.y : '', v: r.last ? r.last.y : null }, { h: r.last ? fmt(r.last.dia, 1) : '', v: r.last ? r.last.dia : null },
+      neg(r.total, 1), neg(r.rate, 2), neg(r.rate != null ? r.rate * 5 : null, 2)].concat(r.inc.map(x => neg(x, 1)))
+      .concat([{ h: isExpert() ? esc(r.full) : `<span title="${esc(r.full)}">${esc(r.fate)}</span>`, v: r.fate }]) }));
+  const html = tbl(cols, rows, { sort: true, sticky: true, id: 'trees_t', cls: 'sticky2' });
+  // exact dates and years elapsed in the interval headers' tooltips
+  $('#treetab').innerHTML = html;
+  $('#treetab').querySelectorAll('thead th').forEach((h, i) => { if (cols[i] && cols[i].title) h.querySelector('.sortb').title = cols[i].title; });
+  $('#treetab').querySelectorAll('tr.trow').forEach(tr => { const go = e => { if (e && e.target.closest('a, button')) return; toggleTree(tr); }; tr.onclick = go; tr.onkeydown = e => { if (e.key === 'Enter') go(); }; });
+  updateFades($('#treetab'));
 }
 function toggleTree(tr) {
   const nx = tr.nextElementSibling;
   if (nx && nx.classList.contains('tdet')) { nx.remove(); tr.setAttribute('aria-expanded', 'false'); return; }
   const P = PL.P, ti = +tr.dataset.ti, recs = rowsOf(P.tr).filter(r => r.ti === ti).sort((a, b) => a.vi - b.vi);
-  const cols = ['STATUSCD', 'DIA', 'HT', 'CR', 'CCLCD', 'AGENTCD', 'RECONCILECD', 'MORTYR', 'TPA_UNADJ'];
-  const t = PL.hist.trees.find(x => x.ti === ti);
-  const html = `<tr class="tdet"><td colspan="6"><p class="muted">${esc(t ? t.entry + '; ' + t.fate : '')}</p>` + tbl([{ k: 'd:survey' }, { k: 'TREE.SUBP' }].concat(cols.map(c => ({ k: 'TREE.' + c }))),
-    recs.map(r => [esc(P.v[r.vi].d), r.SUBP].concat(cols.map(c => dv(decodeCell('TREE', c, r[c]))))), { noMax: true }) + '</td></tr>';
+  const cols = ['STATUSCD', 'SPCD', 'DIA', 'HT', 'CR', 'CCLCD', 'AGENTCD', 'RECONCILECD', 'MORTYR', 'TPA_UNADJ'];
+  const t = PL.hist.trees.find(x => x.ti === ti), n = tr.cells.length;
+  const html = `<tr class="tdet"><td colspan="${n}"><div class="tdetin"><p class="muted">${esc(t ? t.entry + '; ' + t.fate : '')}</p>`
+    + `<div class="grid2"><div id="td_dbh_${ti}" class="chart tchart"></div><div id="td_ht_${ti}" class="chart tchart"></div></div>`
+    + tbl([{ k: 'd:survey' }, { k: 'TREE.SUBP' }].concat(cols.map(c => ({ k: 'TREE.' + c }))),
+      recs.map(r => [esc(P.v[r.vi].d), r.SUBP].concat(cols.map(c => cell('TREE', c, r[c]).h))), { noMax: true }) + '</div></td></tr>';
   tr.insertAdjacentHTML('afterend', html); tr.setAttribute('aria-expanded', 'true');
+  const X = recs.map(r => P.v[r.vi].d), mk = recs.map(r => r.STATUSCD === 1 ? 'circle' : r.STATUSCD === 2 ? 'x' : 'square-open');
+  const one = (id, key, title, unit) => Plotly.react(id, [{ x: X, y: recs.map(r => r[key]), mode: 'lines+markers', type: 'scatter', line: { color: '#2a78d6', width: 2 },
+    marker: { size: 9, symbol: mk, color: '#2a78d6' }, hovertemplate: `%{x}: %{y} ${unit}<extra></extra>` }],
+    lay({ title: { text: `${t ? t.id + ' ' + t.sp : ''}: ${title}`, x: 0 }, xaxis: { title: 'Survey date' }, yaxis: { title: unit, rangemode: 'tozero' }, showlegend: false, margin: { l: 50, r: 10, t: 36, b: 44 } }), plotCfg);
+  one(`td_dbh_${ti}`, 'DIA', 'DBH at each survey (× = dead, □ = cut)', 'in');
+  one(`td_ht_${ti}`, 'HT', 'total height at each survey', 'ft');
 }
-
 // ---------------------------------------------------------------- 9-11. growth, mortality, invasives (unchanged content)
 function renderGrowth(H) {
   if (H.empty) { $('#growth').innerHTML = intro('growth') + '<p class="muted">No TREE records at this location key.</p>'; return; }
@@ -646,7 +679,7 @@ function buildHistory(P) {
   const tr = rowsOf(P.tr).filter(r => r.SUBP <= 4 || (P.v[r.vi].ds !== 'annual' && r.TPA_UNADJ != null)), byT = new Map();
   tr.forEach(r => { if (!byT.has(r.ti)) byT.set(r.ti, []); byT.get(r.ti).push(r); });
   H.trees = [...byT.entries()].map(([ti, recs]) => { recs.sort((a, b) => a.vi - b.vi); const [entry, fate] = entryFate(recs, P);
-    return { ti, id: P.tl[ti], sp: spName(recs[recs.length - 1].SPCD), entry, fate, pts: recs.map(r => ({ y: P.v[r.vi].y, dia: r.DIA, ht: r.HT, st: r.STATUSCD })) }; })
+    return { ti, id: P.tl[ti], sp: spName(recs[recs.length - 1].SPCD), entry, fate, pts: recs.map(r => ({ vi: r.vi, spcd: r.SPCD, y: P.v[r.vi].y, dia: r.DIA, ht: r.HT, st: r.STATUSCD, agent: r.AGENTCD, rc: r.RECONCILECD, mortyr: r.MORTYR })) }; })
     .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
   const gr = rowsOf(P.gr), gs = {};
   gr.forEach(g => (gs[g.SPCD] = gs[g.SPCD] || []).push(g));
