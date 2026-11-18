@@ -265,12 +265,23 @@ function detailSection(key, vi) {
       r.STDAGE != null ? `Stand age ${r.STDAGE}` : '',
       r.SICOND != null ? `Site index ${r.SICOND}` + (r.SISP != null || r.SIBASE != null ? ` (${[r.SISP != null ? spName(r.SISP) : '', r.SIBASE != null ? `base ${r.SIBASE}` : ''].filter(Boolean).join(', ')})` : '') : '']
       .filter(Boolean).join(' · ');
-    const open = !!PL.condOpen;
-    return `<div class="condsum">${c.map(r => `<p class="condline">${esc(line(r))}</p>`).join('')}</div>`
-      + `<button type="button" class="linkbtn noprint" id="condtoggle" aria-expanded="${open}" aria-controls="condfields">${open ? 'Hide condition fields' : 'Show all condition fields'}</button>`
-      + `<div id="condfields"${open ? '' : ' hidden'}>${c.map(r => `<h4>Condition ${r.CONDID ?? ''}</h4>${fieldsHtml('COND', r)}`).join('')}</div>`;
+    return collapsible('cond', c.map(r => `<p class="condline">${esc(line(r))}</p>`).join(''), 'condition fields',
+      c.map(r => `<h4>Condition ${r.CONDID ?? ''}</h4>${fieldsHtml('COND', r)}`).join(''));
   }
-  if (key === 'plotrec') { const r = forVisit(P.pf, vi); return r.length ? r.map(x => fieldsHtml('PLOT', x)).join('') : ''; }
+  if (key === 'plotrec') {
+    const r = forVisit(P.pf, vi)[0];
+    if (!r) return '';
+    const sh = col => { const x = cell('PLOT', col, r[col]); return x.v == null ? '' : String(x.v); };
+    // short forms of the decoded User Guide text ("Remeasurement of previously installed ..." -> "Remeasurement")
+    const full = col => { const d = decode('PLOT.' + col, r[col]); return d.status === 'decoded' ? d.text.replace(/^[^=]*=\s*/, '') : ''; };
+    const ps = full('PLOT_STATUS_CD'), ml = full('MICROPLOT_LOC');
+    const status = /^Sampled/.test(ps) ? (/no accessible forest/i.test(ps) ? 'Sampled, no accessible forest' : /accessible forest/i.test(ps) ? 'Sampled, accessible forest present' : 'Sampled') : sh('PLOT_STATUS_CD');
+    const micro = /offset/i.test(ml) ? 'Microplot offset from subplot center' : /at the subplot center/i.test(ml) ? 'Microplot at subplot center' : (ml ? `Microplot: ${ml.replace(/\.$/, '')}` : '');
+    const line = [`Measured ${v.d}${v.da ? ' (month only)' : ''}`, `INVYR ${v.y}`, (full('KINDCD') || sh('KINDCD')).split(' of ')[0].replace(/\.$/, ''), v.ds === 'annual' ? 'National design' : 'Periodic design',
+      status, r.REMPER != null ? `${fmt(r.REMPER, 1)} yr since the previous measurement` : '', r.MICROPLOT_LOC != null ? micro : '']
+      .filter(Boolean).join(' · ');
+    return collapsible('plotrec', `<p class="condline">${esc(line)}</p>`, 'PLOT record fields', fieldsHtml('PLOT', r));
+  }
   if (key === 'metrics') {
     const k = (h, l, val, u) => `<div class="kpi"><div class="l">${l}<button type="button" class="hb" data-h="${h}" aria-label="About ${l}">ⓘ</button></div><div class="v">${val}</div><div class="u">${u}</div></div>`;
     const m = key_ => met(v, key_);
@@ -316,7 +327,13 @@ function detailSection(key, vi) {
         { wrapCls: 'wide', cls: 'wide trees', id: 'vd_trees', sort: true, sticky: true }) : '<p class="muted">No tree records at this visit.</p>');
   }
   if (key === 'seed') return genericTable(P.sd, 'SEEDLING', vi);
-  if (key === 'site') return genericTable(P.st, 'SITETREE', vi);
+  if (key === 'site') {
+    const t = genericTable(P.st, 'SITETREE', vi);
+    if (!t) return '';
+    const yrs = [...new Set(forVisit(P.st, vi).map(r => r.YEAR_AGE_TAKEN).filter(x => x != null))];
+    return `<p class="muted" id="coreyear">Year the core was taken (YEAR_AGE_TAKEN, User Guide §3.10.46): `
+      + (yrs.length ? `<b>${yrs.sort().join(', ')}</b>.` : `not recorded for these site trees; they belong to the ${esc(v.d)} visit.`) + `</p>` + t;
+  }
   if (key === 'veg') return genericTable(P.p2s, 'P2VEG_SUBP_STRUCTURE', vi) + genericTable(P.p2v, 'P2VEG_SUBPLOT_SPP', vi);
   if (key === 'inv') return invVisit(P, vi);
   if (key === 'dwm') return Object.entries(P.dwm || {}).map(([t, b]) => genericTable(b, t, vi)).join('');
@@ -333,12 +350,20 @@ function invVisit(P, vi) {
       return [{ h: `${esc(cn)} <i class="muted">${esc(sci)}</i>`, v: cn }, esc(s), g.map(r => r.SUBP).sort().join(', '), { h: fmt(cov), v: cov }]; }), { noMax: true, sort: true, sticky: true })
     : '<p class="muted">No invasive plant records for this visit.</p>');
 }
-// Conditions: collapsed by default; the state lives in this page view and in the URL hash (#cond-open) for shared links
-PL.condOpen = /(^|[#&])cond-open($|&)/.test(location.hash.slice(1));
-function toggleCond() {
-  PL.condOpen = !PL.condOpen;
-  const u = new URL(location.href), parts = u.hash.slice(1).split('&').filter(x => x && x !== 'cond-open');
-  if (PL.condOpen) parts.push('cond-open');
+// Conditions and the PLOT record: collapsed by default to a one-line summary; the state lives in this page view and in the
+// URL hash (#cond-open, #plot-open) so a shared link can open them; print expands both
+const COLL = { cond: 'cond-open', plotrec: 'plot-open' };
+const hashParts = () => location.hash.slice(1).split('&').filter(Boolean);
+PL.open = Object.fromEntries(Object.entries(COLL).map(([k, t]) => [k, hashParts().includes(t)]));
+function collapsible(k, summary, what, body) {
+  const open = !!PL.open[k];
+  return `<div class="condsum">${summary}</div><button type="button" class="linkbtn noprint" id="${k}toggle" aria-expanded="${open}" aria-controls="${k}fields">`
+    + `${open ? 'Hide ' + what : 'Show all ' + what}</button><div id="${k}fields" class="collfields"${open ? '' : ' hidden'}>${body}</div>`;
+}
+function toggleSect(k) {
+  PL.open[k] = !PL.open[k];
+  const u = new URL(location.href), parts = hashParts().filter(x => x !== COLL[k]);
+  if (PL.open[k]) parts.push(COLL[k]);
   u.hash = parts.join('&');
   history.replaceState(null, '', u.hash ? u : u.pathname + u.search);
   const y = scrollY; renderDetails(); scrollTo(0, y);
@@ -362,10 +387,13 @@ function renderDetails() {
   }
   if (absent.length) html += `<p class="absent">No records at this visit: ${absent.map(esc).join(', ')}.</p>`;
   $('#details').innerHTML = html;
-  const ch = document.querySelector('.vsect[data-ds=cond] > h3');
-  if (ch) { ch.innerHTML = `<button type="button" class="secttoggle" aria-expanded="${!!PL.condOpen}" aria-controls="condfields">${PL.condOpen ? '▾' : '▸'} Conditions</button>`;
-    ch.querySelector('button').onclick = toggleCond; }
-  const ct = $('#condtoggle'); if (ct) ct.onclick = toggleCond;
+  for (const k of Object.keys(COLL)) {
+    const h = document.querySelector(`.vsect[data-ds=${k}] > h3`);
+    if (h) { const title = h.textContent;
+      h.innerHTML = `<button type="button" class="secttoggle" aria-expanded="${!!PL.open[k]}" aria-controls="${k}fields">${PL.open[k] ? '▾' : '▸'} ${esc(title)}</button>`;
+      h.querySelector('button').onclick = () => toggleSect(k); }
+    const t = document.getElementById(k + 'toggle'); if (t) t.onclick = () => toggleSect(k);
+  }
   const at = $('#alltrees'); if (at) at.onchange = () => { PL.allTrees = at.checked; const y = scrollY; renderDetails(); scrollTo(0, y); };
   updateFades($('#details'));
 }
@@ -655,7 +683,8 @@ async function preparePrint(opt) {
   document.body.classList.add('printing');
   const restore = [];
   document.querySelectorAll('section.psec').forEach(s => { const on = !opt.secs || opt.secs.includes(s.dataset.sec); s.dataset.print = on ? 'on' : 'off'; });
-  if (!PL.condOpen) { PL.condOpen = true; renderDetails(); restore.push(() => { PL.condOpen = false; renderDetails(); }); }   // print expands every section
+  const was = { ...PL.open };                                         // print expands every collapsed section
+  if (Object.values(was).some(x => !x)) { Object.keys(PL.open).forEach(k => PL.open[k] = true); renderDetails(); restore.push(() => { PL.open = was; renderDetails(); }); }
   document.querySelectorAll('.treetable').forEach(e => { if (!opt.trees) { e.dataset.prevDisplay = e.style.display; e.style.display = 'none'; restore.push(() => { e.style.display = e.dataset.prevDisplay || ''; }); } });
   if (opt.raw && window.expertRawAppendix) { const a = window.expertRawAppendix(); restore.push(() => a.remove()); }
   // charts as static images (sharp in print, no interactivity needed)

@@ -298,7 +298,7 @@ table.stickyfirst thead th:first-child { position: sticky; left: 0; top: 0; z-in
 @media print {
   .hscroll::after { display: none; }
   table.stickyfirst td:first-child, table.stickyfirst th:first-child { position: static; box-shadow: none; }
-  #condfields[hidden] { display: block !important; }
+  .collfields[hidden] { display: block !important; }
   table.vt td, table.vt th { white-space: normal; }
   .sortb .arr { display: none; }
 }

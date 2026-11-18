@@ -362,6 +362,7 @@ def main():
             c.js("document.querySelector('#alltrees').click(); true"); time.sleep(0.5)
             out["all"] = (n_vis, c.js("document.querySelector('#vd_trees').tBodies[0].rows.length"))
             out["cond0"] = json.loads(c.js(COND_JS))
+            out["plot0"] = c.js("[document.querySelector('#plotrecfields').hidden, document.querySelector('.vsect[data-ds=plotrec] .condline').textContent, (document.querySelector('#coreyear') || {}).textContent || '']")
             c.js("document.querySelector('.secttoggle').click(); true"); time.sleep(0.3)
             out["cond1"] = json.loads(c.js(COND_JS))
             c.goto(f"{base}plot.html?k={KEY}&view=standard&reload=1#cond-open"); c.wait("document.body.dataset.ready === '1'", what="plot page with #cond-open")
@@ -369,8 +370,10 @@ def main():
             c.js("document.querySelector('#condtoggle').click(); true"); time.sleep(0.3)
             out["cond3"] = json.loads(c.js(COND_JS))
             c.js("window.__pp = 0; PLOT.preparePrint({secs: null, trees: true, raw: false}).then(() => { window.__pp = 1; }); true"); c.wait("window.__pp === 1", 90, "print prep")
-            out["print"] = c.js("!document.querySelector('#condfields').hidden"); c.js("PLOT.printRestore(); true"); time.sleep(0.3)
-            out["after"] = c.js("document.querySelector('#condfields').hidden")
+            out["print"] = c.js("!document.querySelector('#condfields').hidden && !document.querySelector('#plotrecfields').hidden"); c.js("PLOT.printRestore(); true"); time.sleep(0.3)
+            out["after"] = c.js("document.querySelector('#condfields').hidden && document.querySelector('#plotrecfields').hidden")
+            c.goto(f"{base}plot.html?k={KEY}&view=standard&reload=2#plot-open"); c.wait("document.body.dataset.ready === '1'", what="plot page with plot-open")
+            out["plot1"] = c.js("[document.querySelector('#plotrecfields').hidden, document.querySelector('#condfields').hidden]")
             return out
         PJ0 = json.load(urllib.request.urlopen(f"{base}p/{KEY}.json", timeout=60))
         t0c = {k_: i for i, k_ in enumerate(PJ0["tr"]["c"])}
@@ -388,14 +391,16 @@ def main():
                       and all(x == "" or x.isdigit() for x in f_["ht"]) and f_["diaHead"].endswith(", in"))
             ok_all = o["all"][1] == n_expect
             line = o["cond0"]["line"]
-            ok_cond = (o["cond0"]["hidden"] and o["cond0"]["exp"] == "false" and not o["cond1"]["hidden"] and "cond-open" in o["cond1"]["hash"]
+            ok_plot = (o["plot0"][0] and o["plot0"][1].startswith("Measured 2021-12-21 · INVYR 2021") and o["plot1"] == [False, True]
+                       and "YEAR_AGE_TAKEN" in o["plot0"][2])
+            ok_cond = ok_plot and (o["cond0"]["hidden"] and o["cond0"]["exp"] == "false" and not o["cond1"]["hidden"] and "cond-open" in o["cond1"]["hash"]
                        and not o["cond2"]["hidden"] and o["cond3"]["hidden"] and o["print"] and o["after"]
                        and all(x in line for x in ["Condition 1", "100% of plot", "Accessible forest", "Private", "Loblolly pine / hardwood", "Stand age 34", "Site index 71 (water oak, base 50)"]))
             check(f"Visit details ({label}): every tree column sorts both ways and back, ⓘ not triggered; plain formatting; Survey year first; 'Show all surveys' = all non-bridge TREE records",
                   ok_sort and ok_fmt and ok_all, f"{o['sort']['n']} columns, bad {o['sort']['bad'][:5]}; status {f_['status']}, species {f_['sp']}, DIA {f_['dia']}, HT {f_['ht']}, head '{f_['diaHead']}'; "
                   f"rows {o['all'][0]} → {o['all'][1]} (expected {n_expect})")
-            check(f"Conditions ({label}): collapsed with a one-line summary; expands from the header or the control; #cond-open opens it; print expands",
-                  ok_cond, f"'{line}'; states {[o[k]['hidden'] for k in ('cond0', 'cond1', 'cond2', 'cond3')]}, print open {o['print']}, after {o['after']}")
+            check(f"Conditions and PLOT record ({label}): collapsed with a one-line summary; expand from the header or the control; #cond-open / #plot-open open them; print expands",
+                  ok_cond, f"'{line}' | '{o['plot0'][1]}' | {o['plot0'][2][:70]}; states {[o[k]['hidden'] for k in ('cond0', 'cond1', 'cond2', 'cond3')]}, print open {o['print']}, after {o['after']}")
         hc = []
         for scheme in ("light", "dark"):
             c.call("Emulation.setEmulatedMedia", features=[{"name": "prefers-color-scheme", "value": scheme}])
