@@ -130,3 +130,45 @@ document.addEventListener('click', e => {
 }, true);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') hideHelp(); });
 window.addEventListener('scroll', () => { if (pop && !pop.hidden && !pinned) hideHelp(); }, { passive: true });
+
+// ---------------------------------------------------------------- table alignment (all pages)
+// A column whose body cells are all numbers, years or short counts ("3 (1 new)", "11 + 17*", "1, 2, 3, 4", "35.3†") is
+// centred, header included. Plain numbers are padded with figure spaces (U+2007, the width of a tabular digit) to the
+// column's widest integer part and decimal part, so the decimal points line up in the centred column.
+const NUMISH = /^(?:[-−–]?\d[\d,]*(?:\.\d+)?\s*[%†*]?|\d+ \(\d+ new\)(?:; \d+ cut)?|\d+; \d+ cut|\d+(?: \+ \d+\*)?|\d+(?:, \d+)+|—)$/;
+const PLAIN = /^(-?)([\d,]+)(?:\.(\d+))?([†*%]?)$/;
+function alignTable(t) {
+  const body = t.tBodies[0];
+  if (!body || !t.tHead) return;
+  const heads = [...t.tHead.rows[0].cells], rows = [...body.rows].filter(r => !r.classList.contains('tdet') && r.cells.length === heads.length);
+  if (!rows.length) return;
+  heads.forEach((th, ci) => {
+    const cells = rows.map(r => r.cells[ci]);
+    const texts = cells.map(td => td.textContent.replace(/[  ]/g, '').trim());
+    const filled = texts.filter(x => x !== '');
+    const numeric = th.classList.contains('n') || (filled.length && filled.every(x => NUMISH.test(x)) && filled.some(x => x !== '—'));
+    if (!numeric || th.classList.contains('nopad-text')) return;
+    th.classList.add('n'); cells.forEach(td => td.classList.add('n'));
+    // decimal alignment for plain numbers
+    const parts = texts.map(x => PLAIN.exec(x));
+    const plain = parts.filter(Boolean);
+    if (plain.length < 2) return;
+    const wi = Math.max(...plain.map(m => m[1].length + m[2].length)), wf = Math.max(...plain.map(m => (m[3] || '').length)), ws = Math.max(...plain.map(m => m[4].length));
+    // integer part right-aligned in a fixed box, decimals left-aligned in another: decimal points line up in a centred column
+    cells.forEach((td, i) => {
+      const m = parts[i];
+      if (!m || td.querySelector('.ni')) return;
+      let host = td;
+      while (host.children.length === 1 && host.firstElementChild.textContent.trim() === texts[i]) host = host.firstElementChild;
+      host.innerHTML = `<span class="ni" style="min-width:${wi}ch">${esc(m[1] + m[2])}</span>`
+        + (wf ? `<span class="nf" style="min-width:${wf + 1}ch">${m[3] ? '.' + m[3] : ''}</span>` : '')
+        + (ws ? `<span class="nsuf" style="min-width:${ws}ch">${esc(m[4])}</span>` : '');
+    });
+  });
+  t.dataset.aligned = rows.length;
+}
+function alignAll(root = document) { root.querySelectorAll('table').forEach(t => { if (t.dataset.aligned !== String(t.tBodies[0] ? t.tBodies[0].rows.length : 0)) { try { alignTable(t); } catch (e) { t.dataset.aligned = 'error'; console.error('table alignment', e); } } }); }
+let alignQueued = false;
+// a timer, not requestAnimationFrame: rAF does not run while the tab is hidden (background tabs, headless browsers)
+new MutationObserver(() => { if (!alignQueued) { alignQueued = true; setTimeout(() => { alignQueued = false; alignAll(); }, 0); } })
+  .observe(document.documentElement, { childList: true, subtree: true });

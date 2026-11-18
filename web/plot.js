@@ -172,7 +172,7 @@ function renderTimeline(P) {
       falls within 0.5 yr of the first national-design visit; scored 0–100 from bridge-tree matches (60), date fit (25) and distance (15).</p>`
       + tbl([{ k: 'd:rank' }, { k: 'd:pred_plot' }, { k: 'd:last_measured' }, { k: 'd:ft_age' }, { k: 'd:dist', n: 1 }, { k: 'd:datefit', n: 1 }, { k: 'd:bridge' }, { k: 'd:score', n: 1 }],
         preds.map(p => [p.rank, `<a href="${plotUrl(p.key)}">${esc(p.key)}</a>`, `${esc(p.last)} (INVYR ${p.invyr})`, `${esc(ftName(p.ft))}${p.age != null ? `, ${p.age} yr` : ''}`,
-          fmt(p.dist, 2), fmt(p.dt, 2), p.nb ? `${p.nm} of ${p.nb}${p.pairs ? ': ' + esc(p.pairs) : ''}` : 'no bridge records', fmt(p.score, 0)]), { noMax: true });
+          fmt(p.dist, 2), fmt(p.dt, 2), p.nb ? `<span class="wrapcell">${p.nm} of ${p.nb}${p.pairs ? ': ' + esc(p.pairs) : ''}</span>` : 'no bridge records', fmt(p.score, 0)]), { noMax: true });
   } else if ((P.cf || []).length) {
     $('#predbox').innerHTML = intro('predecessor') + `<p class="muted">This periodic plot is an inferred predecessor candidate (not database-linked) of: ` +
       P.cf.map(c => `<a href="${plotUrl(c.key)}">${esc(c.key)}</a> (rank ${c.rank}, score ${fmt(c.score, 0)})`).join(', ') + '.</p>';
@@ -590,7 +590,7 @@ function drawTreeTable(R) {
     cells: [{ h: esc(r.id), v: r.id }, { h: esc(r.sp), v: r.sp }, { h: r.first ? r.first.y : '', v: r.first ? r.first.y : null }, { h: r.first ? fmt(r.first.dia, 1) : '', v: r.first ? r.first.dia : null },
       { h: r.last ? r.last.y : '', v: r.last ? r.last.y : null }, { h: r.last ? fmt(r.last.dia, 1) : '', v: r.last ? r.last.dia : null },
       neg(r.total, 1), neg(r.rate, 2), neg(r.rate != null ? r.rate * 5 : null, 2)].concat(r.inc.map(x => neg(x, 1)))
-      .concat([{ h: isExpert() ? esc(r.full) : `<span title="${esc(r.full)}">${esc(r.fate)}</span>`, v: r.fate }]) }));
+      .concat([{ h: isExpert() ? `<span class="wrapcell">${esc(r.full)}</span>` : `<span title="${esc(r.full)}">${esc(r.fate)}</span>`, v: r.fate }]) }));
   const html = tbl(cols, rows, { sort: true, sticky: true, id: 'trees_t', cls: 'sticky2' });
   // exact dates and years elapsed in the interval headers' tooltips
   $('#treetab').innerHTML = html;
@@ -720,6 +720,24 @@ async function preparePrint(opt) {
   if (Object.values(was).some(x => !x)) { Object.keys(PL.open).forEach(k => PL.open[k] = true); renderDetails(); restore.push(() => { PL.open = was; renderDetails(); }); }
   document.querySelectorAll('.treetable').forEach(e => { if (!opt.trees) { e.dataset.prevDisplay = e.style.display; e.style.display = 'none'; restore.push(() => { e.style.display = e.dataset.prevDisplay || ''; }); } });
   if (opt.raw && window.expertRawAppendix) { const a = window.expertRawAppendix(); restore.push(() => a.remove()); }
+  // very wide tables (more than 24 columns: the Expert tree table, raw records) print as continuation blocks of at most 15
+  // columns, each repeating the first (identifier) column, instead of being clipped at the page edge
+  document.querySelectorAll('section.psec[data-print="on"] table').forEach(t => {
+    const n = t.tHead ? t.tHead.rows[0].cells.length : 0;
+    if (n <= 24 || t.closest('.printsplit')) return;
+    const nb = Math.ceil((n - 1) / 15), per = Math.ceil((n - 1) / nb);
+    const box = document.createElement('div'); box.className = 'printsplit printonly';
+    for (let start = 1, part = 1; start < n; start += per, part++) {
+      const keep = new Set([0].concat(Array.from({ length: Math.min(per, n - start) }, (_, j) => start + j)));
+      const c = t.cloneNode(true); c.removeAttribute('id');
+      c.querySelectorAll('tr').forEach(tr => { const cells = [...tr.cells]; if (cells.length === n) cells.forEach((td, j) => { if (!keep.has(j)) td.remove(); }); });
+      const h = document.createElement('p'); h.className = 'muted'; h.textContent = `Columns ${start + 1}–${Math.min(n, start + per)} of ${n}` + (part > 1 ? ' (continued)' : '');
+      box.append(h, c);
+    }
+    const wrap = t.closest('.hscroll') || t.closest('.scroll') || t;
+    wrap.classList.add('noprint'); wrap.after(box);
+    restore.push(() => { box.remove(); wrap.classList.remove('noprint'); });
+  });
   // charts as static images (sharp in print, no interactivity needed)
   const charts = [...document.querySelectorAll('.js-plotly-plot')].filter(c => c.closest('section.psec[data-print="on"]') || c.closest('#s-expert'));
   for (const c of charts) {

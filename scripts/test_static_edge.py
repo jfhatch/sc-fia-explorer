@@ -38,6 +38,7 @@ COND_JS = "JSON.stringify({ hidden: document.querySelector('#condfields').hidden
 TT_JS = '(() => {\n  const R = PLOT.treeRows, H = PLOT.hist, t = document.querySelector(\'#trees_t\'), hk = [...t.querySelectorAll(\'thead th\')].map(h => h.dataset.hk);\n  // interval increases add up to the total for trees live at every survey\n  const nv = PLOT.P.v.length, full = R.filter(r => r.inc.every(x => x != null) && r.inc.length === nv - 1);\n  const sumBad = full.filter(r => Math.abs(r.inc.reduce((a, x) => a + x, 0) - r.total) > 1e-9).map(r => r.id);\n  // per-species mean of the interval rates = Growth section means (an interval counts for the species recorded at its end, as there)\n  const by = {}; R.forEach(r => r.inc.forEach((x, i) => { if (x != null) (by[r.ivsp[i]] = by[r.ivsp[i]] || []).push(x / r.ivs[i].yrs); }));\n  // Growth section interval rates are stored rounded to 4 decimals in the export, so means agree to within 5e-5\n  const diffs = H.growth.map(g => by[g.sp] ? Math.abs(by[g.sp].reduce((a, x) => a + x, 0) / by[g.sp].length - g.mean) : Infinity);\n  const rateBad = H.growth.filter((g, i) => diffs[i] > 5e-5).map(g => g.sp), maxDiff = Math.max(...diffs);\n  const ivTitles = [...t.querySelectorAll(\'thead th[data-hk="d:ivl"] .sortb\')].map(b => b.title);\n  const fates = R.map(r => r.fate).filter(f => !/^(Live \\d{4}|Died \\d{4}–\\d{4}( \\(.+\\))?|Dead when first tallied \\d{4}|Dropped \\d{4} \\(.+\\)|Cut (\\d{4}–)?\\d{4})$/.test(f));\n  const fmtBad = [...t.tBodies[0].rows].slice(0, 20).flatMap(tr => [...tr.cells].slice(3, 9).map(td => td.textContent.trim())).filter(x => x && !/^-?\\d+\\.\\d{1,2}$|^\\d{4}$/.test(x));\n  return { n: R.length, full: full.length, sumBad, rateBad, maxDiff, growthN: H.growth.length, spark: !!document.querySelector(\'#treetab .spark\'), hk, ivTitles, fates, fmtBad,\n    neg: [...t.querySelectorAll(\'.negchg\')].length };\n})()'
 STICK_JS = "(() => {\n  const t = document.querySelector('#trees_t'), sc = t.closest('.scroll'); sc.scrollLeft = 260;\n  const r0 = sc.getBoundingClientRect(), c1 = t.tBodies[0].rows[0].cells[0].getBoundingClientRect(), c2 = t.tBodies[0].rows[0].cells[1].getBoundingClientRect();\n  const out = { scrolled: sc.scrollLeft, c1: Math.round(c1.left - r0.left), gap: Math.round(c2.left - c1.right), sticky: getComputedStyle(t.tBodies[0].rows[0].cells[1]).position };\n  sc.scrollLeft = 0; return out;\n})()"
 SORT_TT_JS = SORT_JS.replace("'#vd_trees'", "'#trees_t'")
+ALIGN_JS = "((sels) => {\n  const chk = t => {\n    const heads = [...t.tHead.rows[0].cells], rows = [...t.tBodies[0].rows].filter(r => !r.classList.contains('tdet') && r.cells.length === heads.length);\n    const res = { bad: [], dec: [], n: [], rows: rows.length, spread: 0 };\n    heads.forEach((th, ci) => {\n      const isN = th.classList.contains('n'), key = th.dataset.hk || String(ci), tds = rows.map(r => r.cells[ci]);\n      if (isN) res.n.push(key);\n      if (isN) res.boxed = (res.boxed || 0) + tds.filter(td => td.querySelector('.ni')).length;\n      const want = isN ? 'center' : 'left';\n      if (getComputedStyle(th).textAlign !== want || tds.some(td => getComputedStyle(td).textAlign !== want)) res.bad.push(key);\n      if (isN) {\n        // decimal point position: the start of the decimal box (help.js), else the '.' inside an unboxed number\n        const xs = tds.map(td => { const nf = td.querySelector('.nf'); if (nf && nf.textContent.startsWith('.')) return nf.getBoundingClientRect().left;\n          const w = document.createTreeWalker(td, NodeFilter.SHOW_TEXT); let nd;\n          while ((nd = w.nextNode())) { const v = nd.nodeValue, i = v.search(/\\d\\.\\d/); if (i >= 0) { const r = document.createRange(); r.setStart(nd, i + 1); r.setEnd(nd, i + 2); return r.getBoundingClientRect().left; } }\n          return null; }).filter(x => x != null);\n        if (xs.length > 1 && Math.max(...xs) - Math.min(...xs) > 1.5) res.dec.push(key + ':' + (Math.max(...xs) - Math.min(...xs)).toFixed(1));\n      }\n    });\n    const hs = rows.filter(r => !r.querySelector('.wrapcell, td.wrap')).map(r => r.getBoundingClientRect().height);\n    res.spread = hs.length ? Math.round(Math.max(...hs) - Math.min(...hs)) : 0;\n    return res;\n  };\n  const out = {};\n  sels.forEach(s => { const t = document.querySelector(s); out[s] = t && t.tHead && t.tBodies[0] ? chk(t) : null; });\n  return out;\n})"
 HELP_JS = """((sel) => {
   const ths = [...document.querySelectorAll(sel || 'th')].filter(t => t.getClientRects().length);
   const bad = ths.filter(t => { const k = t.dataset.hk, h = k && helpFor(k); return !t.querySelector('.hb') || !h || !h.text; })
@@ -356,6 +357,15 @@ def main():
         def vd_checks():
             out = {}
             c.goto(f"{base}plot.html?k={KEY}&view=standard"); c.wait("document.body.dataset.ready === '1'", what="plot page")
+            c.js("document.querySelector('#alltrees').click(); true"); time.sleep(0.5)
+            AL = "['#totals', '#treetot_t', '#vd_trees', '#trees_t', '#species table.sp', '#vc table.sp']"
+            out["align"] = c.js(ALIGN_JS + f"({AL})")
+            c.call("Emulation.setEmulatedMedia", features=[{"name": "prefers-color-scheme", "value": "dark"}]); time.sleep(0.3)
+            out["align_dark"] = c.js(ALIGN_JS + f"({AL})")
+            c.call("Emulation.setEmulatedMedia", media="print", features=[{"name": "prefers-color-scheme", "value": "light"}]); time.sleep(0.3)
+            out["align_print"] = c.js(ALIGN_JS + f"({AL})")
+            c.call("Emulation.setEmulatedMedia", media="", features=[])
+            c.js("document.querySelector('#alltrees').click(); true"); time.sleep(0.5)
             out["sort"] = c.js(SORT_JS)
             out["tt"] = c.js(TT_JS)
             out["ttsort"] = c.js(SORT_TT_JS)
@@ -407,6 +417,23 @@ def main():
             check(f"Visit details ({label}): every tree column sorts both ways and back, ⓘ not triggered; plain formatting; Survey year first; 'Show all surveys' = all non-bridge TREE records",
                   ok_sort and ok_fmt and ok_all, f"{o['sort']['n']} columns, bad {o['sort']['bad'][:5]}; status {f_['status']}, species {f_['sp']}, DIA {f_['dia']}, HT {f_['ht']}, head '{f_['diaHead']}'; "
                   f"rows {o['all'][0]} → {o['all'][1]} (expected {n_expect})")
+            def al_ok(A, check_dec=True, check_h=True):
+                bad = []
+                for sel, r in A.items():
+                    if r is None:
+                        bad.append(f"{sel}: missing"); continue
+                    if r["bad"]: bad.append(f"{sel} align {r['bad'][:3]}")
+                    if check_dec and r["dec"]: bad.append(f"{sel} decimals {r['dec'][:3]}")
+                    if check_h and r["spread"] > 1: bad.append(f"{sel} row heights differ by {r['spread']}px")
+                    if not r.get("boxed"): bad.append(f"{sel}: numbers not boxed for decimal alignment")
+                vt = A.get("#vd_trees") or {"n": []}
+                need = ["d:invyr", "TREE.SUBP", "TREE.TREE", "TREE.DIA", "TREE.HT", "TREE.CR"]
+                if not all(k_ in vt["n"] for k_ in need) or any(k_ in vt["n"] for k_ in ("TREE.SPCD", "TREE.STATUSCD")):
+                    bad.append(f"#vd_trees centred columns {vt['n'][:8]}")
+                return bad
+            ab = al_ok(o["align"]) + [f"dark: {x}" for x in al_ok(o["align_dark"])] + [f"print: {x}" for x in al_ok(o["align_print"], check_h=False)]
+            check(f"Table alignment ({label}, light/dark/print): numbers, years and counts centred (headers too), text left; decimals line up; equal row heights",
+                  not ab, f"{sum(r['rows'] for r in o['align'].values() if r)} rows in {len(o['align'])} tables" + (f"; problems {ab[:6]}" if ab else ""))
             tt = o["tt"]
             ok_tt = (tt["n"] > 50 and not tt["spark"] and tt["full"] > 5 and not tt["sumBad"] and not tt["rateBad"] and tt["growthN"] >= 5
                      and tt["hk"][:9] == ["d:tree_id", "d:species", "d:first_y", "d:first_dbh", "d:last_y", "d:last_dbh", "d:dbh_total", "d:dbh_rate", "d:dbh_rate5"]
@@ -438,6 +465,9 @@ def main():
         hcov = [("attribute search", c.js(HELP_JS + "('#a_out th')"))]
         c.js(f"focusKey('{KEY}'); true"); c.wait("!!document.querySelector('.leaflet-popup-content th')", 60, "popup")
         hcov.append(("map popup", c.js(HELP_JS + "('.leaflet-popup-content th')")))
+        pal = c.js(ALIGN_JS + "(['.leaflet-popup-content table'])")[".leaflet-popup-content table"]
+        check("map popup table: numeric columns centred, decimals aligned, equal row heights", pal and not pal["bad"] and not pal["dec"] and pal["spread"] <= 1 and len(pal["n"]) >= 6,
+              f"centred {pal and pal['n']}; problems {pal and (pal['bad'] + pal['dec'])}")
         # ---------------- plot page: help, tooltips, view switch, expert view
         t0p = time.time()
         c.goto(f"{base}plot.html?k={KEY}&view=standard")
@@ -498,6 +528,10 @@ def main():
         dcl_ok = set(page) == set(hand) and all(all(abs(a_ - b_) < 1e-6 for a_, b_ in zip(page[k_], hand[k_])) for k_ in hand)
         sdi_pg = float(c.js("document.querySelector('#x_sdi').dataset.sdi"))
         xcodes = c.js("[...document.querySelectorAll('#x_trees tbody td')].some(td => / = /.test(td.textContent))")
+        xal = c.js(ALIGN_JS + "(['#x_trees', '#x_stand', '#x_grm', '#x_subp'])")
+        xab = [f"{k_}: {v_['bad'][:3]} {v_['dec'][:2]} h{v_['spread']}" for k_, v_ in xal.items() if v_ and (v_["bad"] or v_["dec"] or v_["spread"] > 1)]
+        check("Expert tables aligned: numbers centred, codes and text left, decimals aligned, equal row heights", not xab and xal["#x_trees"] and "TREE.DIA" in xal["#x_trees"]["n"],
+              f"{sum(v_['rows'] for v_ in xal.values() if v_)} rows" + (f"; problems {xab}" if xab else ""))
         exp_ba = c.js("Object.fromEntries([...document.querySelectorAll('#totals tr[data-invyr]')].map(tr => [tr.dataset.invyr, +tr.querySelector('[data-ba]').dataset.ba]))")
         check("Standard | Expert switch round-trips via URL and localStorage; expert 91-25 values = report/PDF; SDI and 2-in classes = hand calculation",
               v1 == [True, "expert"] and v2 == "expert" and all(int(round(exp_ba[str(y)])) == v for y, v in core.REGRESSION_BA[KEY].items())
