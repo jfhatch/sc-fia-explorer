@@ -125,7 +125,9 @@ def main():
                 return c.wait(expr, t, what)
             except TimeoutError:
                 print("   DEBUG", what, c.js("JSON.stringify({w: innerWidth, z: map.getZoom(), onmap: !!APP.markers.get('" + KEY + "')._map, open: APP.markers.get('" + KEY + "').isPopupOpen(), "
-                      "inCl: cluster.hasLayer(APP.markers.get('" + KEY + "')), pop: !!document.querySelector('.leaflet-popup'), tok: focusKey.token})"))
+                      "inCl: cluster.hasLayer(APP.markers.get('" + KEY + "')), pop: !!document.querySelector('.leaflet-popup'), tok: focusKey.token, pin: APP.pin, "
+                      "pinOn: APP.pin && !!APP.markers.get(APP.pin)._map, pinOpen: APP.pin && APP.markers.get(APP.pin).isPopupOpen(), pinInHist: APP.pin && APP.histCluster.hasLayer(APP.markers.get(APP.pin)), "
+                      "pinVis: APP.pin && APP.histCluster.getVisibleParent(APP.markers.get(APP.pin)) === APP.markers.get(APP.pin), popTxt: (document.querySelector('.leaflet-popup-content')||{}).textContent})"))
                 return False
         # 1. map + tiles
         t0 = time.time()
@@ -232,7 +234,8 @@ def main():
         check("search by PLOT CN (2021 visit of 91-25)", c.wait(f"!!document.querySelector('#id_out li[data-key=\"{KEY}\"]')", what="CN result"))
         c.js(f"document.querySelector('#idq').value = '{per_key}'; document.querySelector('#idgo').click(); true")
         ok = c.wait(f"document.querySelector('#id_out li[data-key=\"{per_key}\"]')?.dataset.active === '0' && /Historical plot — last measured/.test(document.querySelector('#id_out').textContent)", what="periodic ID result")
-        ok = ok and c.wait(f"APP.markers.get('{per_key}').isPopupOpen() && /Historical plot — last measured/.test(document.querySelector('.leaflet-popup-content').textContent)", 60, "historical popup")
+        ok = ok and c.wait(f"APP.markers.get('{per_key}').isPopupOpen() && /Historical plot — last measured/.test(document.querySelector('.leaflet-popup-content').textContent)", 60, "historical popup") if "--debug" not in a else ok and wait_or_dump(
+            f"APP.markers.get('{per_key}').isPopupOpen() && /Historical plot — last measured/.test(document.querySelector('.leaflet-popup-content').textContent)", 60, "historical popup")
         st4 = c.js("[+document.body.dataset.historical, document.querySelector('#count').textContent, document.querySelector('.leaflet-popup-content .histbadge').textContent]")
         check(f"ID search finds a periodic-only historical plot ({per_key}) while historical plots are hidden; opened with badge",
               ok and st4[0] == 0 and "+ 1 search result" in st4[1], f"badge '{st4[2]}'; count '{st4[1]}'")

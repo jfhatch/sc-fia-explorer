@@ -114,7 +114,7 @@ async function init() {
     ['#f_cty', '#f_ft', '#f_own', '#f_des', '#f_inv', '#f_last0', '#f_last1'].forEach(s => $(s).value = '');
     $('#f_nv').value = 1;
     document.querySelectorAll('#legend input').forEach(i => i.checked = true);
-    S.attrKeys = null; S.pin = null; applyFilters();
+    S.attrKeys = null; dropPin(); S.pin = null; applyFilters();
   };
   const c = S.col;
   // fit the view before adding markers, without animation, so the clusters are built for the final zoom level
@@ -154,10 +154,10 @@ function applyFilters() {
   const act = [], hist = [], c = S.col;
   for (const r of S.rows) if (passes(r)) (isActive(r) ? act : hist).push(S.markers.get(r[c.k]));
   S.nAct = act.length; S.nHist = hist.length;
-  const pr = S.pin && rowOf(S.pin);
-  if (pr && !passes(pr)) (isActive(pr) ? act : hist).push(S.markers.get(S.pin));
+  dropPin();                                       // a pinned marker that now passes the filters goes back to its cluster
   cluster.clearLayers(); cluster.addLayers(act);
   histCluster.clearLayers(); histCluster.addLayers(hist);
+  syncPin();
   const y0 = +$('#f_last0').value || 0, y1 = +$('#f_last1').value || 0;
   const ln = $('#lastnote');
   ln.textContent = !S.showHist && ((y0 && y0 < ACTIVE_FROM) || (y1 && y1 < ACTIVE_FROM) || $('#f_des').value === 'p')
@@ -172,26 +172,35 @@ function renderCount() {
   Object.assign(document.body.dataset, { visible: S.nAct + S.nHist, active: S.nAct, historical: S.nHist });
 }
 // keep a searched plot on the map even when the current filters (or the active-only view) would hide it
+// The pinned marker goes on the map directly, outside the cluster groups: a marker added late to a cluster group was not
+// always rendered (and cluster re-renders close its popup), so search results the filters hide could fail to open.
+function dropPin() { if (S.pinM) { if (S.pinM._map && !clusterOf(rowOf(S.pinM.key)).hasLayer(S.pinM)) map.removeLayer(S.pinM); S.pinM = null; } }
+function syncPin() {
+  const pr = S.pin && rowOf(S.pin);
+  if (pr && !passes(pr)) { const m = S.markers.get(S.pin); if (!m._map) m.addTo(map); S.pinM = m; }
+}
 function setPin(key) {
-  const old = S.pin;
+  if (S.pin !== key) dropPin();
   S.pin = key;
-  if (old && old !== key) { const r = rowOf(old); if (!passes(r)) clusterOf(r).removeLayer(S.markers.get(old)); }
-  const r = rowOf(key), m = S.markers.get(key);
-  if (!clusterOf(r).hasLayer(m)) clusterOf(r).addLayer(m);
+  syncPin();
   renderCount();
 }
 // compact popup headers; the full name is the tooltip
 // compact popup headers; each has an ⓘ with the full name, units and meaning (help.json)
 const POP_COLS = [['Survey', 'd:survey', 0], ['Design', 'd:design', 0], ['BA', 'd:ba', 1], ['TPA', 'd:tpa', 1], ['C', 'd:c', 1], ['Died', 'd:died_pop', 1],
   ['Ingr.', 'd:ingrowth', 1], ['Inv.', 'd:inv_pop', 1]];
-async function openPopup(m) {
+// token: set when opened by a search (focusKey); such a popup is reopened if the cluster re-render closes it meanwhile
+async function openPopup(m, token) {
   if (!m._map) return;
   // as wide as the table needs on desktop; on narrow screens the table scrolls sideways inside the popup
   const mw = Math.max(220, Math.min(600, map.getSize().x - 76));
   m.bindPopup('Loading…', { maxWidth: mw, minWidth: Math.min(290, mw) }).openPopup();
   try {
     const P = await getJSON(`p/${encodeURIComponent(m.key)}.json`);
-    if (!m.isPopupOpen()) return;                 // closed (or another plot opened) while loading
+    const latest = token && token === focusKey.token;
+    if (!m.isPopupOpen()) {                       // closed while loading: by the user / another plot, or by a cluster re-render
+      if (latest && m._map && !(map._popup && map._popup !== m.getPopup() && map._popup.isOpen())) m.openPopup(); else return;
+    }
     const M = S.meta.metrics, ix = k => M.indexOf(k);
     const ev = rowsOf(P.ev);
     const rows = P.v.map((v, i) => {
@@ -215,12 +224,20 @@ function focusKey(key, open = true) {
   const r = rowOf(key);
   if (!clusterOf(r).hasLayer(m)) setPin(key);
   const token = (focusKey.token = (focusKey.token || 0) + 1);
+  if (S.pinM === m) {                               // pinned search result: on the map directly, no cluster involved
+    map.setView(m.getLatLng(), Math.max(map.getZoom(), 13), { animate: false });
+    if (open) openPopup(m, token);
+    return;
+  }
   // Not markercluster's zoomToShowLayer: it waits for a DOM icon (marker._icon or the parent cluster's icon), which canvas
   // circle markers never have, so for a marker already shown on its own its callback never fired and no popup opened.
   // Open only for the latest request, and only once the marker is on the map (Leaflet would otherwise pan a detached popup).
   const go = () => {
     if (!open || token !== focusKey.token) return;
-    if (m._map) openPopup(m); else m.once('add', () => { if (token === focusKey.token) openPopup(m); });
+    if (m._map) openPopup(m, token); else m.once('add', () => { if (token === focusKey.token) openPopup(m, token); });
+    // a cluster re-render shortly after can remove and re-add the marker, closing its popup: reopen once if still the latest
+    const t0 = Date.now();
+    m.once('remove', () => { if (Date.now() - t0 < 4000) m.once('add', () => { if (token === focusKey.token && !m.isPopupOpen()) openPopup(m, token); }); });
   };
   const cl = clusterOf(r);
   if (cl.getVisibleParent(m) === m) { map.panTo(m.getLatLng(), { animate: false }); go(); return; }
