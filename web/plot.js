@@ -22,14 +22,67 @@ const LIGHT = new Set(['#eda100', '#e87ba4', '#c9c8c2', '#9a9893', '#1baf7a']);
 
 // ---------------------------------------------------------------- tables: every header goes through th() (help text required)
 // cols: [{k: help key, l?: label override, n?: numeric}]; rows: arrays of cell HTML (or {h, cls, attrs} objects)
+// o.sort: sortable headers (click/tap: ascending → descending → original order; cells may be {h: html, v: sort value});
+// o.sticky: first column stays in view while the table scrolls sideways (with a fade on the right edge when more columns exist)
 function tbl(cols, rows, o = {}) {
-  const head = cols.map(c => th(c.k, { l: c.l, n: c.n })).join('');
-  const body = rows.map(r => {
+  const head = cols.map(c => th(c.k, { l: c.l, n: c.n, sort: o.sort })).join('');
+  const body = rows.map((r, ri) => {
     const tr = Array.isArray(r) ? { cells: r } : r;
-    return `<tr${tr.attrs || ''}>` + tr.cells.map((c, i) => `<td${cols[i] && cols[i].n ? ' class="n"' : ''}>${c ?? ''}</td>`).join('') + '</tr>';
+    return `<tr data-i="${ri}"${tr.attrs || ''}>` + tr.cells.map((c, i) => { const obj = c !== null && typeof c === 'object';
+      const v = obj ? c.v : null, h = obj ? c.h : c;
+      return `<td${cols[i] && cols[i].n ? ' class="n"' : ''}${obj && v != null ? ` data-v="${esc(v)}"` : ''}>${h ?? ''}</td>`; }).join('') + '</tr>';
   }).join('');
   const foot = o.foot ? `<tfoot><tr><td colspan="${cols.length}">${o.foot}</td></tr></tfoot>` : '';
-  return `<div class="scroll${o.wrapCls ? ' ' + o.wrapCls : ''}"${o.noMax ? ' style="max-height:none"' : ''}><table class="${o.cls || ''}"${o.id ? ` id="${o.id}"` : ''}><thead><tr>${head}</tr></thead><tbody>${body}</tbody>${foot}</table></div>`;
+  const cls = [o.cls || '', o.sort ? 'sortable vt' : '', o.sticky ? 'stickyfirst' : ''].join(' ').trim();
+  const t = `<div class="scroll${o.wrapCls ? ' ' + o.wrapCls : ''}"${o.noMax ? ' style="max-height:none"' : ''}><table class="${cls}"${o.id ? ` id="${o.id}"` : ''}><thead><tr>${head}</tr></thead><tbody>${body}</tbody>${foot}</table></div>`;
+  return o.sticky ? `<div class="hscroll">${t}</div>` : t;
+}
+// sort a table.sortable by one column; ties and "original" fall back to the row's original position (which is
+// survey year, subplot, tree number for tree tables)
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('table.sortable .sortb');
+  if (!b) return;
+  const thEl = b.closest('th'), table = thEl.closest('table'), ci = [...thEl.parentElement.children].indexOf(thEl);
+  const next = { none: 'ascending', ascending: 'descending', descending: 'none' }[thEl.getAttribute('aria-sort') || 'none'];
+  table.querySelectorAll('thead th').forEach(x => x.setAttribute('aria-sort', 'none'));
+  thEl.setAttribute('aria-sort', next);
+  const tb = table.tBodies[0], rows = [...tb.rows];
+  const key = tr => { const td = tr.cells[ci]; if (!td) return null; const v = td.dataset.v ?? td.textContent.trim(); return v === '' || v === '—' ? null : v; };
+  const num = v => v !== null && v !== '' && !isNaN(+v);
+  const dir = next === 'ascending' ? 1 : next === 'descending' ? -1 : 0;
+  rows.sort((a, b2) => {
+    if (dir) { const x = key(a), y = key(b2);
+      if (x === null && y !== null) return 1; if (y === null && x !== null) return -1;
+      if (x !== null && y !== null) { const c = num(x) && num(y) ? (+x - +y) : String(x).localeCompare(String(y), undefined, { numeric: true }); if (c) return dir * c; } }
+    return +a.dataset.i - +b2.dataset.i;
+  });
+  rows.forEach(r => tb.append(r));
+});
+// right-edge fade while more columns are hidden to the right
+function updateFades(root = document) {
+  root.querySelectorAll('.hscroll').forEach(w => { const s = w.querySelector('.scroll');
+    const f = () => w.classList.toggle('more', s.scrollLeft + s.clientWidth < s.scrollWidth - 2);
+    if (!s.dataset.fade) { s.dataset.fade = '1'; s.addEventListener('scroll', f, { passive: true }); }
+    f(); });
+}
+window.addEventListener('resize', () => updateFades());
+// Standard view: meanings without codes, common names, fixed decimals; Expert view: "code = meaning"
+const STATUS_WORD = { 0: 'Not in sample', 1: 'Live', 2: 'Dead', 3: 'Cut' };
+const NUMFMT = { DIA: 1, HT: 0, ACTUALHT: 0, CR: 0, TPA_UNADJ: 3, VOLCFNET: 1, VOLCFGRS: 1, DRYBIO_AG: 0, CARBON_AG: 0, TREECOUNT: 0, SITREE: 0, SIBASE: 0,
+  AGEDIA: 0, SICOND: 0, COVER_PCT: 1, MORTYR: 0, SLOPE: 0, ASPECT: 0, CONDPROP_UNADJ: 2 };
+function cell(table, col, v) {
+  if (blank(v)) return { h: '', v: null };
+  if (isExpert()) return { h: dvs(decodeCell(table, col, v), 26), v };
+  if (col === 'STATUSCD' && STATUS_WORD[v] !== undefined && /TREE|SITETREE/.test(table)) return { h: STATUS_WORD[v], v: STATUS_WORD[v] };
+  if (col === 'SPCD' || col === 'SISP' || col === 'SISP_FVS') { const n = spName(v); return { h: esc(n), v: n }; }
+  const d = decodeCell(table, col, v);
+  if (d && typeof d === 'object' && 'status' in d) {
+    if (d.status !== 'decoded') return { h: dv(d), v: String(v) };
+    const t = d.text.replace(/^[^=]*=\s*/, '').split(' - ')[0].split('. ')[0].replace(/\.$/, '').replace(/\s*\(.*$/, '');
+    return { h: `<span title="${esc(d.text)}">${esc(t)}</span>`, v: t };
+  }
+  if (typeof v === 'number') return { h: col in NUMFMT ? fmt(v, NUMFMT[col]) : (Number.isInteger(v) ? String(v) : fmt(v, 2)), v };
+  return { h: esc(v), v };
 }
 const S_ = () => PL.S;
 
@@ -197,11 +250,26 @@ function genericTable(b, table, vi) {
   const rows = forVisit(b, vi);
   if (!rows.length) return '';
   const cols = b.c.filter(c => c !== 'vi' && rows.some(r => r[c] !== null));
-  return `<h4>${esc(table)} (${rows.length})</h4>` + tbl(cols.map(c => ({ k: `${table}.${c}` })), rows.map(r => cols.map(c => dvs(decodeCell(table, c, r[c]), 26))), { wrapCls: 'wide', cls: 'wide' });
+  const num = c => rows.some(r => typeof r[c] === 'number') && !isCoded(table, c) && !(c in REF_CODED);
+  return `<h4>${esc(table)} (${rows.length})</h4>` + tbl(cols.map(c => ({ k: `${table}.${c}`, n: num(c) })), rows.map(r => cols.map(c => cell(table, c, r[c]))),
+    { wrapCls: 'wide', cls: 'wide', sort: true, sticky: true });
 }
 function detailSection(key, vi) {
   const P = PL.P, v = P.v[vi], s = S_().v[vi];
-  if (key === 'cond') { const c = forVisit(P.cn, vi); return c.length ? c.map(r => `<h4>Condition ${r.CONDID ?? ''}</h4>${fieldsHtml('COND', r)}`).join('') : ''; }
+  if (key === 'cond') {
+    const c = forVisit(P.cn, vi);
+    if (!c.length) return '';
+    const short = (col, v) => { const x = cell('COND', col, v); return x.v == null ? '' : String(x.v); };
+    const line = r => [`Condition ${r.CONDID ?? ''}`, r.CONDPROP_UNADJ != null ? `${Math.round(r.CONDPROP_UNADJ * 100)}% of plot` : '',
+      short('COND_STATUS_CD', r.COND_STATUS_CD).replace(/ land$/, ''), short('OWNGRPCD', r.OWNGRPCD), r.FORTYPCD != null ? (FIA.codes.ft[r.FORTYPCD] || '') : '',
+      r.STDAGE != null ? `Stand age ${r.STDAGE}` : '',
+      r.SICOND != null ? `Site index ${r.SICOND}` + (r.SISP != null || r.SIBASE != null ? ` (${[r.SISP != null ? spName(r.SISP) : '', r.SIBASE != null ? `base ${r.SIBASE}` : ''].filter(Boolean).join(', ')})` : '') : '']
+      .filter(Boolean).join(' · ');
+    const open = !!PL.condOpen;
+    return `<div class="condsum">${c.map(r => `<p class="condline">${esc(line(r))}</p>`).join('')}</div>`
+      + `<button type="button" class="linkbtn noprint" id="condtoggle" aria-expanded="${open}" aria-controls="condfields">${open ? 'Hide condition fields' : 'Show all condition fields'}</button>`
+      + `<div id="condfields"${open ? '' : ' hidden'}>${c.map(r => `<h4>Condition ${r.CONDID ?? ''}</h4>${fieldsHtml('COND', r)}`).join('')}</div>`;
+  }
   if (key === 'plotrec') { const r = forVisit(P.pf, vi); return r.length ? r.map(x => fieldsHtml('PLOT', x)).join('') : ''; }
   if (key === 'metrics') {
     const k = (h, l, val, u) => `<div class="kpi"><div class="l">${l}<button type="button" class="hb" data-h="${h}" aria-label="About ${l}">ⓘ</button></div><div class="v">${val}</div><div class="u">${u}</div></div>`;
@@ -210,7 +278,8 @@ function detailSection(key, vi) {
       ${k('d:tpa5', 'Trees ≥5 in', fmt(s.tpa5, 0), 'trees/ac')}${k('d:sap', 'Saplings 1–4.9 in', fmt(s.sap, 0), 'trees/ac')}${k('d:qmd', 'QMD', fmt(s.qmd), 'in')}
       ${k('d:vol', 'Net cubic volume', fmt(s.vol, 0), 'ft³/ac')}${k('d:c', 'Aboveground carbon', fmt(s.c, 2), 'tons C/ac')}${k('d:dead_tpa', 'Standing dead', fmt(s.dtpa, 0), `trees/ac (${s.nd} tallied)`)}</div>`;
     if (m('live_tpa_c1') != null) html += `<h4>Trees per acre by size class</h4>` + tbl([{ k: 'd:status' }, { k: 'd:c1', n: 1 }, { k: 'd:c2', n: 1 }, { k: 'd:c3', n: 1 }, { k: 'd:c4', n: 1 }],
-      [['Live'].concat(['c1', 'c2', 'c3', 'c4'].map(c => fmt(m('live_tpa_' + c), 1))), ['Standing dead'].concat(['c1', 'c2', 'c3', 'c4'].map(c => fmt(m('dead_tpa_' + c), 1)))], { noMax: true });
+      [['Live'].concat(['c1', 'c2', 'c3', 'c4'].map(c => ({ h: fmt(m('live_tpa_' + c), 1), v: m('live_tpa_' + c) }))),
+       ['Standing dead'].concat(['c1', 'c2', 'c3', 'c4'].map(c => ({ h: fmt(m('dead_tpa_' + c), 1), v: m('dead_tpa_' + c) })))], { noMax: true, sort: true, sticky: true });
     return html + `<p class="muted">${esc(FIA.meta.unadj_note)}</p>`;
   }
   if (key === 'species_v') {
@@ -221,19 +290,30 @@ function detailSection(key, vi) {
     }
     if (!sp.length) return '';
     const tot = sp.reduce((a, s_) => a + (s_.ba || 0), 0);
+    const nv = (v, d) => ({ h: fmt(v, d), v: v ?? null });
     return tbl([{ k: 'd:species' }, { k: 'd:live_n_sp', n: 1 }, { k: 'd:tpa', n: 1 }, { k: 'd:tpa5', n: 1 }, { k: 'd:ba', n: 1 }, { k: 'd:pct_ba', n: 1 }, { k: 'd:vol', n: 1 },
       { k: 'd:c', n: 1 }, { k: 'd:dead_n_sp', n: 1 }, { k: 'd:dead_tpa_sp', n: 1 }],
-      sp.map(x => [`${esc(spName(x.SPCD))} <span class="muted">(${x.SPCD})</span>`, x.live_n ?? '—', fmt(x.live_tpa, 1), fmt(x.tpa5, 1), fmt(x.ba, 2), tot ? fmt(100 * (x.ba || 0) / tot, 1) : '—',
-        fmt(x.vol, 0), fmt(x.carbon, 2), x.dead_n ?? '—', fmt(x.dead_tpa, 1)]));
+      sp.map(x => [{ h: esc(spName(x.SPCD)) + (isExpert() ? ` <span class="muted">(${x.SPCD})</span>` : ''), v: spName(x.SPCD) }, { h: x.live_n ?? '—', v: x.live_n ?? null },
+        nv(x.live_tpa, 1), nv(x.tpa5, 1), nv(x.ba, 2), nv(tot ? 100 * (x.ba || 0) / tot : null, 1), nv(x.vol, 0), nv(x.carbon, 2), { h: x.dead_n ?? '—', v: x.dead_n ?? null }, nv(x.dead_tpa, 1)]),
+      { sort: true, sticky: true });
   }
   if (key === 'trees') {
     const cols = ['SUBP', 'TREE', 'STATUSCD', 'SPCD', 'DIA', 'HT', 'ACTUALHT', 'CR', 'CCLCD', 'TREECLCD', 'AGENTCD', 'DAMAGE_AGENT_CD1', 'DECAYCD', 'MORTYR', 'RECONCILECD', 'TPA_UNADJ', 'VOLCFNET', 'CARBON_AG'];
-    const tr = forVisit(P.tr, vi);
-    if (!tr.length) return '';
-    return `<p class="muted">${tr.length} TREE records. Rows on SUBP &gt; 4 at national-design visits are bridge records (excluded from totals).</p>`
-      + tbl([{ k: 'd:tree_id' }].concat(cols.map(c => ({ k: 'TREE.' + c }))).concat([{ k: 'd:ba_tree', n: 1 }, { k: 'd:linked' }]),
-        tr.map(t => ({ attrs: t.SUBP > 4 && v.ds === 'annual' ? ' class="muted"' : '', cells: [esc(P.tl[t.ti])].concat(cols.map(c => dvs(decodeCell('TREE', c, t[c]), 26)))
-          .concat([t.DIA != null && t.TPA_UNADJ != null ? fmt(BA_K * t.DIA ** 2 * t.TPA_UNADJ, 3) : '—', t.pv ? 'yes' : '']) })), { wrapCls: 'wide', cls: 'wide' });
+    const NUMC = new Set(['SUBP', 'TREE', 'DIA', 'HT', 'ACTUALHT', 'CR', 'MORTYR', 'TPA_UNADJ', 'VOLCFNET', 'CARBON_AG']);
+    // bridge records (SUBP > 4 at national-design visits, P2A_GRM_FLG) are not tallied trees: left out here, kept in Expert view
+    const notBridge = t => !(t.SUBP > 4 && P.v[t.vi].ds === 'annual');
+    const all = rowsOf(P.tr).filter(notBridge);
+    const tr = (PL.allTrees ? all : all.filter(t => t.vi === vi)).sort((a, b) => P.v[a.vi].y - P.v[b.vi].y || a.SUBP - b.SUBP || a.TREE - b.TREE);
+    if (!all.length) return '';
+    const nb = rowsOf(P.tr).length - all.length;
+    return `<div class="actions noprint"><label class="switch"><input type="checkbox" id="alltrees"${PL.allTrees ? ' checked' : ''}> Show all surveys</label>`
+      + `<span class="muted" id="trees_n">${tr.length} tree record${tr.length === 1 ? '' : 's'}${PL.allTrees ? ` from ${P.v.length} surveys` : ' at this visit'}`
+      + `${nb ? `; ${nb} bridge record${nb > 1 ? 's' : ''} (SUBP &gt; 4, not tallied trees) shown in Expert view only` : ''}</span></div>`
+      + (tr.length ? tbl([{ k: 'd:invyr', l: 'Survey year' }].concat(cols.map(c => ({ k: 'TREE.' + c, n: NUMC.has(c) }))).concat([{ k: 'd:ba_tree', n: 1 }, { k: 'd:linked' }]),
+        tr.map(t => { const ba = t.DIA != null && t.TPA_UNADJ != null ? BA_K * t.DIA ** 2 * t.TPA_UNADJ : null;
+          return [{ h: `<abbr title="${esc(P.v[t.vi].d)}">${P.v[t.vi].y}</abbr>`, v: P.v[t.vi].y }].concat(cols.map(c => cell('TREE', c, t[c])))
+            .concat([{ h: fmt(ba, 3), v: ba }, { h: t.pv ? 'yes' : '', v: t.pv ? 'yes' : '' }]); }),
+        { wrapCls: 'wide', cls: 'wide trees', id: 'vd_trees', sort: true, sticky: true }) : '<p class="muted">No tree records at this visit.</p>');
   }
   if (key === 'seed') return genericTable(P.sd, 'SEEDLING', vi);
   if (key === 'site') return genericTable(P.st, 'SITETREE', vi);
@@ -249,8 +329,19 @@ function invVisit(P, vi) {
   const pf = forVisit(P.pf, vi)[0] || {};
   if (!iv.length && pf.INVASIVE_SAMPLING_STATUS_CD == null) return '';
   return `<p>Invasive sampling: ${dv(decode('PLOT.INVASIVE_SAMPLING_STATUS_CD', pf.INVASIVE_SAMPLING_STATUS_CD))}</p>` + (iv.length ? tbl([{ k: 'd:inv_species' }, { k: 'd:inv_symbol' }, { k: 'd:inv_subp' }, { k: 'd:inv_cover', n: 1 }],
-    Object.entries(by).map(([s, g]) => { const [cn, sci] = plant(s); return [`${esc(cn)} <i class="muted">${esc(sci)}</i>`, esc(s), g.map(r => r.SUBP).sort().join(', '), fmt(g.reduce((a, r) => a + (r.COVER_PCT || 0), 0) / g.length)]; }), { noMax: true })
+    Object.entries(by).map(([s, g]) => { const [cn, sci] = plant(s), cov = g.reduce((a, r) => a + (r.COVER_PCT || 0), 0) / g.length;
+      return [{ h: `${esc(cn)} <i class="muted">${esc(sci)}</i>`, v: cn }, esc(s), g.map(r => r.SUBP).sort().join(', '), { h: fmt(cov), v: cov }]; }), { noMax: true, sort: true, sticky: true })
     : '<p class="muted">No invasive plant records for this visit.</p>');
+}
+// Conditions: collapsed by default; the state lives in this page view and in the URL hash (#cond-open) for shared links
+PL.condOpen = /(^|[#&])cond-open($|&)/.test(location.hash.slice(1));
+function toggleCond() {
+  PL.condOpen = !PL.condOpen;
+  const u = new URL(location.href), parts = u.hash.slice(1).split('&').filter(x => x && x !== 'cond-open');
+  if (PL.condOpen) parts.push('cond-open');
+  u.hash = parts.join('&');
+  history.replaceState(null, '', u.hash ? u : u.pathname + u.search);
+  const y = scrollY; renderDetails(); scrollTo(0, y);
 }
 function renderDetails() {
   const P = PL.P, vi = PL.vi, v = P.v[vi];
@@ -271,6 +362,12 @@ function renderDetails() {
   }
   if (absent.length) html += `<p class="absent">No records at this visit: ${absent.map(esc).join(', ')}.</p>`;
   $('#details').innerHTML = html;
+  const ch = document.querySelector('.vsect[data-ds=cond] > h3');
+  if (ch) { ch.innerHTML = `<button type="button" class="secttoggle" aria-expanded="${!!PL.condOpen}" aria-controls="condfields">${PL.condOpen ? '▾' : '▸'} Conditions</button>`;
+    ch.querySelector('button').onclick = toggleCond; }
+  const ct = $('#condtoggle'); if (ct) ct.onclick = toggleCond;
+  const at = $('#alltrees'); if (at) at.onchange = () => { PL.allTrees = at.checked; const y = scrollY; renderDetails(); scrollTo(0, y); };
+  updateFades($('#details'));
 }
 
 // ---------------------------------------------------------------- shared species grouping for the stacked charts (PDF: top 7 + other)
@@ -558,6 +655,7 @@ async function preparePrint(opt) {
   document.body.classList.add('printing');
   const restore = [];
   document.querySelectorAll('section.psec').forEach(s => { const on = !opt.secs || opt.secs.includes(s.dataset.sec); s.dataset.print = on ? 'on' : 'off'; });
+  if (!PL.condOpen) { PL.condOpen = true; renderDetails(); restore.push(() => { PL.condOpen = false; renderDetails(); }); }   // print expands every section
   document.querySelectorAll('.treetable').forEach(e => { if (!opt.trees) { e.dataset.prevDisplay = e.style.display; e.style.display = 'none'; restore.push(() => { e.style.display = e.dataset.prevDisplay || ''; }); } });
   if (opt.raw && window.expertRawAppendix) { const a = window.expertRawAppendix(); restore.push(() => a.remove()); }
   // charts as static images (sharp in print, no interactivity needed)

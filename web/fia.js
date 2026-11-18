@@ -30,7 +30,7 @@ const plotUrl = key => `plot.html?k=${encodeURIComponent(key)}${document.documen
 
 // ---------------------------------------------------------------- decoding
 // Texts were rendered by fiasc.core.decode at export time; values not in the guide are flagged, never guessed.
-const REF_CODED = { SPCD: 'sp', FORTYPCD: 'ft', FLDTYPCD: 'ft', FORTYPCDCALC: 'ft', VEG_SPCD: 'pl' };
+const REF_CODED = { SPCD: 'sp', SISP: 'sp', SISP_FVS: 'sp', FORTYPCD: 'ft', FLDTYPCD: 'ft', FORTYPCDCALC: 'ft', VEG_SPCD: 'pl' };
 function blank(v) { return v === null || v === undefined || v === '' || (typeof v === 'number' && isNaN(v)); }
 function decode(key, v) {
   const C = FIA.codes;

@@ -15,7 +15,7 @@ totals = 35/82/82/101/92 ft²/ac; history charts and tabs render; phone viewport
 page usable without horizontal scrolling); no CSP violations, no cookies, no requests to hosts other than the site
 and basemap.nationalmap.gov.
 """
-import os, sys, io, json, math, time, base64, datetime, shutil, subprocess, tempfile, urllib.request, functools, threading, http.server
+import os, sys, io, re, json, math, time, base64, datetime, shutil, subprocess, tempfile, urllib.request, functools, threading, http.server
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT); sys.path.insert(0, os.path.join(ROOT, "scripts"))
 sys.stdout.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)
@@ -33,6 +33,8 @@ CONTRAST_JS = """((sel) => {
   const r = els.map(el => { const a = lum(getComputedStyle(el).color), b = lum(bg(el)); return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05); });
   return { n: els.length, min: r.length ? Math.min(...r) : null };
 })"""
+SORT_JS = "(() => {\n  const t = () => document.querySelector('#vd_trees'), bad = [];\n  const n = t().querySelectorAll('thead th').length;\n  for (let ci = 0; ci < n; ci++) {\n    for (const dir of ['ascending', 'descending', 'none']) {\n      t().querySelectorAll('thead th')[ci].querySelector('.sortb').click();\n      const th = t().querySelectorAll('thead th')[ci];\n      if (th.getAttribute('aria-sort') !== dir) { bad.push(ci + ':' + dir + ':state'); continue; }\n      const rows = [...t().tBodies[0].rows];\n      if (dir === 'none') { if (rows.some((r, i) => +r.dataset.i !== i)) bad.push(ci + ':original'); continue; }\n      const vals = rows.map(r => { const td = r.cells[ci], v = td.dataset.v ?? td.textContent.trim(); return v === '' || v === '—' ? null : v; }).filter(v => v !== null);\n      const num = vals.every(v => !isNaN(+v));\n      for (let i = 1; i < vals.length; i++) { const c = num ? +vals[i - 1] - +vals[i] : String(vals[i - 1]).localeCompare(String(vals[i]), undefined, { numeric: true });\n        if ((dir === 'ascending' && c > 0) || (dir === 'descending' && c < 0)) { bad.push(ci + ':' + dir); break; } }\n    }\n  }\n  return { n, bad, help: !!document.querySelector('#hpop:not([hidden])') };\n})()"
+COND_JS = "JSON.stringify({ hidden: document.querySelector('#condfields').hidden, line: document.querySelector('.condline').textContent,\n  hash: location.hash, exp: document.querySelector('.secttoggle').getAttribute('aria-expanded') })"
 HELP_JS = """((sel) => {
   const ths = [...document.querySelectorAll(sel || 'th')].filter(t => t.getClientRects().length);
   const bad = ths.filter(t => { const k = t.dataset.hk, h = k && helpFor(k); return !t.querySelector('.hb') || !h || !h.text; })
@@ -347,6 +349,53 @@ def main():
             check("Plot 91-25 numbers match the Plot 25 summary PDF (survey, tree totals, volume/carbon, species, KPIs, highlights)",
                   not bad, f"{len(labels)} survey rows, {len(st['tt'])} tree-total rows compared" + (f"; differences: {bad[:6]}" if bad else ""))
         flag = 0
+        # Visit details tables: sorting, formatting, show-all switch, Conditions collapsed by default
+        def vd_checks():
+            out = {}
+            c.goto(f"{base}plot.html?k={KEY}&view=standard"); c.wait("document.body.dataset.ready === '1'", what="plot page")
+            out["sort"] = c.js(SORT_JS)
+            out["fmt"] = c.js("(() => { const t = document.querySelector('#vd_trees'), hk = [...t.querySelectorAll('thead th')].map(h => h.dataset.hk), col = k => hk.indexOf(k);"
+                              " const rows = [...t.tBodies[0].rows]; const cells = k => rows.map(r => r.cells[col(k)].textContent.trim());"
+                              " return { first: hk[0], status: [...new Set(cells('TREE.STATUSCD'))], sp: cells('TREE.SPCD').slice(0, 3), dia: cells('TREE.DIA').slice(0, 3), ht: cells('TREE.HT').slice(0, 3),"
+                              " codes: rows.filter(r => / = /.test(r.textContent)).length, diaHead: t.querySelectorAll('thead th')[col('TREE.DIA')].querySelector('.thl').textContent }; })()")
+            n_vis = c.js("document.querySelector('#vd_trees').tBodies[0].rows.length")
+            c.js("document.querySelector('#alltrees').click(); true"); time.sleep(0.5)
+            out["all"] = (n_vis, c.js("document.querySelector('#vd_trees').tBodies[0].rows.length"))
+            out["cond0"] = json.loads(c.js(COND_JS))
+            c.js("document.querySelector('.secttoggle').click(); true"); time.sleep(0.3)
+            out["cond1"] = json.loads(c.js(COND_JS))
+            c.goto(f"{base}plot.html?k={KEY}&view=standard&reload=1#cond-open"); c.wait("document.body.dataset.ready === '1'", what="plot page with #cond-open")
+            out["cond2"] = json.loads(c.js(COND_JS))
+            c.js("document.querySelector('#condtoggle').click(); true"); time.sleep(0.3)
+            out["cond3"] = json.loads(c.js(COND_JS))
+            c.js("window.__pp = 0; PLOT.preparePrint({secs: null, trees: true, raw: false}).then(() => { window.__pp = 1; }); true"); c.wait("window.__pp === 1", 90, "print prep")
+            out["print"] = c.js("!document.querySelector('#condfields').hidden"); c.js("PLOT.printRestore(); true"); time.sleep(0.3)
+            out["after"] = c.js("document.querySelector('#condfields').hidden")
+            return out
+        PJ0 = json.load(urllib.request.urlopen(f"{base}p/{KEY}.json", timeout=60))
+        t0c = {k_: i for i, k_ in enumerate(PJ0["tr"]["c"])}
+        n_expect = sum(1 for r in PJ0["tr"]["r"] if not (r[t0c["SUBP"]] > 4 and PJ0["v"][r[t0c["vi"]]]["ds"] == "annual"))
+        for label, dims in (("desktop", None), ("390 px", (390, 844))):
+            if dims:
+                c.call("Emulation.setDeviceMetricsOverride", width=dims[0], height=dims[1], deviceScaleFactor=2, mobile=True)
+            o = vd_checks()
+            if dims:
+                c.call("Emulation.clearDeviceMetricsOverride")
+            f_ = o["fmt"]
+            ok_sort = o["sort"]["n"] >= 15 and not o["sort"]["bad"] and not o["sort"]["help"]
+            ok_fmt = (f_["first"] == "d:invyr" and set(f_["status"]) <= {"Live", "Dead", "Cut", "Not in sample"} and f_["codes"] == 0
+                      and all(" = " not in x and not x[:1].isdigit() for x in f_["sp"]) and all(re.fullmatch(r"\d+\.\d", x) for x in f_["dia"])
+                      and all(x == "" or x.isdigit() for x in f_["ht"]) and f_["diaHead"].endswith(", in"))
+            ok_all = o["all"][1] == n_expect
+            line = o["cond0"]["line"]
+            ok_cond = (o["cond0"]["hidden"] and o["cond0"]["exp"] == "false" and not o["cond1"]["hidden"] and "cond-open" in o["cond1"]["hash"]
+                       and not o["cond2"]["hidden"] and o["cond3"]["hidden"] and o["print"] and o["after"]
+                       and all(x in line for x in ["Condition 1", "100% of plot", "Accessible forest", "Private", "Loblolly pine / hardwood", "Stand age 34", "Site index 71 (water oak, base 50)"]))
+            check(f"Visit details ({label}): every tree column sorts both ways and back, ⓘ not triggered; plain formatting; Survey year first; 'Show all surveys' = all non-bridge TREE records",
+                  ok_sort and ok_fmt and ok_all, f"{o['sort']['n']} columns, bad {o['sort']['bad'][:5]}; status {f_['status']}, species {f_['sp']}, DIA {f_['dia']}, HT {f_['ht']}, head '{f_['diaHead']}'; "
+                  f"rows {o['all'][0]} → {o['all'][1]} (expected {n_expect})")
+            check(f"Conditions ({label}): collapsed with a one-line summary; expands from the header or the control; #cond-open opens it; print expands",
+                  ok_cond, f"'{line}'; states {[o[k]['hidden'] for k in ('cond0', 'cond1', 'cond2', 'cond3')]}, print open {o['print']}, after {o['after']}")
         hc = []
         for scheme in ("light", "dark"):
             c.call("Emulation.setEmulatedMedia", features=[{"name": "prefers-color-scheme", "value": scheme}])
@@ -425,11 +474,12 @@ def main():
         page = {(x["k"], x["sp"]): [x["tpa"], x["ba"], x["vol"]] for x in c.js(f"EXPERT_standTable(PLOT.P, {vi4})")}
         dcl_ok = set(page) == set(hand) and all(all(abs(a_ - b_) < 1e-6 for a_, b_ in zip(page[k_], hand[k_])) for k_ in hand)
         sdi_pg = float(c.js("document.querySelector('#x_sdi').dataset.sdi"))
+        xcodes = c.js("[...document.querySelectorAll('#x_trees tbody td')].some(td => / = /.test(td.textContent))")
         exp_ba = c.js("Object.fromEntries([...document.querySelectorAll('#totals tr[data-invyr]')].map(tr => [tr.dataset.invyr, +tr.querySelector('[data-ba]').dataset.ba]))")
         check("Standard | Expert switch round-trips via URL and localStorage; expert 91-25 values = report/PDF; SDI and 2-in classes = hand calculation",
               v1 == [True, "expert"] and v2 == "expert" and all(int(round(exp_ba[str(y)])) == v for y, v in core.REGRESSION_BA[KEY].items())
-              and abs(sdi_pg - sdi) < 0.01 and dcl_ok and abs(sum(x[1] for x in hand.values()) - 92.2444) < 0.001,
-              f"URL/storage {v1}, reload → {v2}; SDI page {sdi_pg:.2f} vs hand {sdi:.2f} (TPA {tpa:.1f}, QMD {qmd:.3f}); {len(hand)} class×species cells {'equal' if dcl_ok else 'DIFFER'}")
+              and abs(sdi_pg - sdi) < 0.01 and dcl_ok and xcodes and abs(sum(x[1] for x in hand.values()) - 92.2444) < 0.001,
+              f"URL/storage {v1}, reload → {v2}; expert codes shown {xcodes}; SDI page {sdi_pg:.2f} vs hand {sdi:.2f} (TPA {tpa:.1f}, QMD {qmd:.3f}); {len(hand)} class×species cells {'equal' if dcl_ok else 'DIFFER'}")
         # print to PDF (Chromium print engine via CDP): standard and expert
         pr = {}
         for view in ("standard", "expert"):

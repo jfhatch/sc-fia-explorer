@@ -53,12 +53,25 @@ function helpFor(key) {
 const gAnchor = key => 'h-' + key.replace(/[^A-Za-z0-9]+/g, '-');
 // a table header cell: friendly label (Standard) or the raw column name (Expert), the other in small text, and an ⓘ button
 function th(key, opts = {}) {
+  if (opts.sort) return thSort(key, opts);
   const h = helpFor(key) || { label: opts.l || key, unit: '', text: '', code: '' };
   const col = h.code || '';
   let main = opts.l || h.label, sub = col && col !== main ? col : '';
   if (isExpert() && col) { main = col; sub = ''; }
   if (opts.unit !== false && h.unit && !/[(/]/.test(main) && !isExpert()) sub = (sub ? sub + ' · ' : '') + h.unit;
   return `<th${opts.n ? ' class="n"' : ''} scope="col" data-hk="${esc(key)}"><span class="thl">${esc(main)}</span>${sub ? `<small class="thc">${esc(sub)}</small>` : ''}`
+    + `<button type="button" class="hb" data-h="${esc(key)}" aria-label="About ${esc(main)}">ⓘ</button></th>`;
+}
+// sortable header: the label is its own button (sort), the ⓘ a separate tap target (help). Standard view shows the plain
+// name with its unit ("Diameter (DBH), in") and the FIADB name in small text (hidden on phones); Expert view the FIADB name.
+function thSort(key, opts) {
+  const h = helpFor(key) || { label: opts.l || key, unit: '', text: '', code: '' };
+  const col = h.code || '', exp = isExpert() && col;
+  let main = exp ? col : (opts.l || h.label);
+  if (!exp && h.unit && opts.unit !== false && !main.includes(h.unit)) main += `, ${h.unit}`;
+  const sub = !exp && col && col !== main ? col : '';
+  return `<th${opts.n ? ' class="n"' : ''} scope="col" data-hk="${esc(key)}" aria-sort="none"><button type="button" class="sortb" aria-label="Sort by ${esc(main)}">`
+    + `<span class="thl">${esc(main)}</span>${sub ? `<small class="thc">${esc(sub)}</small>` : ''}<span class="arr" aria-hidden="true"></span></button>`
     + `<button type="button" class="hb" data-h="${esc(key)}" aria-label="About ${esc(main)}">ⓘ</button></th>`;
 }
 // a section intro: the plain-language text (Standard) or a one-line ⓘ (Expert)
